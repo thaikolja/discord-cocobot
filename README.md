@@ -9,10 +9,13 @@ A bot for the Discord Thailand-related server **Thailand — Official English-sp
   * `<to>`: The language as language code or name of the language to translate to, i.e., `de` / `german` for German, or `es` / `spanish` for Spanish
   * `<from>` (optional): If your `<text>` is **not** in English, specify your language here
 * ``/languages`: Lists all available language codes
+* `/time <location>`: Show the current time in a certain location
+  * `<location>`: City, country, or both of the location
+
 
 ## Installation
 
-**Note:** For installing it on your online server, follow these instructions *after* creating a user and group so that the user directory is created in `/home`
+**Note:** For installing it on your **online** server, follow these instructions *after* creating a user and group so that the (example) paths used in this documentation are valid.
 
 1. `git clone https://gitlab.com/thaikolja/discord-cocobot.git`
 2. (Optional) Rename the directory to `cocobot`  using `mv discord-cocobot cocobot`
@@ -21,11 +24,15 @@ A bot for the Discord Thailand-related server **Thailand — Official English-sp
 5. Switch to the virtual environment with `source venv/bin/activate`[^2]
 6. Install required modules via `pip install -r requirements.txt`
 7. `touch .env && nano .env` to open environment file
-8. Enter your [private bot token](https://www.writebots.com/discord-bot-token/) as `BOT_TOKEN="..."` and the [guild ID](https://cybrancee.com/learn/knowledge-base/how-to-find-a-discord-guild-id/) as `SERVER_ID=...`
+8. Add and replace the values of the following environmental variables:
+   1. `BOT_TOKEN=abc`
+   2. `SERVER_ID=123`
+   3. `LOCALTIME_API_KEY=abc`  ([Sign up to geoapify.com](https://myprojects.geoapify.com/login) for a free API key)
+
 
 ## Usage
 
-Please refer to [Discord's official documentation](https://discord.com/developers/docs/intro) on how to add a bot to your Discord server. This is required to get the `BOT_TOKEN` and the `SERVER_ID` environment variables.
+Please refer to [Discord's official documentation](https://discord.com/developers/docs/intro) on how to add a bot to your Discord server. This is required to get the `BOT_TOKEN` and the `SERVER_ID` environment variables. [Sign up to geoapify.com](https://myprojects.geoapify.com/login) for a free API key required for the `/time` command.
 
 ### Locally
 
@@ -37,6 +44,8 @@ Please refer to [Discord's official documentation](https://discord.com/developer
 **Note:** The bot will only be online as long as your process is running. Having it run on a server that is online 24/7 (server-side) is, obviously, the better solution.
 
 ### Server-Side
+
+Again, make sure to **skip** the installation section until you've arrived at **step 3**, otherwise the paths in this documentation will be invalid.
 
 1. Create a user and group the bot will be run as, for example:
 
