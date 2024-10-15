@@ -1,0 +1,17 @@
+# Changelog
+
+## v1
+
+### v1.1.0-pre - Preview for v1.1.0 with some bugs
+**Date:** 2024-10-16
+
+* Addead `/time <city|country|both>` which displays the current time in the entered location.
+* Added detailed comments and docstrings to the bot code to improve readability and maintainability.
+
+### v1.0.0 - Initial Release
+**Date:** 2024-10-06
+
+* Initial release of the Discord bot code.
+* Added `/translate <text> <language>` command, where `<language>` refers to the output language
+* Added README.md
+* Added LICENSE
