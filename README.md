@@ -8,7 +8,7 @@ A bot for the Discord Thailand-related server **Thailand — Official English-sp
   * `<text>`: The text to translate
   * `<to>`: The language as language code or name of the language to translate to, i.e., `de` / `german` for German, or `es` / `spanish` for Spanish
   * `<from>` (optional): If your `<text>` is **not** in English, specify your language here
-* ``/languages`: Lists all available language codes
+* `/languages`: Lists all available language codes
 * `/time <location>`: Show the current time in a certain location
   * `<location>`: City, country, or both of the location
 
