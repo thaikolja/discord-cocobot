@@ -5,7 +5,7 @@
 ### v1.1.0-pre - Preview for v1.1.0 with some bugs
 **Date:** 2024-10-16
 
-* Addead `/time <city|country|both>` which displays the current time in the entered location.
+* Added `/time <city|country|both>` which displays the current time in the entered location.
 * Added detailed comments and docstrings to the bot code to improve readability and maintainability.
 
 ### v1.0.0 - Initial Release
