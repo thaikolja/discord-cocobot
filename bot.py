@@ -108,19 +108,19 @@ async def weather(interaction: discord.Interaction, location: str = 'Bangkok'):
 
 	try:
 		response = requests.get(api_url).json()
-		current_time = datetime.fromtimestamp(response['location']['localtime'])
-		# current_time = time_object.strftime('%H:%M')
+		current_weather_time = response['location']['localtime']
 		city = response['location']['name']
 		temperature_c = response['current']['temp_c']
 		condition = str(response['current']['condition']['text'])
 		feels_like = response['current']['feelslike_c']
 		output = (
-			f"🌤️ It's currently {current_time} **{temperature_c}°C** in {city} which feels more like **{feels_like}°C**. "
+			f"🌤️ It's currently ({current_weather_time}) **{temperature_c}°C** in {city} which feels more like *"
+			f"*{feels_like}°C**. "
 			f"Weather "
 			f"condition: **{condition}**. "
 		)
 	except requests.RequestException:
-		output = f"\"{location}\" doesn\'t look like a real leocation. Did a coconut fall on your head?!"
+		output = f"\"{location}\" doesn\'t look like a real location. Did a coconut fall on your head?!"
 
 	if 'error' in response:
 		print('Error:', response['error']['message'])
