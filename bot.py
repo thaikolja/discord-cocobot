@@ -115,15 +115,13 @@ async def weather(interaction: discord.Interaction, location: str = 'Bangkok'):
 		feels_like = response['current']['feelslike_c']
 		output = (
 			f"🌤️ It's currently ({current_weather_time}) **{temperature_c}°C** in {city} which feels more like *"
-			f"*{feels_like}°C**. "
-			f"Weather "
-			f"condition: **{condition}**. "
+			f"*{feels_like}°C**. Weather condition: **{condition}**."
 		)
 	except requests.RequestException:
-		output = f"\"{location}\" doesn\'t look like a real location. Did a coconut fall on your head?!"
+		output = f"⚠️ \"{location}\" doesn\'t look like a real location. Did a coconut fall on your head?!"
 
 	if 'error' in response:
-		print('Error:', response['error']['message'])
+		print('⚠️ Error:', response['error']['message'])
 
 	await interaction.response.send_message(output)
 
@@ -147,7 +145,8 @@ async def translate(interaction: discord.Interaction, text: str, language: str):
 		if language not in LANGUAGES and language not in LANGUAGES.values():
 			# Send an error message to the interaction
 			await interaction.response.send_message(
-				"What kind of language is that supposed to be?! Did a coconut fall on your head or what? Run `/languages` to see what languages I can translate.")
+				"⚠️ What kind of language is that supposed to be?! Did a coconut fall on your head or what? Run "
+				"`/languages` to see what languages I can translate.")
 			# Return from the function
 			return
 
@@ -155,13 +154,11 @@ async def translate(interaction: discord.Interaction, text: str, language: str):
 		translation = translator.translate(text, dest=language)
 		# Send the translation to the interaction
 		await interaction.response.send_message(
-			f'**Translation:** {translation.text}')
+			f'🌏 **Translation:** {translation.text}')
 	except Exception as e:
-		# Print the error message to the console
-		print(f'Error: {str(e)}')
 		# Send an error message to the interaction
 		await interaction.response.send_message(
-			"Seems like my coconut brain wasn't able to translate this. Try again, maybe?")
+			"⚠️ Seems like my coconut brain wasn't able to translate this. Try again, maybe?")
 
 
 # Define a command to show the current time in a city or country
@@ -202,13 +199,13 @@ async def time(interaction: discord.Interaction, location: str):
 	if type(current_time) == str:
 		# If the city is not empty, include it in the output
 		if len(city) >= 3:
-			output = f'The current time in **{city}**, **{country}** is **{current_time}**'
+			output = f'🕐 The current time in **{city}**, **{country}** is **{current_time}**'
 		# Otherwise, only include the country in the output
 		else:
-			output = f'The current time in **{country}** is **{current_time}**'
+			output = f'🕐 The current time in **{country}** is **{current_time}**'
 	else:
 		# If the current time is not a string, send an error message
-		output = "That doesn't look like a real location. Are you making things up?!"
+		output = "⚠️That doesn't look like a real location. Are you making things up?!"
 
 	# Send the output to the interaction
 	await interaction.response.send_message(output)
