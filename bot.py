@@ -77,7 +77,7 @@ if is_server():
 	parser = argparse.ArgumentParser(description='Run the Discord bot')
 
 	# Add an argument for the action to take (start or stop)
-	parser.add_argument('action', type=str, choices=['start', 'stop'], help='Start or stop the bot', required=False)
+	parser.add_argument('action', type=str, choices=['start', 'stop'], help='Start or stop the bot')
 
 	# Parse the command-line arguments
 	args = parser.parse_args()
