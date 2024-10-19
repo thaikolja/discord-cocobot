@@ -48,52 +48,6 @@ BOT_TOKEN = os.getenv('BOT_TOKEN')
 
 WEATHERAPI_API_KEY = os.getenv('WEATHERAPI_API_KEY')
 
-
-# Define a function to check if the current host is the server
-def is_server() -> bool:
-	# Return True if the current host is the server, False otherwise
-	return HOST == socket.gethostname()
-
-
-# Check if the current host is the server
-if is_server():
-	# Define a function to start the bot
-	def start_bot():
-		# Start the bot using the systemctl command
-		os.system("systemctl start discord-cocobot")
-		# Enable the bot to start automatically on boot
-		os.system("systemctl enable discord-cocobot")
-
-
-	# Define a function to stop the bot
-	def stop_bot():
-		# Stop the bot using the systemctl command
-		os.system("systemctl stop discord-cocobot")
-		# Disable the bot from starting automatically on boot
-		os.system("systemctl disable discord-cocobot")
-
-
-	# Create a parser for parsing command-line arguments
-	parser = argparse.ArgumentParser(description='Run the Discord bot')
-
-	# Add an argument for the action to take (start or stop)
-	parser.add_argument('action', type=str, choices=['start', 'stop'], help='Start or stop the bot')
-
-	# Parse the command-line arguments
-	args = parser.parse_args()
-
-	# Check if the action is to start the bot
-	if args.action == 'start':
-		# Call the start_bot function
-		start_bot()
-	# Check if the action is to stop the bot
-	elif args.action == 'stop':
-		# Call the stop_bot function
-		stop_bot()
-	# If no action is specified, print an error message
-	else:
-		print('Invalid action. Please specify either "start" or "stop."')
-
 # Load environment variables from a .env file
 load_dotenv()
 
@@ -154,8 +108,8 @@ async def weather(interaction: discord.Interaction, location: str = 'Bangkok'):
 
 	try:
 		response = requests.get(api_url).json()
-		time_object = datetime.fromtimestamp(response['location']['localtime_epoch'])
-		current_time = time_object.strftime('%H:%M')
+		current_time = datetime.fromtimestamp(response['location']['localtime'])
+		# current_time = time_object.strftime('%H:%M')
 		city = response['location']['name']
 		temperature_c = response['current']['temp_c']
 		condition = str(response['current']['condition']['text'])
