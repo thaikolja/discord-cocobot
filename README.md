@@ -4,11 +4,13 @@ A bot for the Discord Thailand-related server **Thailand — Official English-sp
 
 ## Features
 
-* `/translate <text> <to> <from>`: Translate a text into another language
+* `/translate <text> <language>`: Translate a text into another language
   * `<text>`: The text to translate
-  * `<to>`: The language as language code or name of the language to translate to, i.e., `de` / `german` for German, or `es` / `spanish` for Spanish
-  * `<from>` (optional): If your `<text>` is **not** in English, specify your language here
+  * `<language>`: The language as language code or name of the language to translate to, i.e., `de` / `german` for German, or `es` / `spanish` for Spanish
 * `/languages`: Lists all available language codes
+* `/weather <location>`: Display the current weather in a city or country.
+  * `<location>`  (optional): The specified location. **Default:** Bangkok
+
 * `/time <location>`: Show the current time in a certain location
   * `<location>`: City, country, or both of the location
 
@@ -28,7 +30,7 @@ A bot for the Discord Thailand-related server **Thailand — Official English-sp
    1. `BOT_TOKEN=abc`
    2. `SERVER_ID=123`
    3. `LOCALTIME_API_KEY=abc`  ([Sign up to geoapify.com](https://myprojects.geoapify.com/login) for a free API key)
-
+   4. `WEATHERAPI_API_KEY=123abc` ([Register on weatherapi.com](https://www.weatherapi.com/signup.aspx) for free to get an API key) 
 
 ## Usage
 
@@ -94,8 +96,6 @@ Again, make sure to **skip** the installation section until you've arrived at **
 ## Authors
 
 * **Kolja Nolte** / [thaikolja](https://gitlab.com/thaikolja/) \<kolja.nolte@gmail.com\>
-
-## Footnotes
 
 [^1]: For these instructions, the directory will be `cocobot`
 [^2]: To exit the virtual environment, run `deactivate`

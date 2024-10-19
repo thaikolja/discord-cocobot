@@ -1,209 +1,284 @@
-# Import the os module for interacting with the operating system
-import os  # This module provides a way to use operating system dependent functionality
+# Import the necessary libraries for parsing command-line arguments
+import argparse
 
-# Import discord module for creating a Discord bot
-import discord  # This module is used to create a Discord bot
+# Import the os library for interacting with the operating system
+import os
 
-# Import app_commands for creating application commands
-from discord import app_commands  # This module is used to create application commands for the Discord bot
+# Import the discord library for creating a Discord bot
+import discord
 
-# Import Translator and LANGUAGES from googletrans for translation functionality
-from googletrans import Translator, LANGUAGES  # This module is used for language translation
-
-# Import load_dotenv to load environment variables from a .env file
-from dotenv import load_dotenv  # This module is used to load environment variables from a .env file
+# Import the socket library for checking the current host
+import socket
 
 # Import the requests library for making HTTP requests
-import requests  # This library is used to make HTTP requests
+import requests
 
-# Import the sub function from the re module for regular expression substitution
-from re import sub  # This function is used for regular expression substitution
+# Import the app_commands library for creating Discord bot commands
+from discord import app_commands
+
+# Import the Translator library for translating text
+from googletrans import Translator, LANGUAGES
+
+# Import the load_dotenv function for loading environment variables from a .env file
+from dotenv import load_dotenv
+
+# Import the sub function for regular expression substitution
+from re import sub
+
+from datetime import datetime
 
 # Load environment variables from a .env file
-load_dotenv()  # Load environment variables from a .env file
+load_dotenv()
+
+# Define a constant for the host name
+# HOST will be used to check if the current host is the server
+HOST = 'host.yanawa.io'
+
+# Define a constant for the Discord guild ID
+# GUILD_ID will be used to identify the Discord guild
+GUILD_ID = os.getenv('GUILD_ID')
+
+# Define a constant for the LocalTime API key
+# LOCALTIME_API_KEY will be used to make requests to the LocalTime API
+LOCALTIME_API_KEY = os.getenv('LOCALTIME_API_KEY')
+
+# Define a constant for the Discord bot token
+# BOT_TOKEN will be used to authenticate the Discord bot
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+
+WEATHERAPI_API_KEY = os.getenv('WEATHERAPI_API_KEY')
 
 
-# Define a custom client class that extends discord.Client
+# Define a function to check if the current host is the server
+def is_server() -> bool:
+	# Return True if the current host is the server, False otherwise
+	return HOST == socket.gethostname()
+
+
+# Check if the current host is the server
+if is_server():
+	# Define a function to start the bot
+	def start_bot():
+		# Start the bot using the systemctl command
+		os.system("systemctl start discord-cocobot")
+		# Enable the bot to start automatically on boot
+		os.system("systemctl enable discord-cocobot")
+
+
+	# Define a function to stop the bot
+	def stop_bot():
+		# Stop the bot using the systemctl command
+		os.system("systemctl stop discord-cocobot")
+		# Disable the bot from starting automatically on boot
+		os.system("systemctl disable discord-cocobot")
+
+
+	# Create a parser for parsing command-line arguments
+	parser = argparse.ArgumentParser(description='Run the Discord bot')
+
+	# Add an argument for the action to take (start or stop)
+	parser.add_argument('action', type=str, choices=['start', 'stop'], help='Start or stop the bot', required=False)
+
+	# Parse the command-line arguments
+	args = parser.parse_args()
+
+	# Check if the action is to start the bot
+	if args.action == 'start':
+		# Call the start_bot function
+		start_bot()
+	# Check if the action is to stop the bot
+	elif args.action == 'stop':
+		# Call the stop_bot function
+		stop_bot()
+	# If no action is specified, print an error message
+	else:
+		print('Invalid action. Please specify either "start" or "stop."')
+
+# Load environment variables from a .env file
+load_dotenv()
+
+
+# Define a custom Discord client class
 class Cocobot(discord.Client):
-	"""
-	A custom Discord client class that extends discord.Client.
-	This client handles bot initialization, command tree setup, and translation functionality.
-	"""
-
+	# Initialize the client with default intents
 	def __init__(self):
-		"""
-		Initialize the MyClient instance with specific intents and a command tree.
-		"""
-		# Set up default intents for the bot
-		intents = discord.Intents.default()  # Create a new Intents object with default values
-		# Enable receiving message content
-		intents.message_content = True  # Allow the bot to receive message content
-		# Enable receiving presence updates
-		intents.presences = True  # Allow the bot to receive presence updates
-		# Enable receiving member events
-		intents.members = True  # Allow the bot to receive member events
-		# Initialize the superclass with the specified intents
-		super().__init__(intents=intents)  # Initialize the superclass with the specified intents
-		# Create a command tree for application commands
-		self.tree = app_commands.CommandTree(self)  # Create a new CommandTree object
-		# Initialize a translator for language translation
-		self.translator = Translator()  # Create a new Translator object
+		# Create a new instance of the discord.Intents class
+		intents = discord.Intents.default()
+		# Enable message content intent
+		intents.message_content = True
+		# Enable presence intent
+		intents.presences = True
+		# Enable member intent
+		intents.members = True
+		# Call the superclass constructor
+		super().__init__(intents=intents)
+		# Create a new instance of the app_commands.CommandTree class
+		self.tree = app_commands.CommandTree(self)
+		# Create a new instance of the Translator class
+		self.translator = Translator()
 
+	# Define a setup hook for the client
 	async def setup_hook(self):
-		"""
-		An asynchronous setup hook to synchronize the command tree with a specific guild.
-		"""
-		# Create a guild object with a specific ID (replace with your Guild ID)
-		guild = discord.Object(id=os.getenv('GUILD_ID'))  # Create a new Guild object with the specified ID
-		# Copy global commands to the specified guild
-		self.tree.copy_global_to(guild=guild)  # Copy global commands to the specified guild
-		# Synchronize the command tree with the guild
-		await self.tree.sync(guild=guild)  # Synchronize the command tree with the guild
+		# Create a new instance of the discord.Object class for the guild
+		guild = discord.Object(id=GUILD_ID)
+		# Copy global commands to the guild
+		self.tree.copy_global_to(guild=guild)
+		# Sync the command tree for the guild
+		await self.tree.sync(guild=guild)
 
 
-# Instantiate the custom client
-client = Cocobot()  # Create a new instance of the Cocobot class
+# Create a new instance of the Cocobot class
+client = Cocobot()
 
 
-# Define an event handler for when the bot is ready
+# Define an event handler that is called when the bot is ready
 @client.event
 async def on_ready():
-	"""
-	Event handler that is called when the bot is ready.
-	Sets the bot's status and activity.
-	"""
-	# Print bot login information to the console
-	print(f'Bot is ready. Logged in as {client.user} (ID: {client.user.id})')  # Print bot login information
-	print('------')  # Print a separator
-	# Set the bot's status to online and activity to a game
-	await client.change_presence(  # Set the bot's presence
-		status=discord.Status.online,  # Set the bot's status to online
-		activity=discord.Game(name="whatever you want me to do")  # Set the bot's activity to a game
+	# Print a message to the console to indicate that the bot is ready
+	print(f'Bot is ready. Logged in as {client.user} (ID: {client.user.id})')
+	# Print a separator line
+	print('------')
+	# Change the bot's presence to online
+	await client.change_presence(
+		status=discord.Status.online,
+		activity=discord.Game(name="whatever you want me to do")
 	)
+
+
+@client.tree.command(name="weather", description="Show the current weather in a city or country")
+@app_commands.describe(location="The city or country to show the current weather (Default: Bangkok)")
+async def weather(interaction: discord.Interaction, location: str = 'Bangkok'):
+	location = sub(r'[^-\w\s]', '', location).replace(' ', '%20')
+	api_url = f'https://api.weatherapi.com/v1/current.json?key={WEATHERAPI_API_KEY}&q={location}'
+	response = {}
+
+	try:
+		response = requests.get(api_url).json()
+		time_object = datetime.fromtimestamp(response['location']['localtime_epoch'])
+		current_time = time_object.strftime('%H:%M')
+		city = response['location']['name']
+		temperature_c = response['current']['temp_c']
+		condition = str(response['current']['condition']['text'])
+		feels_like = response['current']['feelslike_c']
+		output = (
+			f"🌤️ It's currently {current_time} **{temperature_c}°C** in {city} which feels more like **{feels_like}°C**. "
+			f"Weather "
+			f"condition: **{condition}**. "
+		)
+	except requests.RequestException:
+		output = f"\"{location}\" doesn\'t look like a real leocation. Did a coconut fall on your head?!"
+
+	if 'error' in response:
+		print('Error:', response['error']['message'])
+
+	await interaction.response.send_message(output)
 
 
 # Define a command to translate text into a target language
 @client.tree.command(name="translate", description="Translate text into a target language")
 @app_commands.describe(
+	# Describe the text argument
 	text="The text in English to translate",
+	# Describe the language argument
 	language="Target language (e.g., 'es' or 'spanish' for Spanish)"
 )
 async def translate(interaction: discord.Interaction, text: str, language: str):
-	"""
-	Command to translate text into a specified target language.
-
-	Parameters:
-	interaction (discord.Interaction): The interaction object.
-	text (str): The text to translate.
-	language (str): The target language code (e.g., 'es' for Spanish).
-	"""
-	# Get the translator from the client
-	translator = client.translator  # Get the translator object from the client
-	# Convert the target language code to lowercase
-	language = language.lower()  # Convert the language code to lowercase
-
-	# Check if the target language code is valid
-	if language not in LANGUAGES and language not in LANGUAGES.values():
-		# Send an error message if the language code is invalid
-		await interaction.response.send_message(
-			"What kind of language is that supposed to be?! Did a coconut fall on your head or what? Run `/languages` to see what languages I can translate.")
-		return  # Return from the function
-
 	try:
-		# Attempt to translate the text to the target language
-		translation = translator.translate(text, dest=language)  # Translate the text
-		# Send the translation result as a message
+		# Create a new instance of the Translator class
+		translator = client.translator
+		# Convert the language to lowercase
+		language = language.lower()
+
+		# Check if the language is valid
+		if language not in LANGUAGES and language not in LANGUAGES.values():
+			# Send an error message to the interaction
+			await interaction.response.send_message(
+				"What kind of language is that supposed to be?! Did a coconut fall on your head or what? Run `/languages` to see what languages I can translate.")
+			# Return from the function
+			return
+
+		# Translate the text
+		translation = translator.translate(text, dest=language)
+		# Send the translation to the interaction
 		await interaction.response.send_message(
-			f'**Translation{translation.dest}:** {translation.text}')  # Send the translation result
+			f'**Translation:** {translation.text}')
 	except Exception as e:
-		# Print the error to the console
-		print(f'Error: {str(e)}')  # Print the error
-		# Send an error message if translation fails
+		# Print the error message to the console
+		print(f'Error: {str(e)}')
+		# Send an error message to the interaction
 		await interaction.response.send_message(
-			"Seems like my coconut brain wasn't able to translate this. Try again, maybe?")  # Send an error message
+			"Seems like my coconut brain wasn't able to translate this. Try again, maybe?")
 
 
 # Define a command to show the current time in a city or country
 @client.tree.command(name="time", description="Show the current time a city or country")
 @app_commands.describe(location="The city or country to show the current time")
 async def time(interaction: discord.Interaction, location: str):
-	"""
-	Command to show the current time in a specified city or country.
-
-	Parameters:
-	interaction (discord.Interaction): The interaction object.
-	location (str): The city or country to show the current time.
-	"""
-	# Clean the location string by removing special characters and replacing spaces with URL-encoded spaces
-	location_cleaned = sub(r'[^-\w\s]', '', location).replace(' ', '%20')  # Clean the location string
-	# Get the LOCALTIME_API_KEY environment variable
-	localtime_api_key = os.getenv('LOCALTIME_API_KEY')  # Get the API key
-	# Initialize variables to store the city, country, and current time
-	city = None  # Initialize the city variable
-	country = None  # Initialize the country variable
-	current_time = None  # Initialize the current time variable
+	current_time = None
+	city = None
+	country = None
 
 	try:
-		# Construct the API URL for the time zone API
-		api_url = f'https://api.ipgeolocation.io/timezone?apiKey={localtime_api_key}&location={location_cleaned}'  # Construct the API URL
-		# Send a GET request to the API
-		response = requests.get(api_url)  # Send a GET request
-		# Raise an exception if the response was an error
-		response.raise_for_status()  # Raise an exception if the response was an error
+		# Remove non-alphanumeric characters from the location
+		location = sub(r'[^-\w\s]', '', location).replace(' ', '%20')
+		# Construct the API URL for the LocalTime API
+		api_url = f'https://api.ipgeolocation.io/timezone?apiKey={LOCALTIME_API_KEY}&location={location}'
+		# Make a GET request to the API
+		response = requests.get(api_url)
+		# Raise an exception if the response was not successful
+		response.raise_for_status()
 
-		# Check if the response was in JSON format
+		# Check if the response is in JSON format
 		if response.headers['Content-Type'].startswith('application/json'):
 			# Parse the JSON response
-			data = response.json()  # Parse the JSON response
+			data = response.json()
 
-			# Check if the response contains the required data
-			if 'is_dst' in data and data['is_dst']:
-				# Extract the city, country, and current time from the response
-				city = data['geo']['city']  # Extract the city
-				country = data['geo']['country']  # Extract the country
-				current_time = data.get('date_time_txt')  # Extract the current time
+			# Check if the response contains the expected data
+			if 'geo' in data:
+				# Extract the city and country from the response
+				city = data['geo']['city']
+				country = data['geo']['country']
+				# Extract the current time from the response
+				current_time = data.get('date_time_txt')
 	except requests.RequestException:
-		# Set the current time to None if an exception occurred
-		current_time = None  # Set the current time to None
+		# If the request failed, set the current time to None
+		current_time = None
 
-	# Check if the current time was successfully retrieved
+	# Check if the current time is a string
 	if type(current_time) == str:
-		# Construct the output message
-		output = f'The current time in **{city}**, **{country}** is **{current_time}**'  # Construct the output message
+		# If the city is not empty, include it in the output
+		if len(city) >= 3:
+			output = f'The current time in **{city}**, **{country}** is **{current_time}**'
+		# Otherwise, only include the country in the output
+		else:
+			output = f'The current time in **{country}** is **{current_time}**'
 	else:
-		# Construct an error message if the current time was not retrieved
-		output = "That doesn't look like a real location. Are you making things up?!"  # Construct an error message
+		# If the current time is not a string, send an error message
+		output = "That doesn't look like a real location. Are you making things up?!"
 
-	# Send the output message
-	await interaction.response.send_message(output)  # Send the output message
+	# Send the output to the interaction
+	await interaction.response.send_message(output)
 
 
-# Define a command to list all supported language codes
+# Define a command to list supported language codes
 @client.tree.command(name="languages", description="List supported language codes")
 async def languages(interaction: discord.Interaction):
-	"""
-	Command to list all supported language codes.
-
-	Parameters:
-	interaction (discord.Interaction): The interaction object.
-	"""
-	# Create a list of supported language codes and their names
-	languages_list = [f"• `{language}`/`{code}`" for code, language in
-					  LANGUAGES.items()]  # Create a list of language codes
-	# Join the list into a single message
-	message = "\n".join(languages_list)  # Join the list into a single message
-	# Split the message into chunks if it's too long
-	chunks = [message[i:i + 1990] for i in range(0, len(message), 1990)]  # Split the message into chunks
+	# Create a list of language codes and names
+	languages_list = [f"• `{language}`/`{code}`" for code, language in LANGUAGES.items()]
+	# Join the list into a single string
+	message = "\n".join(languages_list)
+	# Split the message into chunks of 1990 characters or less
+	chunks = [message[i:i + 1990] for i in range(0, len(message), 1990)]
 
 	# Send each chunk as a separate message
 	for i, chunk in enumerate(chunks):
+		# If this is the first chunk, send it as the initial response
 		if i == 0:
-			# Send the first chunk as a response to the interaction
-			await interaction.response.send_message(chunk)  # Send the first chunk
+			await interaction.response.send_message(chunk)
+		# Otherwise, send it as a follow-up message
 		else:
-			# Send subsequent chunks as follow-up messages
-			await interaction.followup.send(chunk)  # Send subsequent chunks
+			await interaction.followup.send(chunk)
 
 
-# Run the client using the retrieved token
-client.run(os.getenv('BOT_TOKEN'))  # Run the client with the retrieved token
+# Run the client with the retrieved token
+client.run(BOT_TOKEN)
