@@ -1,9 +1,9 @@
-### JetBrains template
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 .DS_Store
 .idea
+diff.txt
 
 # User-specific stuff
 .idea/**/workspace.xml
@@ -210,6 +210,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+!.env.example
 
 # Spyder project settings
 .spyderproject

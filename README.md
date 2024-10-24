@@ -1,4 +1,4 @@
-# cocobot for Discord
+# @cocobot for Discord
 
 A bot for the Discord Thailand-related server **Thailand — Official English-speaking community without trolls or spammers.** Features are added as needed. [Join us](https://discord.gg/DN52SxBpYJ)!
 
@@ -7,34 +7,42 @@ A bot for the Discord Thailand-related server **Thailand — Official English-sp
 * `/translate <text> <language>`: Translate a text into another language
   * `<text>`: The text to translate
   * `<language>`: The language as language code or name of the language to translate to, i.e., `de` / `german` for German, or `es` / `spanish` for Spanish
+  
 * `/languages`: Lists all available language codes
+
 * `/weather <location>`: Display the current weather in a city or country.
   * `<location>`  (optional): The specified location. **Default:** Bangkok
 
 * `/time <location>`: Show the current time in a certain location
   * `<location>`: City, country, or both of the location
-
+* `/exchangerate <from_currency> <to_currency> <amount>`: Display the up-to-date exchange rate of two currencies.
+  * `<from_currency>` (optional): Three-character abbreviation for a currency according to [ISO 4217 standards](https://www.iban.com/currency-codes). **Default:** `USD`
+  * `<to_currency>` (optional): Three-character abbreviation for a currency according to [ISO 4217 standards](https://www.iban.com/currency-codes). **Default:** `THB`
+  * `<amount>` (optional): The amount used to convert the currencies. **Default:** `1`  
+  
 
 ## Installation
 
-**Note:** For installing it on your **online** server, follow these instructions *after* creating a user and group so that the (example) paths used in this documentation are valid.
+**Note:** To install it on your **online** server, follow these instructions *after* creating a user and group so that the (example) paths used in this documentation are valid.
 
 1. `git clone https://gitlab.com/thaikolja/discord-cocobot.git`
 2. (Optional) Rename the directory to `cocobot`  using `mv discord-cocobot cocobot`
 3. `cd cocobot`[^1]
-4. Create a virtual environment via `python -m venv venv` (recommended)
-5. Switch to the virtual environment with `source venv/bin/activate`[^2]
-6. Install required modules via `pip install -r requirements.txt`
-7. `touch .env && nano .env` to open environment file
-8. Add and replace the values of the following environmental variables:
-   1. `BOT_TOKEN=abc`
-   2. `SERVER_ID=123`
-   3. `LOCALTIME_API_KEY=abc`  ([Sign up to geoapify.com](https://myprojects.geoapify.com/login) for a free API key)
-   4. `WEATHERAPI_API_KEY=123abc` ([Register on weatherapi.com](https://www.weatherapi.com/signup.aspx) for free to get an API key) 
+4. Duplicate and rename the file `.env.example` to `.env` and fill out the required variables (e.g., `cp .env.example .env && nano .env`)
+5. Create a virtual environment via `python -m venv venv` (recommended)
+6. Switch to the virtual environment with `source venv/bin/activate`[^2]
+7. Install required modules via `pip install -r requirements.txt`
+8. `touch .env && nano .env` to open environment file
+9. Add and replace the values of the following environmental variables:
+   1. `BOT_TOKEN=abc...`
+   2. `SERVER_ID=123...`
+   3. `LOCALTIME_API_KEY=abc...`  ([Sign up to geoapify.com](https://myprojects.geoapify.com/login) for a free API key)
+   4. `WEATHERAPI_API_KEY=123abc...` ([Register on weatherapi.com](https://www.weatherapi.com/signup.aspx) for free to get an API key) 
+   5. `CURRENCYAPI_API_KEY=cur_...` ([Register on currencyapi.com](https://app.currencyapi.com/register) to get a free API key for 300 calls/month)
 
 ## Usage
 
-Please refer to [Discord's official documentation](https://discord.com/developers/docs/intro) on how to add a bot to your Discord server. This is required to get the `BOT_TOKEN` and the `SERVER_ID` environment variables. [Sign up to geoapify.com](https://myprojects.geoapify.com/login) for a free API key required for the `/time` command.
+Please refer to [Discord's official documentation](https://discord.com/developers/docs/intro) on how to add a bot to your Discord server. This is required to get the `BOT_TOKEN` and the `SERVER_ID` environment variables. Register on other websites specified in installation step #8 to obtain a free API key.
 
 ### Locally
 
