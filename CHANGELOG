@@ -2,6 +2,14 @@
 
 ## v1
 
+### v1.2.1
+
+* Removed API-key exposing error exceptions.
+* Changed structure of two environmental variables (!)
+* Changed error messages.
+* Added `on.sh` script for internal use.
+* Added `off.sh` script for internal use.
+
 ### v1.2.0
 
 **Date:** 2024-10-25

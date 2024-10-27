@@ -33,17 +33,17 @@ load_dotenv()
 # HOST will be used to check if the current host is the server
 HOST: str = 'host.yanawa.io'
 
+# Define a constant for the Discord bot token
+# BOT_TOKEN will be used to authenticate the Discord bot
+BOT_ACCESS_TOKEN: str = os.getenv('BOT_ACCESS_TOKEN')
+
 # Define a constant for the Discord guild ID
 # GUILD_ID will be used to identify the Discord guild
-GUILD_ID: str = os.getenv('GUILD_ID')
+SERVER_ID: str = os.getenv('SERVER_ID')
 
 # Define a constant for the LocalTime API key
 # LOCALTIME_API_KEY will be used to make requests to the LocalTime API
 LOCALTIME_API_KEY: str = os.getenv('LOCALTIME_API_KEY')
-
-# Define a constant for the Discord bot token
-# BOT_TOKEN will be used to authenticate the Discord bot
-BOT_TOKEN: str = os.getenv('BOT_TOKEN')
 
 # Define a constant for the Weather API key
 # WEATHERAPI_API_KEY will be used to make requests to the Weather API
@@ -60,7 +60,7 @@ class Cocobot(discord.Client):
 	A custom Discord client class for the Cocobot.
 	"""
 
-	version: str = '1.0.0'
+	version: str = '1.2.1'
 
 	# Initialize the client with default intents
 	def __init__(self):
@@ -82,7 +82,7 @@ class Cocobot(discord.Client):
 		A setup hook for the client.
 		"""
 		# Create a new instance of the discord.Object class for the guild
-		guild: discord.Object = discord.Object(id=GUILD_ID)
+		guild: discord.Object = discord.Object(id=SERVER_ID)
 		# Copy global commands to the guild
 		self.tree.copy_global_to(guild=guild)
 		# Sync the command tree for the guild
@@ -106,18 +106,25 @@ async def on_ready() -> None:
 	# Change the bot's presence to online
 	await client.change_presence(
 		status=discord.Status.online,
-		activity=discord.Game(name="whatever you want me to do")
+		activity=discord.Game(name=" with my 🥥")
 	)
 
 
 # Define a command to show the current exchange rate
 # noinspection PyUnresolvedReferences
-@client.tree.command(name="exchangerate", description="Show the current exchange rate")
+@client.tree.command(
+	name="exchangerate",
+	description="Show the current exchange rate"
+)
 @app_commands.describe(
 	from_currency="The currency to convert from (Default: USD)",
 	to_currency="The currency to convert to (Default: THB)",
 	amount="The amount to convert (Default: 1)")
-async def exchangerate(interaction: discord.Interaction, from_currency: str = 'USD', to_currency: str = 'THB', amount: float = 1.00) -> None:
+async def exchangerate(
+	interaction: discord.Interaction,
+	from_currency: str = 'USD',
+	to_currency: str = 'THB',
+	amount: float = 1.00) -> None:
 	"""
 	A command to show the current exchange rate.
 	"""
@@ -147,11 +154,11 @@ async def exchangerate(interaction: discord.Interaction, from_currency: str = 'U
 			# Check if the error is related to the base currency
 			if 'base_currency' in response['errors']:
 				# Set the output to an error message
-				output = f'🛑 Error: Are you sure **{from_currency}** is a real currency and not just coconut money?'
+				output = f"🥥 Something's cracked, and it's **not** the coconut! Are you sure **{from_currency}** is a real currency and not just coconut money?"
 			# Check if the error is related to the currencies
 			elif 'currencies' in response['errors']:
 				# Set the output to an error message
-				output = f'🛑 Error: Are you sure **{to_currency}** is a real currency and not just coconut money?'
+				output = f"🥥 Something's cracked, and it's **not** the coconut! Are you sure **{to_currency}** is a real currency and not just coconut money?"
 		else:
 			# Extract the value and last updated time from the response
 			value = response['data'][to_currency]['value']
@@ -162,8 +169,8 @@ async def exchangerate(interaction: discord.Interaction, from_currency: str = 'U
 
 			# Set the output to the converted value and last updated time
 			output = f'💰 **{amount:.2f} {from_currency}** is currently worth **{calculated_value:.3f} {to_currency}** (last updated {last_updated})'
-	except requests.RequestException as e:
-		output = f"🛑 An error occurred: {e}"
+	except requests.RequestException:
+		output = f"🥥 Something's cracked, and it's **not** the coconut! ¯\\_(ツ)_/¯"
 
 	# Send the output to the interaction
 	await interaction.response.send_message(output)
@@ -182,7 +189,7 @@ async def weather(interaction: discord.Interaction, location: str = 'Bangkok') -
 		location = re.sub(r'[^-\w\s]', '', location).replace(' ', '%20')
 		# Check if the location is not empty
 		if not location:
-			output = "🛑 Error: That doesn't look like a valid location. Try again!"
+			output = "🥥 Something's cracked, and it's **not** the coconut! That doesn't look like a valid location. Try again!"
 		else:
 			# Construct the API URL for the weather API
 			api_url = f'https://api.weatherapi.com/v1/current.json?key={WEATHERAPI_API_KEY}&q={location}'
@@ -203,8 +210,8 @@ async def weather(interaction: discord.Interaction, location: str = 'Bangkok') -
 				f"🌤️ It's currently ({current_weather_time}) **{temperature_c}°C** in **{city}** which feels more like *"
 				f"*{feels_like}°C**. Weather condition: **{condition}**. Humidity: **{humidity}%**"
 			)
-	except requests.RequestException as e:
-		output = f"🛑 An error occurred: {e}"
+	except requests.RequestException:
+		output = f"🥥 Something's cracked, and it's **not** the coconut! ¯\\_(ツ)_/¯"
 
 	# Send the output to the interaction
 	await interaction.response.send_message(output)
@@ -243,10 +250,10 @@ async def translate(interaction: discord.Interaction, text: str, language: str) 
 		# Send the translation to the interaction
 		await interaction.response.send_message(
 			f'🌏 **Translation:** {translation.text}')
-	except Exception as e:
+	except Exceptione:
 		# Send an error message to the interaction
 		await interaction.response.send_message(
-			f"🛑 An error occurred: {e}")
+			f"🥥 Something's cracked, and it's **not** the coconut! ¯\\_(ツ)_/¯")
 
 
 # Define a command to show the current time in a city or country
@@ -263,7 +270,7 @@ async def time(interaction: discord.Interaction, location: str = 'Bangkok') -> N
 
 		# Check if the location is not empty
 		if not location:
-			output = "🛑 Error: Please enter a valid location."
+			output = "🥥 Something's cracked, and it's **not** the coconut! Please enter a valid location."
 		else:
 			# Construct the API URL for the LocalTime API
 			api_url = f'https://api.ipgeolocation.io/timezone?apiKey={LOCALTIME_API_KEY}&location={location}'
@@ -293,11 +300,11 @@ async def time(interaction: discord.Interaction, location: str = 'Bangkok') -> N
 						output = f'🕓 The current time in **{country}** is **{current_time}**'
 				else:
 					# If the current time is not a string, send an error message
-					output = "🛑 Error: That doesn't look like a real location. Are you making things up?!"
+					output = "🥥 Something's cracked, and it's **not** the coconut! That doesn't look like a real location. Are you making things up?!"
 			else:
-				output = "🛑 Error: That doesn't look like a real location. Are you making things up?!"
-	except requests.RequestException as e:
-		output = f"🛑 An error occurred: {e}"
+				output = "🥥 Something's cracked, and it's **not** the coconut! That doesn't look like a real location. Are you making things up?!"
+	except requests.RequestException:
+		output = f"🥥 Something's cracked, and it's **not** the coconut! ¯\\_(ツ)_/¯"
 
 	# Send the output to the interaction
 	await interaction.response.send_message(output)
@@ -330,4 +337,4 @@ async def languages(interaction: discord.Interaction) -> None:
 
 
 # Run the client with the retrieved token
-client.run(BOT_TOKEN)
+client.run(BOT_ACCESS_TOKEN)
