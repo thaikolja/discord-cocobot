@@ -1,4 +1,7 @@
-# @cocobot for Discord
+# 🥥 @cocobot for Discord
+
+![GitLab Release](https://img.shields.io/gitlab/v/release/thaikolja%2Fdiscord-cocobot) ![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/thaikolja%2Fdiscord-cocobot) ![GitLab Last Commit](https://img.shields.io/gitlab/last-commit/thaikolja%2Fdiscord-cocobot)
+
 
 A bot for the Discord Thailand-related server **Thailand — Official English-speaking community without trolls or spammers.** Features are added as needed. [Join us](https://discord.gg/DN52SxBpYJ)!
 
