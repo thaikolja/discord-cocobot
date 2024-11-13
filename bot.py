@@ -7,6 +7,9 @@ import discord
 # Import the requests library for making HTTP requests
 import requests
 
+# Use an alias for the time module to avoid conflicts
+import time as std_time
+
 # Import the app_commands library for creating Discord bot commands
 from discord import app_commands
 
@@ -34,11 +37,11 @@ load_dotenv()
 HOST: str = 'host.yanawa.io'
 
 # Define a constant for the Discord bot token
-# BOT_TOKEN will be used to authenticate the Discord bot
+# BOT_ACCESS_TOKEN will be used to authenticate the Discord bot
 BOT_ACCESS_TOKEN: str = os.getenv('BOT_ACCESS_TOKEN')
 
 # Define a constant for the Discord guild ID
-# GUILD_ID will be used to identify the Discord guild
+# SERVER_ID will be used to identify the Discord guild
 SERVER_ID: str = os.getenv('SERVER_ID')
 
 # Define a constant for the LocalTime API key
@@ -60,12 +63,14 @@ class Cocobot(discord.Client):
 	A custom Discord client class for the Cocobot.
 	"""
 
-	version: str = '1.2.1'
+	version: str = '1.2.2'
 
 	# Initialize the client with default intents
 	def __init__(self):
 		# Create a new instance of the discord.Intents class
 		intents: discord.Intents = discord.Intents.default()
+		# noinspection PyDunderSlots,PyUnresolvedReferences
+		intents.message_content = True
 
 		# Call the superclass constructor
 		super().__init__(intents=intents)
@@ -91,6 +96,50 @@ class Cocobot(discord.Client):
 
 # Create a new instance of the Cocobot class
 client: Cocobot = Cocobot()
+
+
+# This is the keyword you're listening for
+
+@client.event
+async def on_ready():
+	"""
+	An event handler that is called when the bot is ready.
+	"""
+	print(f'Logged in as {client.user}!')
+
+
+last_triggered = {}
+
+
+@client.event
+async def on_message(message):
+	"""
+	An event handler that is called when a message is received.
+	"""
+	if message.author == client.user:
+		return
+
+	# Regex to match 'tate' with optional spaces before or after, case-insensitive
+	pattern = r"(?<!\w)tate(?!\w)(?=\s|[.!?,;]|\b)"
+
+	# Check if the message contains the exact word 'tate' (case-insensitive)
+	if re.search(pattern, message.content.strip(), re.IGNORECASE):
+		current_time = std_time.time()  # Use std_time to call the correct time function
+
+		# Check if the user has triggered the command before and if the cooldown has passed
+		if message.author.id in last_triggered:
+			last_time = last_triggered[message.author.id]
+			if current_time - last_time < 1800:
+				await message.channel.send(
+					"🕺 The Bottom G is exhausted from all the Bottom-G'ing, give him half 'n hour or so!"
+				)
+				return
+
+		# Send the GIF
+		await message.channel.send('https://media1.tenor.com/m/fyrqnSBR4gcAAAAd/bottom-g-andrew-tate.gif')
+
+		# Update the last triggered time for this user
+		last_triggered[message.author.id] = current_time
 
 
 # Define an event handler that is called when the bot is ready
@@ -250,10 +299,10 @@ async def translate(interaction: discord.Interaction, text: str, language: str) 
 		# Send the translation to the interaction
 		await interaction.response.send_message(
 			f'🌏 **Translation:** {translation.text}')
-	except Exceptione:
+	except TypeError as error:
 		# Send an error message to the interaction
 		await interaction.response.send_message(
-			f"🥥 Something's cracked, and it's **not** the coconut! ¯\\_(ツ)_/¯")
+			f"🥥 Something's cracked, and it's **not** the coconut! ¯\\_(ツ)_/¯ ({error})")
 
 
 # Define a command to show the current time in a city or country
