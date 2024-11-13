@@ -2,6 +2,11 @@
 
 ## v1
 
+### v1.2.2
+
+* Added automated trigger that posts a gif of Bottom G whenever the word 'tate' is mentioned in a message, with a
+cool-off period of 30 minutes.
+
 ### v1.2.1
 
 * Removed API-key exposing error exceptions.

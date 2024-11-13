@@ -10,18 +10,16 @@ A bot for the Discord Thailand-related server **Thailand — Official English-sp
 * `/translate <text> <language>`: Translate a text into another language
   * `<text>`: The text to translate
   * `<language>`: The language as language code or name of the language to translate to, i.e., `de` / `german` for German, or `es` / `spanish` for Spanish
-  
 * `/languages`: Lists all available language codes
-
 * `/weather <location>`: Display the current weather in a city or country.
   * `<location>`  (optional): The specified location. **Default:** Bangkok
-
 * `/time <location>`: Show the current time in a certain location
   * `<location>`: City, country, or both of the location
 * `/exchangerate <from_currency> <to_currency> <amount>`: Display the up-to-date exchange rate of two currencies.
   * `<from_currency>` (optional): Three-character abbreviation for a currency according to [ISO 4217 standards](https://www.iban.com/currency-codes). **Default:** `USD`
   * `<to_currency>` (optional): Three-character abbreviation for a currency according to [ISO 4217 standards](https://www.iban.com/currency-codes). **Default:** `THB`
   * `<amount>` (optional): The amount used to convert the currencies. **Default:** `1`  
+* Displays [a .gif of Bottom G dancing](https://media1.tenor.com/m/fyrqnSBR4gcAAAAd/bottom-g-andrew-tate.gif) whenever the name "Tate" is typed, with a cool-off time of `30` minutes.
   
 
 ## Installation
