@@ -2,9 +2,13 @@
 
 ## v1
 
+### 1.2.3
+* Added slash command `/learn` which will display a random commonly used English word and translation in Thai.
+* Cleaned code and added comments for better readability.
+
 ### v1.2.2
 
-* Added automated trigger that posts a gif of Bottom G whenever the word 'tate' is mentioned in a message, with a
+* Added automated trigger that posts a gif of Bottom G whenever the word `tate` is mentioned in a message, with a
 cool-off period of 30 minutes.
 
 ### v1.2.1
