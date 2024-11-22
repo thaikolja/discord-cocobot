@@ -27,7 +27,7 @@ test:
 deploy:
   stage: deploy
   script:
-    - echo "Deploying to production server..."
+    - echo "Deploying to Discord server..."
     - ssh -o StrictHostKeyChecking=no root@host.yanawa.io 'bash -s' < deploy.sh
   environment: production
   only:
