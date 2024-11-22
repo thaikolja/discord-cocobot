@@ -4,6 +4,7 @@
 
 ### 1.2.3
 * Added slash command `/learn` which will display a random commonly used English word and translation in Thai.
+* Added CI/CD pipeline for automated deployment.
 * Cleaned code and added comments for better readability.
 
 ### v1.2.2
