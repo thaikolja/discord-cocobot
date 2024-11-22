@@ -28,5 +28,9 @@ run:
 
 deploy:
   stage: deploy
-  script: echo "Define your deployment script!"
+  script:
+    - echo "Deploying to production server..."
+    - ssh root@host.yanawa.io 'bash -s' < ./deploy_script.sh
   environment: production
+  when: on_success
+
