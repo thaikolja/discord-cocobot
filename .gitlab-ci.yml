@@ -29,5 +29,5 @@ deploy:
     - ssh root@your-server 'bash -s' < deploy_script.sh
   environment: production
   only:
-    - ci  # Deploy only from the main branch
+    - main  # Deploy only from the main branch
   when: on_success  # Deploy only if tests are successful
