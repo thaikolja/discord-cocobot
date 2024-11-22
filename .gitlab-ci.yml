@@ -8,6 +8,8 @@ cache:
     - .cache/pip
 
 before_script:
+  - eval $(ssh-agent -s)
+  - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
   - pip install --upgrade pip
   - pip install virtualenv
   - virtualenv venv
@@ -26,7 +28,7 @@ deploy:
   stage: deploy
   script:
     - echo "Deploying to production server..."
-    - ssh root@host.yanawa.io 'bash -s' < deploy_script.sh
+     ssh -o StrictHostKeyChecking=no root@host.yanawa.io 'bash -s' < deploy_script.sh
   environment: production
   only:
     - main  # Deploy only from the main branch
