@@ -26,7 +26,7 @@ deploy:
   stage: deploy
   script:
     - echo "Deploying to production server..."
-    - ssh root@your-server 'bash -s' < deploy_script.sh
+    - ssh root@yhost.yanawa.io 'bash -s' < deploy_script.sh
   environment: production
   only:
     - main  # Deploy only from the main branch
