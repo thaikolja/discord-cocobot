@@ -1,12 +1,14 @@
-# 🥥 @cocobot for Discord
+# 🥥 `@cocobot` for Discord
 
 ![GitLab Release](https://img.shields.io/gitlab/v/release/thaikolja%2Fdiscord-cocobot) ![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/thaikolja%2Fdiscord-cocobot) ![GitLab Last Commit](https://img.shields.io/gitlab/last-commit/thaikolja%2Fdiscord-cocobot)
 
 
-A bot for the Discord Thailand-related server **Thailand — Official English-speaking community without trolls or spammers.** Features are added as needed. [Join us](https://discord.gg/DN52SxBpYJ)!
+A custom written in Python for the Thailand-related Discord server **Thailand Discord - The English-speaking Thailand community without trolls or spammers.** Features are added as needed. Feel free to [join us](https://discord.gg/DN52SxBpYJ) or help make `@cocobot` even better!
 
 ## Features
 
+* `/learn`: Helps you extend your Thai vocabulary by randomly displaying one of the 150 most commonly used words in the English language and translating them into Thai, in Thai script, and [transliterated](https://simple.wikipedia.org/wiki/Transliteration).
+* Displays [a .gif of Bottom G dancing](https://media1.tenor.com/m/fyrqnSBR4gcAAAAd/bottom-g-andrew-tate.gif) whenever the name "Tate" is typed, with a cool-off time of `30` minutes.
 * `/translate <text> <language>`: Translate a text into another language
   * `<text>`: The text to translate
   * `<language>`: The language as language code or name of the language to translate to, i.e., `de` / `german` for German, or `es` / `spanish` for Spanish
@@ -19,7 +21,6 @@ A bot for the Discord Thailand-related server **Thailand — Official English-sp
   * `<from_currency>` (optional): Three-character abbreviation for a currency according to [ISO 4217 standards](https://www.iban.com/currency-codes). **Default:** `USD`
   * `<to_currency>` (optional): Three-character abbreviation for a currency according to [ISO 4217 standards](https://www.iban.com/currency-codes). **Default:** `THB`
   * `<amount>` (optional): The amount used to convert the currencies. **Default:** `1`  
-* Displays [a .gif of Bottom G dancing](https://media1.tenor.com/m/fyrqnSBR4gcAAAAd/bottom-g-andrew-tate.gif) whenever the name "Tate" is typed, with a cool-off time of `30` minutes.
   
 
 ## Installation
@@ -35,11 +36,11 @@ A bot for the Discord Thailand-related server **Thailand — Official English-sp
 7. Install required modules via `pip install -r requirements.txt`
 8. `touch .env && nano .env` to open environment file
 9. Add and replace the values of the following environmental variables:
-   1. `BOT_TOKEN=abc...`
-   2. `SERVER_ID=123...`
-   3. `LOCALTIME_API_KEY=abc...`  ([Sign up to geoapify.com](https://myprojects.geoapify.com/login) for a free API key)
-   4. `WEATHERAPI_API_KEY=123abc...` ([Register on weatherapi.com](https://www.weatherapi.com/signup.aspx) for free to get an API key) 
-   5. `CURRENCYAPI_API_KEY=cur_...` ([Register on currencyapi.com](https://app.currencyapi.com/register) to get a free API key for 300 calls/month)
+   1. `BOT_TOKEN`
+   2. `SERVER_ID`
+   3. `LOCALTIME_API_KEY`  ([Sign up to geoapify.com](https://myprojects.geoapify.com/login) for a free API key)
+   4. `WEATHERAPI_API_KEY` ([Register on weatherapi.com](https://www.weatherapi.com/signup.aspx) for free to get an API key) 
+   5. `CURRENCYAPI_API_KEY` ([Register on currencyapi.com](https://app.currencyapi.com/register) to get a free API key for 300 calls/month)
 
 ## Usage
 
@@ -105,6 +106,18 @@ Again, make sure to **skip** the installation section until you've arrived at **
 ## Authors
 
 * **Kolja Nolte** / [thaikolja](https://gitlab.com/thaikolja/) \<kolja.nolte@gmail.com\>
+
+## Contribute
+
+**We welcome contributions of any kind to enhance our Discord server!**
+
+To get involved and make `@cocobot` even better, you can either [browse existing tickets](https://gitlab.com/thaikolja/discord-cocobot/-/issues) or contribute [actual code](https://gitlab.com/thaikolja/discord-cocobot) with features you find useful and match our server profile. *DigitalOcean* has [a very thorough article](https://www.digitalocean.com/resources/articles/how-to-contribute-to-open-source#the-process-for-submitting-your-open-source-contributions) on how this works on the technical side in case you're new to open-source software.
+
+For a detailed guide on how to contribute, please see the [CONTRIBUTING.md](./) file.
+
+## License
+
+Our Discord server's content is licensed under the [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/) license. This allows you to share, copy, and adapt the material for any purpose, provided you give appropriate credit. For full details on usage rights and obligations, please refer to the [LICENSE](https://gitlab.com/thaikolja/discord-cocobot/-/blob/main/LICENSE?ref_type=heads) file.
 
 [^1]: For these instructions, the directory will be `cocobot`
 [^2]: To exit the virtual environment, run `deactivate`

@@ -1,7 +1,7 @@
 image: python:latest
 
 variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PIP_CACHE_DIR: '$CI_PROJECT_DIR/.cache/pip'
 
 cache:
   paths:
@@ -28,7 +28,7 @@ deploy:
   stage: deploy
   script:
     - echo "Deploying to production server..."
-    - ssh -o StrictHostKeyChecking=no root@host.yanawa.io 'bash -s' < deploy_script.sh
+    - ssh -o StrictHostKeyChecking=no root@host.yanawa.io 'bash -s' < deploy.sh
   environment: production
   only:
     - main
