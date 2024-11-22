@@ -4,10 +4,10 @@ International License (CC BY 4.0). This means you are free to share and adapt th
 long as appropriate credit is given, a link to the license is provided, and any changes made are indicated. For more
 details, visit https://creativecommons.org/licenses/by/4.0/.
 
-@title: Cocobot
-@description: A Discord bot that provides various utilities, including translation, weather, time, currency exchange rates, and more.
-@version: 1.2.3
-@date: 2021-10-17
+@title: 			Cocobot
+@description: 		A Discord bot that provides various utilities, including translation, weather, time, currency exchange rates, and more.
+@version: 			1.2.3
+@date: 				2021-10-17
 """
 
 # For interacting with the operating system
