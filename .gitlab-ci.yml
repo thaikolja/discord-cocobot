@@ -28,5 +28,8 @@ deploy:
   stage: deploy
   script:
     - echo "Deploying to production server..."
-    - ssh root@host.yanawa.io 'bash -s' < deploy_script.sh
+    - ssh -o StrictHostKeyChecking=no root@host.yanawa.io 'bash -s' < deploy_script.sh
   environment: production
+  only:
+    - main
+  when: on_success
