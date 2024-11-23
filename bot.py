@@ -6,8 +6,8 @@ details, visit https://creativecommons.org/licenses/by/4.0/.
 
 @title: 			Cocobot
 @description: 		A Discord bot that provides various utilities, including translation, weather, time, currency exchange rates, and more.
-@version: 			1.2.3
-@date: 				2021-10-17
+@version: 			1.2.4
+@date: 				2024-11-24
 """
 
 # For interacting with the operating system
@@ -69,7 +69,7 @@ WEATHERAPI_API_KEY: str = os.getenv('WEATHERAPI_API_KEY')
 # Currency API key
 CURRENCYAPI_API_KEY: str = os.getenv('CURRENCYAPI_API_KEY')
 
-# Initialize global variables
+# Dictionary to track last command trigger times
 last_tate_triggered: dict = {}
 
 # List to store random Thai words
@@ -83,7 +83,7 @@ class Cocobot(discord.Client):
 	"""
 
 	# Define the version of the bot
-	version: str = '1.2.3'
+	version: str = '1.2.4'
 
 	# Initialize the client with default intents
 	def __init__(self):
@@ -152,16 +152,37 @@ async def on_message(message):
 	"""
 	An event handler that is called when a message is received.
 	"""
-	if message.author == client.user:
-		return
-
 	# Regex to match 'tate' with optional spaces before or after, case-insensitive
 	pattern = r"(?<!\w)tate(?!\w)(?=\s|[.!?,;]|\b)"
 
+	if message.author == client.user:
+		return
+
+	elif client.user in message.mentions:
+		try:
+			data = requests.get('https://gitlab.com/api/v4/projects/62280799/releases/permalink/latest').json()
+			last_commit_date = datetime.fromisoformat(data['released_at'])
+			date_ago = humanize.naturaltime(last_commit_date)
+			user = message.author
+
+			with open('./assets/cocobot-introduction.md', 'r') as file:
+				introduction = file.read()
+				introduction = introduction.replace('{user}', f'<@{user.id}>')
+				introduction = introduction.replace('{version}', data['name'])
+				introduction = introduction.replace('{date_ago}', date_ago)
+
+				await message.channel.send(
+					introduction,
+					allowed_mentions=discord.AllowedMentions.none(),
+					suppress_embeds=True
+				)
+		except RuntimeError:
+			await message.channel.send(f"⚠️ Oopsy-daisy, something went wrong, and I have no idea what ¯\\_(ツ)_/¯)")
+
 	# Check if the message contains the exact word 'tate' (case-insensitive)
-	if re.search(pattern, message.content.strip(), re.IGNORECASE):
+	elif re.search(pattern, message.content.strip(), re.IGNORECASE):
 		current_time = std_time.time()  # Use std_time to call the correct time function
-		print('recognized')
+
 		# Check if the user has triggered the command before and if the cooldown has passed
 		if message.author.id in last_tate_triggered:
 			last_time = last_tate_triggered[message.author.id]

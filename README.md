@@ -2,13 +2,19 @@
 
 ![GitLab Release](https://img.shields.io/gitlab/v/release/thaikolja%2Fdiscord-cocobot) ![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/thaikolja%2Fdiscord-cocobot) ![GitLab Last Commit](https://img.shields.io/gitlab/last-commit/thaikolja%2Fdiscord-cocobot)
 
-
 A custom written in Python for the Thailand-related Discord server **Thailand Discord - The English-speaking Thailand community without trolls or spammers.** Features are added as needed. Feel free to [join us](https://discord.gg/DN52SxBpYJ) or help make `@cocobot` even better!
+
+**Table of Contents**
+
+[TOC]
 
 ## Features
 
+`@cocobot` is being continuously being developed. Here is an overview of what it can do. Any contribution by [forking the code](https://gitlab.com/thaikolja/discord-cocobot/-/forks/new) and creating pull requests is highly welcome. Scroll down to the "Contribute" section to learn how—it's easy, don't worry!
+
+### Functions
+
 * `/learn`: Helps you extend your Thai vocabulary by randomly displaying one of the 150 most commonly used words in the English language and translating them into Thai, in Thai script, and [transliterated](https://simple.wikipedia.org/wiki/Transliteration).
-* Displays [a .gif of Bottom G dancing](https://media1.tenor.com/m/fyrqnSBR4gcAAAAd/bottom-g-andrew-tate.gif) whenever the name "Tate" is typed, with a cool-off time of `30` minutes.
 * `/translate <text> <language>`: Translate a text into another language
   * `<text>`: The text to translate
   * `<language>`: The language as language code or name of the language to translate to, i.e., `de` / `german` for German, or `es` / `spanish` for Spanish
@@ -21,7 +27,11 @@ A custom written in Python for the Thailand-related Discord server **Thailand Di
   * `<from_currency>` (optional): Three-character abbreviation for a currency according to [ISO 4217 standards](https://www.iban.com/currency-codes). **Default:** `USD`
   * `<to_currency>` (optional): Three-character abbreviation for a currency according to [ISO 4217 standards](https://www.iban.com/currency-codes). **Default:** `THB`
   * `<amount>` (optional): The amount used to convert the currencies. **Default:** `1`  
-  
+
+### Automation
+
+* `@cocobot`: Mentioning this bot by its user name will display an introduction message and ask users to [contribute to `@cocobot` via GitLab](https://gitlab.com/thaikolja/discord-cocobot)
+* `tate`: Displays [a .gif of Bottom G dancing](https://media1.tenor.com/m/fyrqnSBR4gcAAAAd/bottom-g-andrew-tate.gif) whenever the standalone word "Tate" for Andrew Tate is typed (case-insensitive), with a cool-off time of `30` minutes.
 
 ## Installation
 

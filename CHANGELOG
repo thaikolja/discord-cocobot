@@ -2,6 +2,14 @@
 
 ## v1
 
+### 1.2.4
+* Added trigger that lets @cocobot introduce itself once its username is mentioned
+* Added `/assets/cocobot-introduction.md` file for the introduction message
+* Added and updated `LICENSE`, `CHANGELOG`, `CONTRIBUTING`, and `README.md` files
+* Fixed non-responding `tate` trigger bug
+* Changed `/learn` to import the words on bot initialization instead of on every command
+* Changed license from `MIT` to `CC BY 4.0` for easier forking and sharing
+
 ### 1.2.3
 * Added slash command `/learn` which will display a random commonly used English word and translation in Thai.
 * Added CI/CD pipeline for automated deployment.
