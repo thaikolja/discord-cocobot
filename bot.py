@@ -70,11 +70,10 @@ WEATHERAPI_API_KEY: str = os.getenv('WEATHERAPI_API_KEY')
 CURRENCYAPI_API_KEY: str = os.getenv('CURRENCYAPI_API_KEY')
 
 # Initialize global variables
-# Dictionary to track last command trigger times
 last_tate_triggered: dict = {}
 
 # List to store random Thai words
-random_thai_words = []
+random_thai_words: list = []
 
 
 # Define a custom Discord client class
@@ -93,6 +92,9 @@ class Cocobot(discord.Client):
 		"""
 		# Create a new instance of the discord.Intents class
 		intents: discord.Intents = discord.Intents.default()
+
+		# noinspection PyDunderSlots,PyUnresolvedReferences
+		intents.message_content = True
 
 		# Call the superclass constructor
 		super().__init__(intents=intents)
@@ -128,6 +130,8 @@ async def on_ready() -> None:
 	"""
 	An event handler that is called when the bot is ready.
 	"""
+	print('🥥 Cocobot is ready to serve!')
+
 	# Access the global list of random Thai words
 	global random_thai_words
 
@@ -142,31 +146,22 @@ async def on_ready() -> None:
 				# Assign the list to the global variable
 				random_thai_words = thai_words
 
-	# Print a message to the console to indicate that the bot is ready
-	print(f'Bot is ready. Logged in as {client.user} (ID: {client.user.id})')
 
-	# Change the bot's presence to online
-	await client.change_presence(status=discord.Status.online, activity=discord.Game(name=" with my 🥥"))
-
-
-# Define an event handler for receiving messages
 @client.event
 async def on_message(message):
 	"""
 	An event handler that is called when a message is received.
 	"""
-	# Check if the message author is the bot itself
 	if message.author == client.user:
 		return
 
-	# Define a regex pattern to match 'tate' with optional spaces, case-insensitive
+	# Regex to match 'tate' with optional spaces before or after, case-insensitive
 	pattern = r"(?<!\w)tate(?!\w)(?=\s|[.!?,;]|\b)"
 
 	# Check if the message contains the exact word 'tate' (case-insensitive)
 	if re.search(pattern, message.content.strip(), re.IGNORECASE):
-		# Get the current time using std_time
-		current_time = std_time.time()
-
+		current_time = std_time.time()  # Use std_time to call the correct time function
+		print('recognized')
 		# Check if the user has triggered the command before and if the cooldown has passed
 		if message.author.id in last_tate_triggered:
 			last_time = last_tate_triggered[message.author.id]
