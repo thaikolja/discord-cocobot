@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+source ./venv/bin/activate
+
 # Starts the bot as background service
-systemctl start discord-cocobot
-systemctl enable discord-cocobot
+systemctl start cocobot
+systemctl enable cocobot
