@@ -1,64 +1,75 @@
+# Import the discord library
 import discord
-from discord import app_commands
+
+# Import commands from discord.ext
 from discord.ext import commands
+
+# Import the bot token and server ID from config
 from config.config import DISCORD_BOT_TOKEN, DISCORD_SERVER_ID
 
-# List of cogs to load
-initial_extensions = ['cogs.time', 'cogs.weather']
+# Import the logging library for better logging practices
+import logging
+
+# Configure the logging settings
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('discord')
+
+# Define a list of initial extensions (Cogs) to load
+INITIAL_EXTENSIONS = [
+	'cogs.time',
+	'cogs.weather'
+]
 
 
+# Define the Cocobot class, a subclass of commands.Bot
 class Cocobot(commands.Bot):
-	"""
-	A custom Discord bot class for the Cocobot.
-	"""
+	# Define the version of the bot
+	version: str = '2.0.0'
 
-	version: str = '1.2.4'
-
+	# Initialize the Cocobot instance
 	def __init__(self):
-		"""
-		Initialize the Cocobot with specified intents and command prefix.
-		"""
-		# Define intents
+		# Create default intents
 		intents = discord.Intents.default()
+		# Enable the members intent
 		intents.members = True
-		intents.message_content = True  # Ensure this intent is enabled in the Developer Portal
-
-		# Initialize the superclass with command prefix and intents
+		# Enable the message content intent
+		intents.message_content = True
+		# Initialize the parent class with command prefix and intents
 		super().__init__(command_prefix='!', intents=intents)
 
-	# Initialize the command tree for slash commands
-	# self.tree = app_commands.CommandTree(self)
-
+	# Setup hook to load extensions and sync command tree
 	async def setup_hook(self):
-		"""
-		A setup hook that runs before the bot connects to Discord.
-		It loads all extensions and syncs the command tree.
-		"""
-		# Load each extension (cog)
-		for extension in initial_extensions:
+		# Iterate through each extension in INITIAL_EXTENSIONS
+		for extension in INITIAL_EXTENSIONS:
 			try:
+				# Attempt to load the extension
 				await self.load_extension(extension)
-				print(f'Loaded extension: {extension}')
+				# Log success message
+				logger.info(f'Loaded extension: {extension}')
 			except Exception as e:
-				print(f'Failed to load extension {extension}.')
-				print(f'{type(e).__name__}: {e}')
+				# Log failure message with exception details
+				logger.error(f'Failed to load extension {extension}. {type(e).__name__}: {e}')
 
-		# Sync the command tree to the specified guild
+		# Create a guild object with the server ID
 		guild = discord.Object(id=DISCORD_SERVER_ID)
+
+		# Copy global command tree to the specified guild
 		self.tree.copy_global_to(guild=guild)
+
+		# Synchronize the command tree with the guild
 		await self.tree.sync(guild=guild)
-		print('Command tree synced.')
 
+		# Log that the command tree has been synced
+		logger.info('Command tree synced.')
+
+	# Event handler for when the bot is ready
 	async def on_ready(self):
-		"""
-		Event handler called when the bot is ready.
-		"""
-		print(f'Logged in as {self.user} (ID: {self.user.id})')
-		print('------')
+		# Log the bot's username and ID
+		logger.info(f'🥥 {self.user} is ready!')
 
 
-# Initialize the bot
+# Create an instance of the Cocobot
 bot = Cocobot()
 
-# Run the bot
+# Run the bot with the specified token
 bot.run(DISCORD_BOT_TOKEN)
