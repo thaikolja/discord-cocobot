@@ -35,8 +35,9 @@ logger = logging.getLogger('discord')
 # Define a list of initial extensions (Cogs) to load
 INITIAL_EXTENSIONS = [
 	'cogs.time',
+	'cogs.exchangerate',
 	'cogs.weather',
-	'cogs.exchangerate'
+	'cogs.transliterate'
 ]
 
 
@@ -49,10 +50,13 @@ class Cocobot(commands.Bot):
 	def __init__(self):
 		# Create default intents
 		intents = discord.Intents.default()
+
 		# Enable the members intent
 		intents.members = True
+
 		# Enable the message content intent
 		intents.message_content = True
+
 		# Initialize the parent class with command prefix and intents
 		super().__init__(command_prefix='!', intents=intents)
 

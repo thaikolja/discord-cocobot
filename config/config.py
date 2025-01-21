@@ -16,3 +16,9 @@ WEATHERAPI_API_KEY: str = os.getenv('WEATHERAPI_API_KEY')
 LOCALTIME_API_KEY: str = os.getenv('LOCALTIME_API_KEY')
 
 CURRENCYAPI_API_KEY: str = os.getenv('CURRENCYAPI_API_KEY')
+
+GROQ_API_KEY: str = os.getenv('GROQ_API_KEY')
+
+OPENAI_API_KEY: str = os.getenv('OPENAI_API_KEY')
+
+GOOGLE_API_KEY: str = os.getenv('GOOGLE_API_KEY')
