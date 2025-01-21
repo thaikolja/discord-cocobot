@@ -1,3 +1,21 @@
+#  Copyright (C) 2025 by Kolja Nolte
+#  kolja.nolte@gmail.com
+#  https://gitlab.com/thaikolja/discord-cocobot
+#
+#  This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+#  You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
+#  - Give appropriate credit to the original author.
+#  - Provide a link to the license.
+#  - Distribute your contributions under the same license.
+#
+#  For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
+#
+#  Author:    Kolja Nolte
+#  Email:     kolja.nolte@gmail.com
+#  License:   CC BY-NC-SA 4.0
+#  Date:      2014-2025
+#  Package:   Thailand Discord
+
 # Import the requests library for making HTTP requests
 import requests
 
@@ -26,8 +44,18 @@ from config.config import ERROR_MESSAGE
 # Define the WeatherCog class as a subclass of commands.Cog
 # noinspection PyUnresolvedReferences
 class WeatherCog(commands.Cog):
+	"""
+	A Discord Cog for fetching and displaying the current weather for a specified location.
+	"""
+
 	# Initialize the WeatherCog with a bot instance
 	def __init__(self, bot: commands.Bot):
+		"""
+		Initializes the WeatherCog with the given bot instance.
+
+		Parameters:
+		bot (commands.Bot): The bot instance to which this cog is added.
+		"""
 		# Assign the bot instance to self.bot
 		self.bot = bot
 
@@ -52,10 +80,20 @@ class WeatherCog(commands.Cog):
 		location: str,
 		units: Optional[app_commands.Choice[str]] = None
 	):
+		"""
+		A slash command to get the current weather for a specified location.
+
+		Parameters:
+		interaction (discord.Interaction): The interaction object representing the command invocation.
+		location (str): The location for which to get the current weather.
+		units (Optional[app_commands.Choice[str]]): The unit system for temperature. Defaults to Metric if not specified.
+		"""
 		# Set units_value to "metric" if units is None, else set to units.value
 		units_value = "metric" if units is None else units.value
+
 		# Set unit_symbol based on units_value
 		unit_symbol = "°C" if units_value == "metric" else "°F"
+
 		# Construct the API URL with sanitized location
 		api_url = f"https://api.weatherapi.com/v1/current.json?key={WEATHERAPI_API_KEY}&q={sanitize_url(location)}"
 
@@ -68,19 +106,13 @@ class WeatherCog(commands.Cog):
 		# Catch HTTP errors
 		except requests.HTTPError as http_error:
 			# Send an ephemeral error message to the user with details
-			await interaction.response.send_message(
-				f"{ERROR_MESSAGE} Looks like the connection to the weather API couldn't be established. {http_error}",
-				ephemeral=True
-			)
+			await interaction.response.send_message(f"{ERROR_MESSAGE} Looks like the connection to the weather API couldn't be established. {http_error}")
 			# Exit the function
 			return
 		# Catch any other exceptions
 		except ConnectionError:
 			# Send a generic ephemeral error message to the user
-			await interaction.response.send_message(
-				f"{ERROR_MESSAGE} Give it another try.",
-				ephemeral=True
-			)
+			await interaction.response.send_message(f"{ERROR_MESSAGE} Give it another try.")
 			# Exit the function
 			return
 
@@ -112,10 +144,16 @@ class WeatherCog(commands.Cog):
 		)
 
 		# Send the output message to the user
-		await interaction.response.send_message(output, ephemeral=False)
+		await interaction.response.send_message(output)
 
 
 # Define the setup function to add the WeatherCog to the bot
 async def setup(bot: commands.Bot):
+	"""
+	A setup function to add the WeatherCog to the bot.
+
+	Parameters:
+	bot (commands.Bot): The bot instance to which this cog is added.
+	"""
 	# Add the WeatherCog to the bot
 	await bot.add_cog(WeatherCog(bot))
