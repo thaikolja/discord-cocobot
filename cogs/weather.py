@@ -101,17 +101,20 @@ class WeatherCog(commands.Cog):
 		try:
 			# Make the GET request to the API URL
 			response = requests.get(api_url)
+
 			# Raise an exception for HTTP error responses
 			response.raise_for_status()
 		# Catch HTTP errors
 		except requests.HTTPError as http_error:
 			# Send an ephemeral error message to the user with details
 			await interaction.response.send_message(f"{ERROR_MESSAGE} Looks like the connection to the weather API couldn't be established. {http_error}")
+
 			# Exit the function
 			return
 		# Catch any other exceptions
 		except ConnectionError:
 			# Send a generic ephemeral error message to the user
+
 			await interaction.response.send_message(f"{ERROR_MESSAGE} Give it another try.")
 			# Exit the function
 			return

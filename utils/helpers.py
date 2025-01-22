@@ -43,8 +43,6 @@ class UseAI:
 				model="llama-3.3-70b-versatile",
 			)
 
-			print(chat)
-
 			return chat.choices[0].message.content
 
 		elif self.provider == 'gpt':

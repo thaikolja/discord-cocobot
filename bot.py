@@ -37,7 +37,9 @@ INITIAL_EXTENSIONS = [
 	'cogs.time',
 	'cogs.exchangerate',
 	'cogs.weather',
-	'cogs.transliterate'
+	'cogs.transliterate',
+	'cogs.translate',
+	'cogs.locate',
 ]
 
 
