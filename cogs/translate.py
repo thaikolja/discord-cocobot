@@ -70,7 +70,7 @@ class TranslateCog(commands.Cog):
 		to_language (str): The language code of the target language. Defaults to 'English'.
 		"""
 		# Create an instance of UseAI with 'groq' as the provider
-		ai = UseAI('groq')
+		ai = UseAI(provider='groq')
 
 		# Generate the translation using the AI instance
 		output = ai.prompt(f'Translate the text "{text}" from {from_language} to {to_language}. Keep the tone and meaning of the original text.')

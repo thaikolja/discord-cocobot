@@ -44,7 +44,7 @@ class Transliterate(commands.Cog):
 		)
 
 		# Create an instance of UseAI with 'google' as the provider
-		ai = UseAI(provider='google')
+		ai = UseAI(provider='gpt')
 
 		# Generate the transliteration using the AI instance
 		answer = ai.prompt(prompt)
