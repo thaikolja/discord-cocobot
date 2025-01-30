@@ -47,7 +47,7 @@ class Transliterate(commands.Cog):
 		ai = UseAI(provider='gpt')
 
 		# Generate the transliteration using the AI instance
-		answer = ai.prompt(prompt)
+		answer = ai.prompt(f"🇺🇸 {prompt}")
 
 		# Send the transliterated text as a response to the interaction
 		await interaction.response.send_message(answer)

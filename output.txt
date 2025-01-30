@@ -1,0 +1,110 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.1, pytest-8.3.4, pluggy-1.5.0
+rootdir: /Users/kolja/Coding/Python/cocobot
+plugins: asyncio-0.25.3, anyio-4.8.0, mock-3.14.0, requests-mock-1.12.1
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None
+collected 4 items
+
+tests/test_time.py .F..                                                  [100%]
+
+=================================== FAILURES ===================================
+____________________________ test_invalid_location _____________________________
+
+self = <AsyncMock name='mock.response.send_message' id='4406170960'>
+args = ("🥥 Oops, something's cracked, and it's **not** the coconut! Does `Nowhere` even exist?!",)
+kwargs = {}
+expected = call("🥥 Oops, something's cracked, and it's **not** the coconut! Does `Nowhere` even exist?!")
+_error_message = <function AsyncMockMixin.assert_awaited_with.<locals>._error_message at 0x1069ee340>
+actual = call("🥥 Oops, something's cracked, and it's **not** the coconut! Couldn't find time for `Nowhere`. Maybe it's in a coconut timezone?")
+cause = None
+
+    def assert_awaited_with(self, /, *args, **kwargs):
+        """
+        Assert that the last await was with the specified arguments.
+        """
+        if self.await_args is None:
+            expected = self._format_mock_call_signature(args, kwargs)
+            raise AssertionError(f'Expected await: {expected}\nNot awaited')
+    
+        def _error_message():
+            msg = self._format_mock_failure_message(args, kwargs, action='await')
+            return msg
+    
+        expected = self._call_matcher(_Call((args, kwargs), two=True))
+        actual = self._call_matcher(self.await_args)
+        if actual != expected:
+            cause = expected if isinstance(expected, Exception) else None
+>           raise AssertionError(_error_message()) from cause
+E           AssertionError: expected await not found.
+E           Expected: send_message("🥥 Oops, something's cracked, and it's **not** the coconut! Does `Nowhere` even exist?!")
+E             Actual: send_message("🥥 Oops, something's cracked, and it's **not** the coconut! Couldn't find time for `Nowhere`. Maybe it's in a coconut timezone?")
+
+/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:2380: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+self = <AsyncMock name='mock.response.send_message' id='4406170960'>
+args = ("🥥 Oops, something's cracked, and it's **not** the coconut! Does `Nowhere` even exist?!",)
+kwargs = {}
+
+    def assert_awaited_once_with(self, /, *args, **kwargs):
+        """
+        Assert that the mock was awaited exactly once and with the specified
+        arguments.
+        """
+        if not self.await_count == 1:
+            msg = (f"Expected {self._mock_name or 'mock'} to have been awaited once."
+                   f" Awaited {self.await_count} times.")
+            raise AssertionError(msg)
+>       return self.assert_awaited_with(*args, **kwargs)
+E       AssertionError: expected await not found.
+E       Expected: send_message("🥥 Oops, something's cracked, and it's **not** the coconut! Does `Nowhere` even exist?!")
+E         Actual: send_message("🥥 Oops, something's cracked, and it's **not** the coconut! Couldn't find time for `Nowhere`. Maybe it's in a coconut timezone?")
+E       
+E       pytest introspection follows:
+E       
+E       Args:
+E       assert ('🥥 Oops, som...t timezone?',) == ('🥥 Oops, som...ven exist?!',)
+E         
+E         At index 0 diff: "🥥 Oops, something's cracked, and it's **not** the coconut! Couldn't find time for `Nowhere`. Maybe it's in a coconut timezone?" != "🥥 Oops, something's cracked, and it's **not** the coconut! Does `Nowhere` even exist?!"
+E         Use -v to get more diff
+
+/opt/homebrew/Cellar/python@3.13/3.13.1/Frameworks/Python.framework/Versions/3.13/lib/python3.13/unittest/mock.py:2391: AssertionError
+
+During handling of the above exception, another exception occurred:
+
+mock_get = <MagicMock name='get' id='4406170288'>
+cog = <cogs.time.TimeCog object at 0x1069d1d10>
+interaction = <AsyncMock id='4404771008'>
+
+    @pytest.mark.asyncio
+    @patch('cogs.time.requests.get')
+    async def test_invalid_location(mock_get, cog, interaction):
+    	# Mock API failure
+    	mock_response = MagicMock()
+    	mock_response.ok = False
+    	mock_get.return_value = mock_response
+    
+    	# Execute command
+    	await cog.time_command.callback(cog, interaction, location="Nowhere")
+    
+    	# Verify error message
+>   	interaction.response.send_message.assert_awaited_once_with(
+    		f"{ERROR_MESSAGE} Does `Nowhere` even exist?!"
+    	)
+E    AssertionError: expected await not found.
+E    Expected: send_message("🥥 Oops, something's cracked, and it's **not** the coconut! Does `Nowhere` even exist?!")
+E      Actual: send_message("🥥 Oops, something's cracked, and it's **not** the coconut! Couldn't find time for `Nowhere`. Maybe it's in a coconut timezone?")
+E    
+E    pytest introspection follows:
+E    
+E    Args:
+E    assert ('🥥 Oops, som...t timezone?',) == ('🥥 Oops, som...ven exist?!',)
+E      
+E      At index 0 diff: "🥥 Oops, something's cracked, and it's **not** the coconut! Couldn't find time for `Nowhere`. Maybe it's in a coconut timezone?" != "🥥 Oops, something's cracked, and it's **not** the coconut! Does `Nowhere` even exist?!"
+E      Use -v to get more diff
+
+tests/test_time.py:62: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_time.py::test_invalid_location - AssertionError: expected a...
+========================= 1 failed, 3 passed in 0.62s ==========================

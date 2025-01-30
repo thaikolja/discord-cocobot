@@ -8,6 +8,7 @@ from config.config import (
 	OPENAI_API_KEY  # Import OpenAI API key from config
 )
 
+import urllib.parse
 
 class UseAI:
 	# A list of available AI providers
@@ -80,13 +81,11 @@ class UseAI:
 
 
 def sanitize_url(url: str) -> str:
-	"""Sanitize a URL by encoding its components to ensure it's safe for use."""
-	parsed = urllib.parse.urlsplit(url)  # Split the URL into components
-
+	parsed = urllib.parse.urlsplit(url)
 	return urllib.parse.urlunsplit((
-		parsed.scheme,  # Scheme of the URL (e.g., http)
-		parsed.netloc,  # Network location part of the URL
-		urllib.parse.quote(parsed.path, safe="/"),  # Encode path, preserving slashes
-		urllib.parse.quote(parsed.query, safe="=&?"),  # Encode query, preserving '=', '&', and '?'
-		urllib.parse.quote(parsed.fragment, safe="")  # Encode fragment part of the URL
+		parsed.scheme,
+		parsed.netloc,
+		urllib.parse.quote(parsed.path, safe="/"),
+		urllib.parse.quote(parsed.query, safe="=&?"),
+		urllib.parse.quote(parsed.fragment, safe="")
 	))

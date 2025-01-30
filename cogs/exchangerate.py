@@ -1,3 +1,5 @@
+# cogs/exchangerate.py
+
 #  Copyright (C) 2025 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thaikolja/discord-cocobot
@@ -39,7 +41,6 @@ from config.config import ERROR_MESSAGE, CURRENCYAPI_API_KEY
 
 
 # Define the ExchangerateCog class as a subclass of commands.Cog
-# noinspection PyUnresolvedReferences
 class ExchangerateCog(commands.Cog):
 	"""
 	A Discord Cog for fetching and displaying the current exchange rate between two currencies.
@@ -81,6 +82,7 @@ class ExchangerateCog(commands.Cog):
 		if len(to_currency) != 3 or len(from_currency) != 3:
 			# Send an error message if the currency codes are invalid
 			await interaction.response.send_message(f"{ERROR_MESSAGE} Invalid currency codes. Please use 3-letter currency codes like `USD`, `THB`, `EUR`, etc.")
+			return  # Exit the command early
 
 		# Construct the API URL with the sanitized currency codes and API key
 		api_url = f'https://api.currencyapi.com/v3/latest?apikey={CURRENCYAPI_API_KEY}&currencies={to_currency}&base_currency={from_currency}'
@@ -96,14 +98,18 @@ class ExchangerateCog(commands.Cog):
 			# Parse the JSON data from the response
 			data = response.json()
 
-			# Convert the last updated time to a human-readable format
-			updated_humanized = naturaltime(datetime.strptime(data['meta']['last_updated_at'], '%Y-%m-%dT%H:%M:%SZ'))
+			# Check if the target currency exists in the response data
+			if to_currency not in data.get('data', {}):
+				output = f"{ERROR_MESSAGE} Invalid target currency **{to_currency}**. Please check the currency code and try again."
+			else:
+				# Convert the last updated time to a human-readable format
+				updated_humanized = naturaltime(datetime.strptime(data['meta']['last_updated_at'], '%Y-%m-%dT%H:%M:%SZ'))
 
-			# Calculate the converted value and round it to 2 decimal places
-			value = round(data['data'][to_currency]['value'] * amount, 2)
+				# Calculate the converted value and round it to 2 decimal places
+				value = round(data['data'][to_currency]['value'] * amount, 2)
 
-			# Construct the output message with the exchange rate details
-			output = f"💰 `{amount}` **{from_currency}** is currently `{value}` **{to_currency}** (Updated: {updated_humanized})"
+				# Construct the output message with the exchange rate details
+				output = f"💰 `{amount}` **{from_currency}** is currently `{value}` **{to_currency}** (Updated: {updated_humanized})"
 
 		# Send the output message to the user
 		await interaction.response.send_message(output)
