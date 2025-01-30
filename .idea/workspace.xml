@@ -244,10 +244,10 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python._translate" />
       <item itemvalue="Python.cocobot" />
-      <item itemvalue="Python.locate" />
       <item itemvalue="Python.pollution" />
+      <item itemvalue="Python.locate" />
+      <item itemvalue="Python._translate" />
       <item itemvalue="Python tests.Python tests for tests.test_pollution" />
     </list>
     <recent_temporary>
