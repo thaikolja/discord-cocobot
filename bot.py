@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 #  Copyright (C) 2025 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thaikolja/discord-cocobot
