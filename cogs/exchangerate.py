@@ -1,5 +1,3 @@
-# cogs/exchangerate.py
-
 #  Copyright (C) 2025 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thaikolja/discord-cocobot
@@ -41,6 +39,7 @@ from config.config import ERROR_MESSAGE, CURRENCYAPI_API_KEY
 
 
 # Define the ExchangerateCog class as a subclass of commands.Cog
+# noinspection PyUnresolvedReferences
 class ExchangerateCog(commands.Cog):
 	"""
 	A Discord Cog for fetching and displaying the current exchange rate between two currencies.

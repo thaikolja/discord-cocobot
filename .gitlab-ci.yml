@@ -1,0 +1,50 @@
+# .gitlab-ci.yml
+stages:
+  - test
+  - deploy
+
+# Variables for SSH connection
+variables:
+  SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY         # SSH private key stored in GitLab CI/CD variables
+  SSH_HOST: $SSH_HOST                       # Server hostname or IP
+  SSH_USER: $SSH_USER                       # SSH username
+  REMOTE_SCRIPT_PATH: $REMOTE_SCRIPT_PATH   # Path to the bash script on the server
+
+# Cache Python dependencies
+cache:
+  paths:
+    - .venv/
+    - venv/
+
+# Install dependencies and run tests
+test:
+  stage: test
+  image: python:3.13
+  before_script:
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+  script:
+    - pytest tests/ -v
+  artifacts:
+    reports:
+      junit: junit.xml  # Save test results as artifacts
+
+# Deploy stage: Execute remote bash script if tests pass
+deploy:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh  # Install SSH client
+    - eval $(ssh-agent -s)        # Start SSH agent
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -  # Add private key
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts  # Add server to known hosts
+  script:
+    - ssh $SSH_USER@$SSH_HOST "bash $REMOTE_SCRIPT_PATH"
+  only:
+    - main  # Only run on the main branch
+  dependencies:
+    - test  # Wait for the test stage to complete

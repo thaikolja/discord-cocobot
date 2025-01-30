@@ -1,69 +1,109 @@
+#  Copyright (C) 2025 by Kolja Nolte
+#  kolja.nolte@gmail.com
+#  https://gitlab.com/thaikolja/discord-cocobot
+#
+#  This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+#  You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
+#  - Give appropriate credit to the original author.
+#  - Provide a link to the license.
+#  - Distribute your contributions under the same license.
+#
+#  For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
+#
+#  Author:    Kolja Nolte
+#  Email:     kolja.nolte@gmail.com
+#  License:   CC BY-NC-SA 4.0
+#  Date:      2014-2025
+#  Package:   Thailand Discord
+
+# Import the urllib.parse module for URL manipulation and parsing
 import urllib.parse
+
+# Import the openai module for interacting with OpenAI's API
 import openai
+
+# Import Google's generative AI module with a custom alias 'genai'
 import google.generativeai as genai
+
+# Import configuration constants from config.config module
 from config.config import (
-	ERROR_MESSAGE,  # Import a predefined error message constant
-	GOOGLE_API_KEY,  # Import Google API key from config
-	GROQ_API_KEY,  # Import Groq API key from config
-	OPENAI_API_KEY  # Import OpenAI API key from config
+	GOOGLE_API_KEY,  # Google API key for authentication
+	GROQ_API_KEY,  # Groq API key for authentication
+	OPENAI_API_KEY  # OpenAI API key for authentication
 )
 
+# Import urllib.parse module again (this is redundant as it was already imported)
 import urllib.parse
 
+
+# Define a class UseAI that handles different AI providers
 class UseAI:
-	# A list of available AI providers
+	# List of available AI providers that this class can work with
 	AVAILABLE_PROVIDERS = ['groq', 'gpt', 'google']
 
-	# Configuration settings specific to Google's AI model generation
-	GOOGLE_GENERATION_CONFIG = {
-		'temperature':        0.1,
-		'top_p':              0.2,
-		'top_k':              40,
-		'max_output_tokens':  500,
-		'response_mime_type': 'text/plain',
+	# Configuration settings for Google's generative AI model
+	GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
+		'temperature':        0.1,  # Controls randomness in responses
+		'top_p':              0.2,  # Controls diversity of responses
+		'top_k':              40,  # Limits number of tokens considered
+		'max_output_tokens':  500,  # Maximum length of generated response
+		'response_mime_type': 'text/plain',  # Format of the response
 	}
 
+	# Constructor method that initializes the AI provider
 	def __init__(self, provider: str):
-		# Constructor that initializes the AI provider based on the input
+		# Check if the provider is in the list of available providers
 		if provider not in self.AVAILABLE_PROVIDERS:
+			# Raise ValueError if provider is invalid
 			raise ValueError(f'Invalid provider. Available providers: {self.AVAILABLE_PROVIDERS}')
 
-		self.provider = provider  # Set the provider based on input
+		# Set the provider property based on input
+		self.provider = provider
 
+		# Configure client for Groq provider
 		if provider == 'groq':
-			# Configuring OpenAI client for Groq with specific API endpoint and key
-
+			# Initialize OpenAI client with Groq's API endpoint and API key
 			self.client = openai.OpenAI(
 				base_url="https://api.groq.com/openai/v1",
 				api_key=GROQ_API_KEY
 			)
-
-			self.model_name = "llama3-70b-8192"  # Set model name for Groq
+			# Set the model name for Groq's model
+			self.model_name = "llama3-70b-8192"
+		# Configure client for GPT provider
 		elif provider == 'gpt':
-			# Configuring OpenAI client for GPT with the standard API key
+			# Initialize OpenAI client with default API endpoint and API key
 			self.client = openai.OpenAI(api_key=OPENAI_API_KEY)
-			self.model_name = "gpt-4o-mini"  # Set model name for GPT
+			# Set the model name for GPT model
+			self.model_name = "gpt-4o-mini"
+		# Configure client for Google provider
 		elif provider == 'google':
-			# Configure Google's generative AI settings
+			# Configure Google's generative AI with API key
 			genai.configure(api_key=GOOGLE_API_KEY)
+			# Initialize Google's generative model with specific configuration
 			self.model = genai.GenerativeModel(
 				model_name="gemini-1.5-flash",
 				generation_config=self.GOOGLE_GENERATION_CONFIG,
 			)
 
-	def prompt(self, prompt: str, strict: bool = True) -> str:
-		# Process a prompt to get a response from the configured AI model
+	# Method to process a prompt and get response from AI model
+	def prompt(self, prompt: str, strict: bool = True) -> str | None:
+		# If strict mode is enabled, modify prompt to request only the result
 		if strict:
-			prompt = f"{prompt}. Only return the result, nothing else."  # Modify prompt if strict condition is True
+			prompt = f"{prompt}. Only return the result, nothing else."
 
+		# Handle the prompt based on the provider
 		if self.provider in ('groq', 'gpt'):
-			return self._handle_openai(prompt)  # Handle prompt via OpenAI models
+			# Use OpenAI's API handling for Groq and GPT providers
+			return self._handle_openai(prompt)
 		elif self.provider == 'google':
-			return self._handle_google(prompt)  # Handle prompt via Google's AI model
+			# Use Google's API handling for Google provider
+			return self._handle_google(prompt)
 
+	# Private method to handle OpenAI API requests
 	def _handle_openai(self, prompt: str) -> str:
-		# Private method to handle requests to OpenAI models
-		content = prompt.strip() if self.provider == 'gpt' else prompt  # Strip prompt for GPT provider
+		# For GPT provider, strip whitespace from prompt
+		content = prompt.strip() if self.provider == 'gpt' else prompt
+		# Create a chat completion request with the given prompt
 		chat = self.client.chat.completions.create(
 			messages=[{
 				"role":    "user",
@@ -71,21 +111,28 @@ class UseAI:
 			}],
 			model=self.model_name,
 		)
-		return chat.choices[0].message.content  # Return the content of the response from the model
+		# Return the content of the first response from the model
+		return chat.choices[0].message.content
 
+	# Private method to handle Google's generative AI requests
 	def _handle_google(self, prompt: str) -> str:
-		# Private method to handle requests to Google's AI model
-		chat_session = self.model.start_chat(history=[])  # Start a new chat session
-		response = chat_session.send_message(prompt)  # Send the prompt as a message
-		return response.text.strip()  # Return the stripped text of the response
+		# Start a new chat session with empty history
+		chat_session = self.model.start_chat(history=[])
+		# Send the prompt as a message in the chat session
+		response = chat_session.send_message(prompt)
+		# Return the stripped text response from Google's model
+		return response.text.strip()
 
 
+# Function to sanitize and normalize a URL
 def sanitize_url(url: str) -> str:
+	# Parse the input URL into its components
 	parsed = urllib.parse.urlsplit(url)
+	# Rebuild the URL with properly encoded components
 	return urllib.parse.urlunsplit((
-		parsed.scheme,
-		parsed.netloc,
-		urllib.parse.quote(parsed.path, safe="/"),
-		urllib.parse.quote(parsed.query, safe="=&?"),
-		urllib.parse.quote(parsed.fragment, safe="")
+		parsed.scheme,  # URL scheme (e.g., http, https)
+		parsed.netloc,  # Network location (e.g., www.example.com)
+		urllib.parse.quote(parsed.path, safe="/"),  # Encoded path
+		urllib.parse.quote(parsed.query, safe="=&?"),  # Encoded query string
+		urllib.parse.quote(parsed.fragment, safe="")  # Encoded fragment
 	))
