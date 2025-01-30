@@ -5,29 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ed42961a-583a-4f06-b1b7-531145b6a830" name="Changes" comment="@cocobot Rebuilt v2: `/time` (needs optimization) `/weather`">
-      <change afterPath="$PROJECT_DIR$/.gitlab-ci.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/deploy.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitlab-ci.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.gitlab-ci.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/bot.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/_translate.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/exchangerate.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/exchangerate.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/locate.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/locate.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/pollution.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/pollution.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/time.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/time.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/translate.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/translate.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/transliterate.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/transliterate.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/cogs/weather.py" beforeDir="false" afterPath="$PROJECT_DIR$/cogs/weather.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/config/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/output.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_exchangerate.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_exchangerate.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_pollution.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_pollution.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_time.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_time.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tests/test_translate.py" beforeDir="false" afterPath="$PROJECT_DIR$/tests/test_translate.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/helpers.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/helpers.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy.sh" beforeDir="false" afterPath="$PROJECT_DIR$/deploy.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,6 +48,31 @@
     &quot;second&quot;: &quot;23e9fb45-950b-4cba-aafd-6bc08c0d632b&quot;
   }
 }</component>
+  <component name="GitToolBoxStore">
+    <option name="recentBranches">
+      <RecentBranches>
+        <option name="branchesForRepo">
+          <list>
+            <RecentBranchesForRepo>
+              <option name="branches">
+                <list>
+                  <RecentBranch>
+                    <option name="branchName" value="main" />
+                    <option name="lastUsedInstant" value="1738275986" />
+                  </RecentBranch>
+                  <RecentBranch>
+                    <option name="branchName" value="v2-dev" />
+                    <option name="lastUsedInstant" value="1738275985" />
+                  </RecentBranch>
+                </list>
+              </option>
+              <option name="repositoryRootUrl" value="file://$PROJECT_DIR$" />
+            </RecentBranchesForRepo>
+          </list>
+        </option>
+      </RecentBranches>
+    </option>
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 3
 }</component>
@@ -102,7 +107,7 @@
     "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "com.google.cloudcode.ide_session_index": "20250123_0002",
-    "git-widget-placeholder": "v2-dev",
+    "git-widget-placeholder": "main",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",

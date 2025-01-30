@@ -27,9 +27,6 @@ test:
     - pip install -r requirements.txt
   script:
     - pytest tests/ -v
-  artifacts:
-    reports:
-      junit: junit.xml  # Save test results as artifacts
 
 # Deploy stage: Execute remote bash script if tests pass
 deploy:

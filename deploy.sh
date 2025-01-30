@@ -19,14 +19,10 @@
 # Package:   Thailand Discord
 #
 
-touch /home/api/cocobot/deploy.log
-
-exit 1
-
 echo "Starting deployment..."
 
 # Stop the existing service
-systemctl stop my-service
+systemctl stop cocobot.service
 
 # Pull the latest code
 cd /home/api/cocobot
@@ -36,6 +32,6 @@ git pull origin main
 pip install -r requirements.txt
 
 # Restart the service
-systemctl start my-service
+systemctl start cocobot.service
 
 echo "Deployment complete!"
