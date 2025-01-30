@@ -35,7 +35,7 @@ from datetime import datetime
 from config.config import ERROR_MESSAGE, LOCALTIME_API_KEY
 
 # Import the sanitize_url function from the helpers module in utils
-#from utils.helpers import sanitize_url
+from utils.helpers import sanitize_url
 
 
 # Define the TimeCog class, which is a subclass of commands.Cog
@@ -56,9 +56,9 @@ class TimeCog(commands.Cog):
 		self.bot = bot
 
 	# Define a slash command named "time" with a description
-	@app_commands.command(name="time", description='Get the current time at a certain city or country (Default: Bangkok)')
+	@app_commands.command(name="time", description='Get the current time at a certain city or country')
 	# Describe the "location" parameter for the slash command
-	@app_commands.describe(location='The city or country where you want to get the time (Default: "Bangkok")')
+	@app_commands.describe(location='The city or country for which to get the current time (Default: Bangkok)')
 	# Define the asynchronous function that handles the "time" command
 	async def time_command(self, interaction: discord.Interaction, location: str = 'Bangkok'):
 		"""

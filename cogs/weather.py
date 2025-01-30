@@ -63,8 +63,8 @@ class WeatherCog(commands.Cog):
 	@app_commands.command(name="weather", description="Get the current weather for a location")
 	# Describe the location and units parameters
 	@app_commands.describe(
-		location='The location you want the weather for.',
-		units='Choose the unit system: Metric (°C) or Imperial (°F). Defaults to Metric if not specified.'
+		location='The location you want the weather for (Default: Bangkok)',
+		units='Choose the unit system: Metric (°C) or Imperial (°F). (Default: Metric)'
 	)
 	# Define choices for the units parameter
 	@app_commands.choices(
@@ -77,8 +77,8 @@ class WeatherCog(commands.Cog):
 	async def weather_command(
 		self,
 		interaction: discord.Interaction,
-		location: str,
-		units: Optional[app_commands.Choice[str]] = None
+		location: str = 'Bangkok',
+		units: str = 'metric'
 	):
 		"""
 		A slash command to get the current weather for a specified location.
@@ -89,7 +89,10 @@ class WeatherCog(commands.Cog):
 		units (Optional[app_commands.Choice[str]]): The unit system for temperature. Defaults to Metric if not specified.
 		"""
 		# Set units_value to "metric" if units is None, else set to units.value
-		units_value = "metric" if units is None else units.value
+		if units == '':
+			units_value = 'metric'
+		else:
+			units_value = units
 
 		# Set unit_symbol based on units_value
 		unit_symbol = "°C" if units_value == "metric" else "°F"
@@ -97,27 +100,12 @@ class WeatherCog(commands.Cog):
 		# Construct the API URL with sanitized location
 		api_url = f"https://api.weatherapi.com/v1/current.json?key={WEATHERAPI_API_KEY}&q={sanitize_url(location)}"
 
-		# Try to make a GET request to the API URL
-		try:
-			# Make the GET request to the API URL
-			response = requests.get(api_url)
+		response = requests.get(api_url)
 
-			# Raise an exception for HTTP error responses
-			response.raise_for_status()
-		# Catch HTTP errors
-		except requests.HTTPError as http_error:
-			# Send an ephemeral error message to the user with details
-			await interaction.response.send_message(f"{ERROR_MESSAGE} Looks like the connection to the weather API couldn't be established. {http_error}")
-
-			# Exit the function
-			return
-		# Catch any other exceptions
-		except ConnectionError:
-			# Send a generic ephemeral error message to the user
-
-			await interaction.response.send_message(f"{ERROR_MESSAGE} Give it another try.")
-			# Exit the function
-			return
+		if not response.ok:
+			await interaction.response.send_message(
+				f"{ERROR_MESSAGE} That's a nope. Are you sure **{location}** even exists?!"
+			)
 
 		# Parse the JSON response from the API
 		data = response.json()

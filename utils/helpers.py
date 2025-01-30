@@ -26,6 +26,7 @@ class UseAI:
 		# Constructor that initializes the AI provider based on the input
 		if provider not in self.AVAILABLE_PROVIDERS:
 			raise ValueError(f'Invalid provider. Available providers: {self.AVAILABLE_PROVIDERS}')
+
 		self.provider = provider  # Set the provider based on input
 
 		if provider == 'groq':

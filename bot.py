@@ -40,6 +40,7 @@ INITIAL_EXTENSIONS = [
 	'cogs.transliterate',
 	'cogs.translate',
 	'cogs.locate',
+	'cogs.pollution'
 ]
 
 
