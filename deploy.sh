@@ -25,8 +25,7 @@ echo "Starting deployment..."
 systemctl stop cocobot.service
 
 echo "Changing into /home/api/cocobot"
-cd /home/api/cocobot || exit
-
+cd /home/api/cocobot
 
 git pull origin main
 
