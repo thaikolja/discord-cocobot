@@ -9,6 +9,7 @@ variables:
   SSH_HOST: $SSH_HOST                       # Server hostname or IP
   SSH_USER: $SSH_USER                       # SSH username
   REMOTE_SCRIPT_PATH: $REMOTE_SCRIPT_PATH   # Path to the bash script on the server
+  OPENAI_API_KEY: $OPENAI_API_KEY           # OpenAI API key
 
 # Cache Python dependencies
 cache:

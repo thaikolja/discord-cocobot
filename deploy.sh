@@ -24,8 +24,10 @@ echo "Starting deployment..."
 # Stop the existing service
 systemctl stop cocobot.service
 
-# Pull the latest code
-cd /home/api/cocobot
+echo "Changing into /home/api/cocobot"
+cd /home/api/cocobot || exit
+
+
 git pull origin main
 
 # Install dependencies
