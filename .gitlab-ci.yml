@@ -1,23 +1,18 @@
-# .gitlab-ci.yml
 stages:
   - test
   - deploy
 
-# Variables for SSH connection
 variables:
-  SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY         # SSH private key stored in GitLab CI/CD variables
-  SSH_HOST: $SSH_HOST                       # Server hostname or IP
-  SSH_USER: $SSH_USER                       # SSH username
-  REMOTE_SCRIPT_PATH: $REMOTE_SCRIPT_PATH   # Path to the bash script on the server
-  OPENAI_API_KEY: $OPENAI_API_KEY           # OpenAI API key
+  SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
+  SSH_HOST: $SSH_HOST
+  SSH_USER: $SSH_USER
+  REMOTE_SCRIPT_PATH: $REMOTE_SCRIPT_PATH
+  OPENAI_API_KEY: $OPENAI_API_KEY
 
-# Cache Python dependencies
 cache:
   paths:
     - .venv/
-    - venv/
 
-# Install dependencies and run tests
 test:
   stage: test
   image: python:3.13
@@ -29,20 +24,19 @@ test:
   script:
     - pytest tests/ -v
 
-# Deploy stage: Execute remote bash script if tests pass
 deploy:
   stage: deploy
   image: alpine:latest
   before_script:
-    - apk add --no-cache openssh  # Install SSH client
-    - eval $(ssh-agent -s)        # Start SSH agent
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -  # Add private key
+    - apk add --no-cache openssh
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
-    - ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts  # Add server to known hosts
+    - ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
   script:
     - ssh $SSH_USER@$SSH_HOST "bash $REMOTE_SCRIPT_PATH"
   only:
-    - main  # Only run on the main branch
+    - main
   dependencies:
-    - test  # Wait for the test stage to complete
+    - test

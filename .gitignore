@@ -3,6 +3,8 @@
 .AppleDouble
 .LSOverride
 .idea
+!.idea/copyright
+!.idea/codeStyles
 
 # Icon must end with two \r
 Icon
