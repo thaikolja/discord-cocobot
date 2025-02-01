@@ -19,43 +19,14 @@
 # Package:   Thailand Discord
 #
 
-# Log: This script is used to deploy the bot to the server.
-echo "Starting deployment..."
-
-# Stop the service
-systemctl stop cocobot.service
-
-# Log: Change into the bot directory
-echo "Changing into /home/api/cocobot"
-
-# Change into the bot directory
-cd /home/api/cocobot || exit
-
-# Log: Pull the latest changes
-echo "Pulling the latest changes..."
-
-# Pull the latest changes
-git pull origin main
-
-# Log: Install dependencies
-echo "Installing dependencies..."
-
-# Install dependencies
-pip install -r requirements.txt
-
 # Log: Enable the service
 echo "Enabling the service..."
 
 # Log: Enable the service
 systemctl enable cocobot.service
 
-# Log: Restart the service
-echo "Restarting the service..."
+# Log: Starting the service
+echo "Starting the service..."
 
 # Restart the service
 systemctl start cocobot.service
-
-# Log: Check the status
-echo "Deployment complete!"
-
-exit 1
