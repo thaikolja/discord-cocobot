@@ -57,5 +57,3 @@ systemctl start cocobot.service
 
 # Log: Check the status
 echo "Deployment complete!"
-
-exit 1

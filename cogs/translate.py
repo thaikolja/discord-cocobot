@@ -23,6 +23,8 @@ This module provides a Discord Cog for translating text from one language to ano
 # Import the discord.py library for Discord functionality
 import discord
 
+import openai
+
 # Import commands extension from discord.py for creating bot commands
 from discord.ext import commands
 
@@ -89,18 +91,17 @@ class TranslateCog(commands.Cog):
 		# Create an instance of the UseAI helper with Groq as the provider
 		ai = UseAI(provider='perplexity')
 
-		# Use the AI to translate the given text between languages
-		output = ai.prompt(
-			f'Translate the text "{text}" from {from_language} to {to_language}. '
-			'Keep the tone and meaning of the original text.'
-		)
-
-		# Check if the translation output was successful
-		if not output:
-			# Send error message if translation failed
-			await interaction.followup.send(ERROR_MESSAGE)
-		else:
+		try:
+			ai = UseAI(provider='perplexity')
+			output = ai.prompt(f'Translate the text "{text}" from {from_language} to {to_language}. Keep the tone and meaning of the original text.')
+			if not output:
+				await interaction.followup.send(ERROR_MESSAGE)
+				return
 			await interaction.followup.send(f"📚️ {output}")
+		except openai.APITimeoutError:
+			await interaction.followup.send("⏰ Request timed out after 10 seconds")
+		except Exception as e:
+			await interaction.followup.send(f"❌ Error: {str(e)}")
 
 
 # Define the asynchronous setup function to add the TranslateCog to the bot
