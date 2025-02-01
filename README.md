@@ -1,6 +1,8 @@
-# 🥥 @cocobot
+# 🥥 cocobot
 
 ## Your Thailand Discord Companion
+
+[![pipeline status](https://gitlab.com/thaikolja/discord-cocobot/badges/main/pipeline.svg)](https://gitlab.com/thaikolja/discord-cocobot/-/commits/main) [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-blue.svg)](LICENSE) [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 
 **@cocobot** is a feature-rich, customized **Discord bot** for the [**Discord Thailand** server](https://discord.gg/6JXCqVdmTZ) designed to provide useful utilities and fun interactions with a tropical twist. Built with **Python** and the `discord.py` library, cocobot offers **a variety of commands** for practical tasks like weather checking, translation, and currency conversion, all wrapped in a coconut-themed package.
 
@@ -32,10 +34,10 @@
 - **🌫️ Pollution**: Check air quality index (AQI) for any city
   - `/pollution <city>` *(string)*
 
-- **🔤 Transliteration**: Convert Thai text to Latin script
+- **🔤 Transliteration**: Convert Thai text to Latin script[^3]
   - `/transliterate <text>` *(string)* Change Thai script into the Latin alphabet
 
-- **🌐 Translation**: Translate text between languages using AI
+- **🌐 Translation**: Translate text between languages using AI[^3]
   - `/translate`
     - `<text>` *(string)* The text to be translated
     - `[from_language]` *(string)* **Default:** Thai
@@ -83,13 +85,13 @@
 /transliterate text: "ห้องน้ำอยู่ที่ไหน"
 ```
 
-**Returns:** "🇺🇸 hâawng-náam-yùu-tîi-nǎi"
+**Returns:** "🇺🇸 hông-náam yùu thîi-năi"
 
 ---
 
 ## 🛠️ Installation
 
-In order to keep cocobot running on your Discord server, a web server with root access and feel comfortable with Bash commands **is required**. These steps assume that you're running Debian or Ubuntu.
+In order to keep cocobot running on your Discord server, a web server with root access and feel comfortable with Bash commands **is required**. These steps assume that you're running Debian or Ubuntu and have experience in using SSH.
 
 1. Log in into your server's command line interface as user with root privileges.
    1. If you don't have it yet, install Git via `sudo apt-get install git`
@@ -152,7 +154,13 @@ We recommend adding tests for any new features or bug fixes.
 
 ---
 
-## 🤝 Contributing
+## 🧑‍💻 Authors and Contributors
+
+* **Kolja Nolte** (kolja.nolte@gmail.com)
+
+---
+
+## 🤝 Contribute to cocobot
 
 We welcome contributions via Git! Please follow these standard steps:
 
@@ -176,10 +184,11 @@ We welcome contributions via Git! Please follow these standard steps:
 **cocobot** was created by Kolja Nolte and is maintained by the Thailand Discord community. Special thanks to:
 
 - The `discord.py` team for their excellent library
-- All API providers for their services
-- The coconut for inspiration
+- All API and AI providers for their services
+- [August Engelhardt](https://en.wikipedia.org/wiki/August_Engelhardt) for inspiration
 
 ---
 
 [^1]: Using `.` works only if the current directory is completely empty. If not, leave don't use it and use `mv ./discord-bot/{*,.*} ../`
 [^2]: Keep your `.env` file secret and remember to add it to the `.gitignore` file. 
+[^3]: Uses Perplexity's AI LLM "Sonar Pro" and can produce inaccuracies.
