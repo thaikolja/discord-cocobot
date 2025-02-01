@@ -29,7 +29,8 @@ import google.generativeai as genai
 from config.config import (
 	GOOGLE_API_KEY,  # Google API key for authentication
 	GROQ_API_KEY,  # Groq API key for authentication
-	OPENAI_API_KEY  # OpenAI API key for authentication
+	OPENAI_API_KEY,  # OpenAI API key for authentication
+	PERPLEXITY_API_KEY  # Perplexity API key for authentication
 )
 
 # Import urllib.parse module again (this is redundant as it was already imported)
@@ -39,7 +40,7 @@ import urllib.parse
 # Define a class UseAI that handles different AI providers
 class UseAI:
 	# List of available AI providers that this class can work with
-	AVAILABLE_PROVIDERS = ['groq', 'gpt', 'google']
+	AVAILABLE_PROVIDERS = ['groq', 'gpt', 'google', 'perplexity']
 
 	# Configuration settings for Google's generative AI model
 	GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
@@ -60,15 +61,22 @@ class UseAI:
 		# Set the provider property based on input
 		self.provider = provider
 
+		if provider == 'perplexity':
+			self.client = openai.OpenAI(
+				api_key=PERPLEXITY_API_KEY,
+				base_url="https://api.perplexity.ai"
+			)
+			self.model_name = "sonar-pro"
+
 		# Configure client for Groq provider
-		if provider == 'groq':
+		elif provider == 'groq':
 			# Initialize OpenAI client with Groq's API endpoint and API key
 			self.client = openai.OpenAI(
 				base_url="https://api.groq.com/openai/v1",
 				api_key=GROQ_API_KEY
 			)
 			# Set the model name for Groq's model
-			self.model_name = "llama3-70b-8192"
+			self.model_name = "deepseek-r1-distill-llama-70b"
 		# Configure client for GPT provider
 		elif provider == 'gpt':
 			# Initialize OpenAI client with default API endpoint and API key
@@ -81,7 +89,7 @@ class UseAI:
 			genai.configure(api_key=GOOGLE_API_KEY)
 			# Initialize Google's generative model with specific configuration
 			self.model = genai.GenerativeModel(
-				model_name="gemini-1.5-flash",
+				model_name="gemini-2.0-flash-exp",
 				generation_config=self.GOOGLE_GENERATION_CONFIG,
 			)
 
@@ -92,7 +100,7 @@ class UseAI:
 			prompt = f"{prompt}. Only return the result, nothing else."
 
 		# Handle the prompt based on the provider
-		if self.provider in ('groq', 'gpt'):
+		if self.provider in ('groq', 'gpt', 'perplexity'):
 			# Use OpenAI's API handling for Groq and GPT providers
 			return self._handle_openai(prompt)
 		elif self.provider == 'google':
@@ -102,7 +110,7 @@ class UseAI:
 	# Private method to handle OpenAI API requests
 	def _handle_openai(self, prompt: str) -> str:
 		# For GPT provider, strip whitespace from prompt
-		content = prompt.strip() if self.provider == 'gpt' else prompt
+		content = prompt
 		# Create a chat completion request with the given prompt
 		chat = self.client.chat.completions.create(
 			messages=[{

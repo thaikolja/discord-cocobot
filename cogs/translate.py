@@ -16,6 +16,10 @@
 #  Date:      2014-2025
 #  Package:   Thailand Discord
 
+"""
+This module provides a Discord Cog for translating text from one language to another using AI.
+"""
+
 # Import the discord.py library for Discord functionality
 import discord
 
@@ -41,6 +45,12 @@ class TranslateCog(commands.Cog):
 
 	# Initialize the TranslateCog with a bot instance
 	def __init__(self, bot: commands.Bot):
+		"""
+		Initializes the TranslateCog class with the given bot instance.
+
+		Parameters:
+		bot (commands.Bot): The bot instance to which this cog is added
+		"""
 		# Store the bot instance for later use
 		self.bot = bot
 
@@ -64,10 +74,20 @@ class TranslateCog(commands.Cog):
 		to_language: str = 'English'
 	):
 		"""
-		A slash command to translate text from one language to another.
+		Handles the /translate command to translate text from one language to another.
+
+		Parameters:
+		interaction (discord.Interaction): The interaction object representing the command invocation
+		text (str): The text to translate
+		from_language (str): The language code of the source language (Default: Thai)
+		to_language (str): The language code of the target language (Default: English)
 		"""
+
+		# Defer the response to avoid timeout
+		await interaction.response.defer()
+
 		# Create an instance of the UseAI helper with Groq as the provider
-		ai = UseAI(provider='groq')
+		ai = UseAI(provider='perplexity')
 
 		# Use the AI to translate the given text between languages
 		output = ai.prompt(
@@ -78,15 +98,18 @@ class TranslateCog(commands.Cog):
 		# Check if the translation output was successful
 		if not output:
 			# Send error message if translation failed
-			await interaction.response.send_message(ERROR_MESSAGE)
+			await interaction.followup.send(ERROR_MESSAGE)
 		else:
-			# Send the translated text back to the channel
-			await interaction.response.send_message(
-				f"🇹🇭 {output}"
-			)
+			await interaction.followup.send(f"📚️ {output}")
 
 
 # Define the asynchronous setup function to add the TranslateCog to the bot
 async def setup(bot: commands.Bot):
+	"""
+	A setup function to add the TranslateCog to the bot.
+
+	Parameters:
+	bot (commands.Bot): The bot instance to which this cog is added
+	"""
 	# Add an instance of TranslateCog to the bot
 	await bot.add_cog(TranslateCog(bot))

@@ -66,28 +66,21 @@ class Transliterate(commands.Cog):
 		interaction: discord.Interaction,
 		text: str
 	):
-		"""
-		A slash command to transliterate Thai text to Latin script.
+		# Defer the response immediately
+		await interaction.response.defer()
 
-		Parameters:
-		interaction (discord.Interaction): The interaction object representing the command invocation
-		text (str): The Thai text to be transliterated
-		"""
-		# Create a detailed prompt for the AI to process
 		prompt = (
 			f"Transliterate the Thai text '{text}' into Latin characters only. "
 			f"Use diacritics to display the tone markers for every consonant and vowel. "
+			f"Separate syllables with a dash. Separate words with a space. "
 			f"Make it readable for English readers."
 		)
 
-		# Initialize the UseAI class with the 'gpt' provider for transliteration
-		ai = UseAI(provider='gpt')
+		ai = UseAI(provider='perplexity')
+		answer = ai.prompt(prompt)
 
-		# Generate the transliterated text using the AI instance
-		answer = ai.prompt(f"🇺🇸 {prompt}")
-
-		# Send the transliterated text as a response to the interaction
-		await interaction.response.send_message(answer)
+		# Send the result using follow-up
+		await interaction.followup.send(f"✍️ {answer}")
 
 
 # Define the asynchronous setup function to register the Transliterate cog

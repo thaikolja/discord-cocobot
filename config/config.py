@@ -63,3 +63,6 @@ ACQIN_API_KEY: str = os.getenv('ACQIN_API_KEY')
 
 # Retrieve Google Maps API key from environment variables
 GOOGLE_MAPS_API_KEY: str = os.getenv('GOOGLE_MAPS_API_KEY')
+
+# Retrieve Perplexity API key from environment variables
+PERPLEXITY_API_KEY: str = os.getenv('PERPLEXITY_API_KEY')
