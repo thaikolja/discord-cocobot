@@ -50,7 +50,7 @@ echo "Enabling the service..."
 systemctl enable cocobot.service
 
 # Log: Restart the service
-echo "Restarting the service..."
+echo "Restarting the service... "
 
 # Restart the service
 systemctl start cocobot.service
