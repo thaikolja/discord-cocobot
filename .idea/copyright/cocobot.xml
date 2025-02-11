@@ -1,7 +1,0 @@
-<component name="CopyrightManager">
-  <copyright>
-    <option name="allowReplaceRegexp" value="Copyright" />
-    <option name="notice" value="Copyright (C) &amp;#36;today.year by Kolja Nolte&#10;kolja.nolte@gmail.com&#10;https://gitlab.com/thaikolja/discord-cocobot&#10;&#10;This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.&#10;You are free to use, share, and adapt this work for non-commercial purposes, provided that you:&#10;- Give appropriate credit to the original author.&#10;- Provide a link to the license.&#10;- Distribute your contributions under the same license.&#10;&#10;For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/&#10;&#10;Author:    Kolja Nolte&#10;Email:     kolja.nolte@gmail.com&#10;License:   CC BY-NC-SA 4.0&#10;Date:      2014-&amp;#36;today.year&#10;Package:   Thailand Discord" />
-    <option name="myName" value="cocobot" />
-  </copyright>
-</component>

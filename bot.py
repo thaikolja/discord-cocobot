@@ -48,7 +48,8 @@ INITIAL_EXTENSIONS = [
 	'cogs.transliterate',  # Text transliteration commands
 	'cogs.translate',  # Translation commands
 	'cogs.locate',  # Location-related commands
-	'cogs.pollution'  # Pollution information commands
+	'cogs.pollution',  # Pollution information commands
+	'cogs.learn' # Learn Thai words commands
 ]
 
 
