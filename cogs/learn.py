@@ -1,71 +1,110 @@
+#  Copyright (C) 2025 by Kolja Nolte
+#  kolja.nolte@gmail.com
+#  https://gitlab.com/thaikolja/discord-cocobot
+#
+#  This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+#  You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
+#  - Give appropriate credit to the original author.
+#  - Provide a link to the license.
+#  - Distribute your contributions under the same license.
+#
+#  For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
+#
+#  Author:    Kolja Nolte
+#  Email:     kolja.nolte@gmail.com
+#  License:   CC BY-NC-SA 4.0
+#  Date:      2014-2025
+#  Package:   Thailand Discord
+
+# Importing the os module to interact with the operating system
 import os
+
+# Importing the json module to handle JSON data
 import json
-import random
+
+# Importing the discord module to interact with the Discord API
 import discord
+
+# Importing the random module to generate random numbers
+import random
+
+# Importing the commands module from discord.ext to create bot commands
 from discord.ext import commands
+
+# Importing the app_commands module from discord to create application commands
 from discord import app_commands
 
+# Importing the ERROR_MESSAGE constant from the config module
+from config.config import ERROR_MESSAGE
 
-# Define a cog for fetching random Thai words from a JSON file with in-memory caching
+
+# Defining a new class LearnCog that inherits from commands.Cog
+# noinspection PyUnresolvedReferences
 class LearnCog(commands.Cog):
-	"""
-	Cog that fetches random Thai words from a JSON file with caching in memory.
-	"""
 
-	def __init__(self, bot):
-		"""
-		Initialize the LearnCog instance.
-		"""
+	# Initializing the LearnCog class with a bot instance
+	def __init__(self, bot: commands.Bot):
+
+		# Assigning the bot instance to the self.bot attribute
 		self.bot = bot
-		self.file_path = '../assets/data/thai-words.json'  # Path to the JSON file
-		self.cached_data = None  # Cache to store file content
-		self.data_loaded = False  # Track if data is already loaded
 
-	def load_data(self):
-		"""
-		Loads the JSON data from the file, caching it in memory.
-		Called when the bot is ready or the first time a command is run.
-		"""
-		if os.path.isfile(self.file_path):
-			try:
-				with open(self.file_path, 'r', encoding='utf-8') as file:
-					data = json.load(file)
-					if isinstance(data, list):  # Ensure data is a list
-						self.cached_data = data
-						self.data_loaded = True
-			except (json.JSONDecodeError, Exception):
-				pass  # Ignore errors during file reading or JSON parsing
+	# Defining a new application command named "learn" with a description
+	@app_commands.command(name="learn", description='Displays one of 250 core Thai words and its translation')
+	# Defining an asynchronous method learn_command that handles the "learn" command
+	async def learn_command(self, interaction: discord.Interaction):
 
-	def get_random_thai_word(self):
-		"""
-		Returns a random Thai word from the cached data.
-		Uses the cached data in memory to avoid re-reading the file.
-		"""
-		return random.choice(self.cached_data) if self.cached_data else "Error: No data available. Please try again later."
+		# Specifying the file path to the JSON file containing the word list
+		word_list_path = './assets/data/thai-words.json'
 
-	@app_commands.command(name="learn", description="Fetches a random Thai word")
-	async def learn(self, interaction: discord.Interaction):
-		"""
-		Command to send a random Thai word to the user.
-		"""
-		if not self.data_loaded:
-			self.load_data()  # Load data if not already loaded
+		# Checking if the word list file exists
+		if not os.path.isfile(word_list_path):
+			# Sending an error message to the interaction if the file does not exist
+			await interaction.response.send_message(f"{ERROR_MESSAGE}: No vocabulary found.")
+			# Returning from the function to prevent further execution
+			return
 
-		word = self.get_random_thai_word()
-		if isinstance(word, str) and word.startswith("Error"):
-			await interaction.response.send_message(word, ephemeral=True)
-		else:
-			await interaction.response.send_message(f"Random Thai word: {word.get('word', 'No word available')}", ephemeral=True)
+		# Attempting to open and read the content of the word list file
+		try:
+			# Opening the word list file in read mode with UTF-8 encoding
+			with open(word_list_path, 'r', encoding='utf-8') as file:
+				# Loading the JSON data from the file
+				data = json.load(file)
+		# Catching potential JSON decoding errors
+		except json.JSONDecodeError:
+			# Handling potential errors in parsing JSON data
+			await interaction.response.send_message(f"{ERROR_MESSAGE}: Failed to read vocabulary data. The file may be corrupted.")
+			# Returning from the function to prevent further execution
+			return
+		# Catching all other exceptions
+		except Exception as e:
+			# Catching all other exceptions and displaying the error message
+			await interaction.response.send_message(f"{ERROR_MESSAGE}: An unexpected error occurred: {str(e)}")
+			# Returning from the function to prevent further execution
+			return
 
-	@commands.Cog.listener()
-	async def on_ready(self):
-		"""
-		Called when the bot is ready. Refreshes the cache if needed.
-		"""
-		if not self.data_loaded:
-			self.load_data()  # Load data if not already loaded
+		# Checking if the word list is empty
+		if not data:
+			# Sending an error message to the interaction if the word list is empty
+			await interaction.response.send_message(f"{ERROR_MESSAGE}: I found the vocabulary file, but it contains no words. Weird.")
+			# Returning from the function to prevent further execution
+			return
+
+		# Selecting a random word from the word list
+		word = random.choice(data)
+
+		# Checking if the selected word contains necessary fields
+		if not word.get('english') or not word.get('thai') or not word.get('transliteration'):
+			# Sending an error message to the interaction if the word is missing key data
+			await interaction.response.send_message(f"{ERROR_MESSAGE}: Something's wrong with this word entry. Missing key data.")
+			# Returning from the function to prevent further execution
+			return
+
+		# Sending a sentence with the word's English translation, Thai translation, and transliteration
+		await interaction.response.send_message(f'💡 **"{word["english"]}"** means **"{word["thai"]}"** in Thai and is spoken like `{word["transliteration"]}`')
 
 
-# Define a setup function to add the cog to the bot
-async def setup(bot):
+# Defining an asynchronous setup function to add the LearnCog to the bot
+async def setup(bot: commands.Bot):
+
+	# Adding the LearnCog to the bot
 	await bot.add_cog(LearnCog(bot))

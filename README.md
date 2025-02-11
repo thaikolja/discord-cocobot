@@ -37,6 +37,9 @@
 - **🔤 Transliteration**: Convert Thai text to Latin script[^3]
   - `/transliterate <text>` *(string)* Change Thai script into the Latin alphabet
 
+- 💡 **Learn:** Shows one of the 250 core Thai words and its translation and transliteration
+  - `/learn`
+  
 - **🌐 Translation**: Translate text between languages using AI[^3]
   - `/translate`
     - `<text>` *(string)* The text to be translated

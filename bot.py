@@ -49,7 +49,7 @@ INITIAL_EXTENSIONS = [
 	'cogs.translate',  # Translation commands
 	'cogs.locate',  # Location-related commands
 	'cogs.pollution',  # Pollution information commands
-	'cogs.learn' # Learn Thai words commands
+	'cogs.learn'  # Learn Thai words commands
 ]
 
 
