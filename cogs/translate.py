@@ -88,11 +88,8 @@ class TranslateCog(commands.Cog):
 		# Defer the response to avoid timeout
 		await interaction.response.defer()
 
-		# Create an instance of the UseAI helper with Groq as the provider
-		ai = UseAI(provider='perplexity')
-
 		try:
-			ai = UseAI(provider='perplexity')
+			ai = UseAI(provider='groq')
 			output = ai.prompt(f'Translate the text "{text}" from {from_language} to {to_language}. Keep the tone and meaning of the original text.')
 			if not output:
 				await interaction.followup.send(ERROR_MESSAGE)

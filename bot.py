@@ -56,7 +56,7 @@ INITIAL_EXTENSIONS = [
 # Define the main bot class inheriting from commands.Bot
 class Cocobot(commands.Bot):
 	# Bot version string
-	version: str = '2.0.1'
+	version: str = '2.0.2'
 
 	# Constructor method to initialize the bot
 	def __init__(self):

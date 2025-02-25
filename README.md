@@ -1,10 +1,10 @@
 # 🥥 cocobot
 
-## Your Thailand Discord Companion
-
 [![pipeline status](https://gitlab.com/thaikolja/discord-cocobot/badges/main/pipeline.svg)](https://gitlab.com/thaikolja/discord-cocobot/-/commits/main) [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-blue.svg)](LICENSE) [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 
 **@cocobot** is a feature-rich, customized **Discord bot** for the [**Discord Thailand** server](https://discord.gg/6JXCqVdmTZ) designed to provide useful utilities and fun interactions with a tropical twist. Built with **Python** and the `discord.py` library, cocobot offers **a variety of commands** for practical tasks like weather checking, translation, and currency conversion, all wrapped in a coconut-themed package.
+
+![GitHub Repository Banner](https://p.ipic.vip/srmtct.jpg)
 
 [TOC]
 

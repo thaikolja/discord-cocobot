@@ -49,9 +49,6 @@ CURRENCYAPI_API_KEY: str = os.getenv('CURRENCYAPI_API_KEY')
 # Retrieve Groq API key from environment variables
 GROQ_API_KEY: str = os.getenv('GROQ_API_KEY')
 
-# Retrieve OpenAI API key from environment variables
-OPENAI_API_KEY: str = os.getenv('OPENAI_API_KEY')
-
 # Retrieve Google API key from environment variables
 GOOGLE_API_KEY: str = os.getenv('GOOGLE_API_KEY')
 
@@ -64,5 +61,4 @@ ACQIN_API_KEY: str = os.getenv('ACQIN_API_KEY')
 # Retrieve Google Maps API key from environment variables
 GOOGLE_MAPS_API_KEY: str = os.getenv('GOOGLE_MAPS_API_KEY')
 
-# Retrieve Perplexity API key from environment variables
-PERPLEXITY_API_KEY: str = os.getenv('PERPLEXITY_API_KEY')
+SAMBANOVA_API_KEY: str = os.getenv('SAMBANOVA_API_KEY')

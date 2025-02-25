@@ -76,7 +76,7 @@ class Transliterate(commands.Cog):
 			f"Make it readable for English readers."
 		)
 
-		ai = UseAI(provider='perplexity')
+		ai = UseAI(provider='google')
 		answer = ai.prompt(prompt)
 
 		# Send the result using follow-up

@@ -29,8 +29,7 @@ import google.generativeai as genai
 from config.config import (
 	GOOGLE_API_KEY,  # Google API key for authentication
 	GROQ_API_KEY,  # Groq API key for authentication
-	OPENAI_API_KEY,  # OpenAI API key for authentication
-	PERPLEXITY_API_KEY  # Perplexity API key for authentication
+	SAMBANOVA_API_KEY  # Sambanova API key for authentication
 )
 
 # Import urllib.parse module again (this is redundant as it was already imported)
@@ -40,7 +39,7 @@ import urllib.parse
 # Define a class UseAI that handles different AI providers
 class UseAI:
 	# List of available AI providers that this class can work with
-	AVAILABLE_PROVIDERS = ['groq', 'gpt', 'google', 'perplexity']
+	AVAILABLE_PROVIDERS = ['groq', 'google', 'sambanova']
 
 	# Configuration settings for Google's generative AI model
 	GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
@@ -61,28 +60,19 @@ class UseAI:
 		# Set the provider property based on input
 		self.provider = provider
 
-		if provider == 'perplexity':
+		if provider == 'groq':
 			self.client = openai.OpenAI(
-				api_key=PERPLEXITY_API_KEY,
-				base_url="https://api.perplexity.ai"
+				api_key=GROQ_API_KEY,
+				base_url="https://api.groq.com/openai/v1"
 			)
-			self.model_name = "sonar-pro"
-
-		# Configure client for Groq provider
-		elif provider == 'groq':
-			# Initialize OpenAI client with Groq's API endpoint and API key
-			self.client = openai.OpenAI(
-				base_url="https://api.groq.com/openai/v1",
-				api_key=GROQ_API_KEY
-			)
-			# Set the model name for Groq's model
-			self.model_name = "deepseek-r1-distill-llama-70b"
+			self.model_name = "llama-3.3-70b-versatile"
 		# Configure client for GPT provider
-		elif provider == 'gpt':
-			# Initialize OpenAI client with default API endpoint and API key
-			self.client = openai.OpenAI(api_key=OPENAI_API_KEY)
-			# Set the model name for GPT model
-			self.model_name = "gpt-4o-mini"
+		elif provider == 'sambanova':
+			self.client = openai.OpenAI(
+				base_url='https://api.sambanova.ai/v1/chat/completions',
+				api_key=SAMBANOVA_API_KEY,
+			)
+			self.model_name = "Meta-Llama-3.1-8B-Instruct"
 		# Configure client for Google provider
 		elif provider == 'google':
 			# Configure Google's generative AI with API key
@@ -100,7 +90,7 @@ class UseAI:
 			prompt = f"{prompt}. Only return the result, nothing else."
 
 		# Handle the prompt based on the provider
-		if self.provider in ('groq', 'gpt', 'perplexity'):
+		if self.provider in ('groq', 'gpt', 'sambanova'):
 			# Use OpenAI's API handling for Groq and GPT providers
 			return self._handle_openai(prompt)
 		elif self.provider == 'google':
