@@ -33,6 +33,7 @@ import logging  # Import logging module for error tracking
 logger = logging.getLogger(__name__)
 
 
+# noinspection PyUnresolvedReferences
 class Transliterate(commands.Cog):
 	"""
 	A Discord Cog that provides functionality to transliterate Thai text into Latin script.

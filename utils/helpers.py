@@ -66,17 +66,19 @@ class UseAI:
 		elif provider == 'sambanova':
 			# Set up the OpenAI client for Sambanova with the specified API key and base URL
 			self.client = openai.OpenAI(
-				base_url='https://api.sambanova.ai/v1/chat/completions',
+				base_url='https://api.sambanova.ai/v1',
 				api_key=SAMBANOVA_API_KEY,
 			)
 			# Set the model name for Sambanova
-			self.model_name = "Meta-Llama-3.1-8B-Instruct"
+			self.model_name = 'Meta-Llama-3.3-70B-Instruct'
+			self.temperature = 0.1
+
 		elif provider == 'google':
 			# Configure the Google Generative AI with the specified API key
 			genai.configure(api_key=GOOGLE_API_KEY)
 			# Set up the GenerativeModel for Google with the specified model name and configuration
 			self.model = genai.GenerativeModel(
-				model_name="gemini-2.0-flash-exp",
+				model_name='gemini-2.0-pro-exp-02-05',  # model_name="gemini-2.0-flash-exp",
 				generation_config=self.GOOGLE_GENERATION_CONFIG,
 			)
 

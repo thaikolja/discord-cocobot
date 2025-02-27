@@ -36,6 +36,7 @@ import logging  # Import logging module for error tracking
 logger = logging.getLogger(__name__)
 
 
+# noinspection PyUnresolvedReferences
 class TranslateCog(commands.Cog):
 	"""
 	A Discord Cog for translating text from one language to another.
@@ -83,7 +84,9 @@ class TranslateCog(commands.Cog):
 
 		try:
 			# Initialize the AI helper with the preferred provider
-			ai = UseAI(provider='groq')
+			ai = UseAI(provider='sambanova')
+			ai.temperature = 0.1
+			ai.top_p = 0.1
 			# Construct the prompt for the AI to process
 			prompt = (
 				f'Translate the text "{text}" from {from_language} to {to_language}. '
