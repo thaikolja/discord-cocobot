@@ -1,107 +1,121 @@
-#  Copyright (C) 2025 by Kolja Nolte
-#  kolja.nolte@gmail.com
-#  https://gitlab.com/thaikolja/discord-cocobot
-#
-#  This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
-#  You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
-#  - Give appropriate credit to the original author.
-#  - Provide a link to the license.
-#  - Distribute your contributions under the same license.
-#
-#  For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
-#
-#  Author:    Kolja Nolte
-#  Email:     kolja.nolte@gmail.com
-#  License:   CC BY-NC-SA 4.0
-#  Date:      2014-2025
-#  Package:   Thailand Discord
-
-# Import the urllib.parse module for URL manipulation and parsing
+# Import the urllib.parse module for URL parsing and handling
 import urllib.parse
 
 # Import the openai module for interacting with OpenAI's API
 import openai
 
-# Import Google's generative AI module with a custom alias 'genai'
+# Import the google.generativeai module for interacting with Google's Generative AI
 import google.generativeai as genai
 
-# Import configuration constants from config.config module
+# Import the necessary API keys from the config module
 from config.config import (
-	GOOGLE_API_KEY,  # Google API key for authentication
-	GROQ_API_KEY,  # Groq API key for authentication
-	SAMBANOVA_API_KEY  # Sambanova API key for authentication
+	GOOGLE_API_KEY,  # API key for Google services
+	GROQ_API_KEY,  # API key for Groq services
+	SAMBANOVA_API_KEY  # API key for Sambanova services
 )
 
-# Import urllib.parse module again (this is redundant as it was already imported)
-import urllib.parse
 
-
-# Define a class UseAI that handles different AI providers
+# Define a class named UseAI to handle interactions with various AI providers
 class UseAI:
-	# List of available AI providers that this class can work with
+	"""
+	A class to handle interactions with various AI providers.
+
+	This class abstracts the complexity of different AI provider APIs,
+	allowing for a unified interface to generate responses to prompts.
+	"""
+
+	# Define a list of available AI providers
 	AVAILABLE_PROVIDERS = ['groq', 'google', 'sambanova']
 
-	# Configuration settings for Google's generative AI model
+	# Define the configuration for Google's generative AI model
 	GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
-		'temperature':        0.1,  # Controls randomness in responses
+		'temperature':        0.1,  # Controls randomness in generation
 		'top_p':              0.2,  # Controls diversity of responses
-		'top_k':              40,  # Limits number of tokens considered
-		'max_output_tokens':  500,  # Maximum length of generated response
+		'top_k':              40,  # Limits the number of tokens considered
+		'max_output_tokens':  500,  # Maximum length of the generated response
 		'response_mime_type': 'text/plain',  # Format of the response
 	}
 
-	# Constructor method that initializes the AI provider
+	# Constructor method to initialize the UseAI instance with the specified provider
 	def __init__(self, provider: str):
-		# Check if the provider is in the list of available providers
+		"""
+		Initialize the UseAI instance with the specified provider.
+
+		Args:
+						provider (str): The AI provider to use. Must be one of AVAILABLE_PROVIDERS.
+
+		Raises:
+						ValueError: If the provider is not supported.
+		"""
+		# Check if the provided provider is in the list of available providers
 		if provider not in self.AVAILABLE_PROVIDERS:
-			# Raise ValueError if provider is invalid
 			raise ValueError(f'Invalid provider. Available providers: {self.AVAILABLE_PROVIDERS}')
 
-		# Set the provider property based on input
+		# Assign the provider to the instance variable
 		self.provider = provider
 
+		# Initialize the appropriate client based on the provider
 		if provider == 'groq':
+			# Set up the OpenAI client for Groq with the specified API key and base URL
 			self.client = openai.OpenAI(
 				api_key=GROQ_API_KEY,
 				base_url="https://api.groq.com/openai/v1"
 			)
+			# Set the model name for Groq
 			self.model_name = "llama-3.3-70b-versatile"
-		# Configure client for GPT provider
 		elif provider == 'sambanova':
+			# Set up the OpenAI client for Sambanova with the specified API key and base URL
 			self.client = openai.OpenAI(
 				base_url='https://api.sambanova.ai/v1/chat/completions',
 				api_key=SAMBANOVA_API_KEY,
 			)
+			# Set the model name for Sambanova
 			self.model_name = "Meta-Llama-3.1-8B-Instruct"
-		# Configure client for Google provider
 		elif provider == 'google':
-			# Configure Google's generative AI with API key
+			# Configure the Google Generative AI with the specified API key
 			genai.configure(api_key=GOOGLE_API_KEY)
-			# Initialize Google's generative model with specific configuration
+			# Set up the GenerativeModel for Google with the specified model name and configuration
 			self.model = genai.GenerativeModel(
 				model_name="gemini-2.0-flash-exp",
 				generation_config=self.GOOGLE_GENERATION_CONFIG,
 			)
 
-	# Method to process a prompt and get response from AI model
+	# Method to send a prompt to the AI provider and get the response
 	def prompt(self, prompt: str, strict: bool = True) -> str | None:
-		# If strict mode is enabled, modify prompt to request only the result
+		"""
+		Send a prompt to the AI provider and get the response.
+
+		Args:
+						prompt (str): The prompt to send to the AI.
+						strict (bool): If True, instructs the AI to only return the result.
+
+		Returns:
+						str | None: The response from the AI, or None if there's an error.
+		"""
+		# Append instruction to the prompt if strict mode is enabled
 		if strict:
 			prompt = f"{prompt}. Only return the result, nothing else."
 
-		# Handle the prompt based on the provider
+		# Handle the prompt based on the selected provider
 		if self.provider in ('groq', 'gpt', 'sambanova'):
-			# Use OpenAI's API handling for Groq and GPT providers
 			return self._handle_openai(prompt)
 		elif self.provider == 'google':
-			# Use Google's API handling for Google provider
 			return self._handle_google(prompt)
 
-	# Private method to handle OpenAI API requests
+	# Helper method to handle OpenAI-based providers (Groq, Sambanova)
 	def _handle_openai(self, prompt: str) -> str:
-		# For GPT provider, strip whitespace from prompt
+		"""
+		Handle the prompt using OpenAI's API.
+
+		Args:
+						prompt (str): The prompt to send.
+
+		Returns:
+						str: The response from OpenAI.
+		"""
+		# Assign the prompt to the content variable
 		content = prompt
-		# Create a chat completion request with the given prompt
+		# Create a chat completion request with the specified messages and model
 		chat = self.client.chat.completions.create(
 			messages=[{
 				"role":    "user",
@@ -109,28 +123,46 @@ class UseAI:
 			}],
 			model=self.model_name,
 		)
-		# Return the content of the first response from the model
+		# Return the content of the first choice's message
 		return chat.choices[0].message.content
 
-	# Private method to handle Google's generative AI requests
+	# Helper method to handle Google's Generative AI
 	def _handle_google(self, prompt: str) -> str:
-		# Start a new chat session with empty history
+		"""
+		Handle the prompt using Google's Generative AI.
+
+		Args:
+						prompt (str): The prompt to send.
+
+		Returns:
+						str: The response from Google.
+		"""
+		# Start a new chat session with an empty history
 		chat_session = self.model.start_chat(history=[])
-		# Send the prompt as a message in the chat session
+		# Send the prompt message and get the response
 		response = chat_session.send_message(prompt)
-		# Return the stripped text response from Google's model
+		# Return the stripped text of the response
 		return response.text.strip()
 
 
-# Function to sanitize and normalize a URL
+# Function to sanitize a URL by encoding special characters
 def sanitize_url(url: str) -> str:
-	# Parse the input URL into its components
+	"""
+	Sanitize a URL by encoding special characters.
+
+	Args:
+					url (str): The URL to sanitize.
+
+	Returns:
+					str: The sanitized URL.
+	"""
+	# Parse the URL into its components
 	parsed = urllib.parse.urlsplit(url)
-	# Rebuild the URL with properly encoded components
+	# Rebuild the URL with encoded components
 	return urllib.parse.urlunsplit((
-		parsed.scheme,  # URL scheme (e.g., http, https)
-		parsed.netloc,  # Network location (e.g., www.example.com)
-		urllib.parse.quote(parsed.path, safe="/"),  # Encoded path
-		urllib.parse.quote(parsed.query, safe="=&?"),  # Encoded query string
-		urllib.parse.quote(parsed.fragment, safe="")  # Encoded fragment
+		parsed.scheme,
+		parsed.netloc,
+		urllib.parse.quote(parsed.path, safe="/"),
+		urllib.parse.quote(parsed.query, safe="=&?"),
+		urllib.parse.quote(parsed.fragment, safe="")
 	))

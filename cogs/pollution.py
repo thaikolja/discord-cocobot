@@ -1,46 +1,48 @@
-#  Copyright (C) 2025 by Kolja Nolte
-#  kolja.nolte@gmail.com
-#  https://gitlab.com/thaikolja/discord-cocobot
+# Copyright (C) 2025 by Kolja Nolte
+# kolja.nolte@gmail.com
+# https://gitlab.com/thaikolja/discord-cocobot
 #
-#  This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
-#  You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
-#  - Give appropriate credit to the original author.
-#  - Provide a link to the license.
-#  - Distribute your contributions under the same license.
+# This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+# You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
+# - Give appropriate credit to the original author.
+# - Provide a link to the license.
+# - Distribute your contributions under the same license.
 #
-#  For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
+# For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
 #
-#  Author:    Kolja Nolte
-#  Email:     kolja.nolte@gmail.com
-#  License:   CC BY-NC-SA 4.0
-#  Date:      2014-2025
-#  Package:   Thailand Discord
+# Author:    Kolja Nolte
+# Email:     kolja.nolte@gmail.com
+# License:   CC BY-NC-SA 4.0
+# Date:      2014-2025
+# Package:   Thailand Discord
 
+# Import the requests module to make HTTP requests to external APIs
 import requests
 
-# Import Discord API library for bot functionality
+# Import the Discord API library for interacting with the Discord API
 import discord
 
-# Import command handling from Discord extensions
+# Import the commands module from discord.ext to create bot commands
 from discord.ext import commands
 
-# Import slash command functionality from Discord API
+# Import the app_commands module from discord to create slash commands
 from discord import app_commands
 
-# Import configuration constants and API key
+# Import configuration constants and API key from the config module
 from config.config import ERROR_MESSAGE, ACQIN_API_KEY
 
-# Import URL sanitization utility function
+# Import the sanitize_url function from utils.helpers to sanitize URLs
 from utils.helpers import sanitize_url
 
-# Import datetime handling for time-related operations
+# Import the datetime class from the datetime module for handling dates and times
 from datetime import datetime
 
-# Import human-readable time formatting
+# Import the naturaltime function from the humanize module to format time in a human-readable way
 from humanize import naturaltime
 
 
-# Define a new Discord cog for pollution data
+# Define a new Discord cog for handling pollution data
+# noinspection PyUnresolvedReferences
 class PollutionCog(commands.Cog):
 	"""
 	A Discord Cog for showing up-to-date pollution data and AQI in the entered city.
@@ -54,10 +56,11 @@ class PollutionCog(commands.Cog):
 		Parameters:
 		bot (commands.Bot): The bot instance to which this cog is added.
 		"""
-		self.bot = bot  # Assign the bot instance to self.bot
+		# Assign the bot instance to the self.bot attribute
+		self.bot = bot
 
-	# Define a slash command for pollution data
-	@app_commands.command(name="pollution", description='Shows up-to-date pollution data and AQI a specified city')
+	# Define a slash command for fetching pollution data
+	@app_commands.command(name="pollution", description='Shows up-to-date pollution data and AQI in the specified city')
 	@app_commands.describe(city='The city to check the pollution data for (Default: Bangkok)')
 	async def pollution_command(self, interaction: discord.Interaction, city: str = 'Bangkok'):
 		"""
@@ -67,43 +70,41 @@ class PollutionCog(commands.Cog):
 		interaction (discord.Interaction): The interaction object representing the command invocation.
 		city (str): The city to check the pollution data for (default is Bangkok).
 		"""
-		# Sanitize and construct the API URL with the city and API key
-		api_url = sanitize_url(f'https://api.waqi.info/feed/{city}/?token={ACQIN_API_KEY}')  # Sanitize the city name for use in the URL
+		# Sanitize the city name for use in the URL and construct the API request URL
+		api_url = sanitize_url(f'https://api.waqi.info/feed/{city}/?token={ACQIN_API_KEY}')
 
 		# Make a GET request to the pollution API
-		response = requests.get(api_url)  # Make a GET request to the API
+		response = requests.get(api_url)
 
 		# Check if the response was successful
-		if not response.ok:  # Check if the response is not OK
+		if not response.ok:
 			# Send an error message if the request failed
-			await interaction.response.send_message(
-				f"{ERROR_MESSAGE} Looks like there's been some connection error. Give it another shot.")
-			return  # Exit the function
+			await interaction.response.send_message(f"{ERROR_MESSAGE} Looks like there's been some connection error. Give it another shot.")
+			return
 
 		# Parse the JSON response from the API
-		data = response.json()  # Parse the JSON response
+		data = response.json()
 
 		# Check if the API returned a successful status
-		if data['status'] != 'ok':  # Check if the status in the response is not 'ok'
+		if data['status'] != 'ok':
 			# Send an error message if the city name is incorrect
 			await interaction.response.send_message(f"{ERROR_MESSAGE} Check your spelling of \"{city}\" and give it another shot.")
-			# Exit the function
 			return
 
 		# Extract the main data from the response
-		data = data['data']  # Extract the data from the response
+		data = data['data']
 
 		# Get the AQI value from the data
-		aqi = data['aqi']  # Get the AQI value from the data
+		aqi = data['aqi']
 
 		# Get the city name from the data
-		city = data['city']['name']  # Get the city name from the data
+		city = data['city']['name']
 
 		# Calculate how long ago the data was updated
-		updated_ago = naturaltime(datetime.fromisoformat(data['time']['iso']))  # Get the last updated time in a human-readable format
+		updated_ago = naturaltime(datetime.fromisoformat(data['time']['iso']))
 
 		# Construct the base output message with AQI value
-		pre_output = f"The PM2.5 level in **{city}** is at `{aqi}` **AQI**."  # Construct the pre-output message with the AQI value
+		pre_output = f"The PM2.5 level in **{city}** is at `{aqi}` **AQI**."
 
 		# Determine the appropriate emoji and message based on AQI level
 		if aqi <= 50:
@@ -114,19 +115,17 @@ class PollutionCog(commands.Cog):
 			emoji, message = "🟠", "Not great, not terrible. Stay in, unless you fancy a diet of delusions. Wear a mask."
 		elif aqi <= 200:
 			emoji, message = "🔴", "Unhealthy. Breathing's like Engelhardt's coconut-only dreams. Wear a mask - and, no, it's not \"infringing on your freedom.\""
-		elif aqi <= 300:
-			emoji, message = "🟣", "Very unhealthy. The air is a cult—suffocating your sanity, one breath at a time. A mask is no longer optional."
 		else:
 			emoji, message = "⚫️", "Apocalypse air! Even Engelhardt's coconuts couldn't save this. Mask up, or you'll be seeing coconuts soon."
 
 		# Combine all elements into the final output message
-		output = f"{emoji} {pre_output} {message} (Last checked: {updated_ago})"  # Combine everything into the output
+		output = f"{emoji} {pre_output} {message} (Last checked: {updated_ago})"
 
 		# Send the final message as a response to the interaction
-		await interaction.response.send_message(output)  # Send the output message as a response to the interaction
+		await interaction.response.send_message(output)
 
 
-# Setup function to register the cog with the bot
+# Define the setup function to register the cog with the bot
 async def setup(bot: commands.Bot):
 	"""
 	A setup function to add the PollutionCog to the bot.
@@ -135,4 +134,4 @@ async def setup(bot: commands.Bot):
 	bot (commands.Bot): The bot instance to which this cog is added.
 	"""
 	# Add the PollutionCog instance to the bot
-	await bot.add_cog(PollutionCog(bot))  # Add an instance of PollutionCog to the bot
+	await bot.add_cog(PollutionCog(bot))

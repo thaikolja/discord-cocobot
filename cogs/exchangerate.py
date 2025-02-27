@@ -1,31 +1,31 @@
-#  Copyright (C) 2025 by Kolja Nolte
-#  kolja.nolte@gmail.com
-#  https://gitlab.com/thaikolja/discord-cocobot
+# Copyright (C) 2025 by Kolja Nolte
+# kolja.nolte@gmail.com
+# https://gitlab.com/thaikolja/discord-cocobot
 #
-#  This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
-#  You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
-#  - Give appropriate credit to the original author.
-#  - Provide a link to the license.
-#  - Distribute your contributions under the same license.
+# This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+# You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
+# - Give appropriate credit to the original author.
+# - Provide a link to the license.
+# - Distribute your contributions under the same license.
 #
-#  For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
+# For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
 #
-#  Author:    Kolja Nolte
-#  Email:     kolja.nolte@gmail.com
-#  License:   CC BY-NC-SA 4.0
-#  Date:      2014-2025
-#  Package:   Thailand Discord
+# Author:    Kolja Nolte
+# Email:     kolja.nolte@gmail.com
+# License:   CC BY-NC-SA 4.0
+# Date:      2014-2025
+# Package:   Thailand Discord
 
 # Import the requests library for making HTTP requests
 import requests
 
-# Import the discord library
+# Import the discord library for Discord functionality
 import discord
 
-# Import commands from discord.ext
+# Import commands from discord.ext for creating bot commands
 from discord.ext import commands
 
-# Import app_commands from discord
+# Import app_commands from discord for slash command functionality
 from discord import app_commands
 
 # Import the datetime class from the datetime module for handling date and time
@@ -53,6 +53,7 @@ class ExchangerateCog(commands.Cog):
 		Parameters:
 		bot (commands.Bot): The bot instance to which this cog is added.
 		"""
+		# Store the bot instance for later use
 		self.bot = bot
 
 	# Define a slash command named "exchangerate" with a description
@@ -73,7 +74,7 @@ class ExchangerateCog(commands.Cog):
 		to_currency (str): The currency to convert to. Defaults to 'THB'.
 		amount (int): The amount of money to convert. Defaults to 1.
 		"""
-		# Strip and convert the currency codes to uppercase
+		# Strip whitespace and convert the currency codes to uppercase
 		from_currency = from_currency.strip().upper()
 		to_currency = to_currency.strip().upper()
 

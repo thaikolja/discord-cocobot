@@ -8,6 +8,7 @@ audioop-lts==0.2.1
 cachetools==5.5.0
 certifi==2024.12.14
 charset-normalizer==3.4.1
+click==8.1.8
 discord==2.3.2
 discord.py==2.4.0
 distro==1.9.0
@@ -65,4 +66,5 @@ typing_extensions==4.12.2
 unittest2==1.1.0
 uritemplate==4.1.1
 urllib3==2.3.0
+uvicorn==0.34.0
 yarl==1.18.3

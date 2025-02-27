@@ -1,3 +1,4 @@
+# Copyright and licensing information
 #  Copyright (C) 2025 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thaikolja/discord-cocobot
@@ -19,36 +20,33 @@
 # Import the requests library for making HTTP requests
 import requests
 
-# Import the discord library
+# Import the discord library for interacting with the Discord API
 import discord
 
-# Import commands from discord.ext
+# Import the commands module from discord.ext to create bot commands
 from discord.ext import commands
 
-# Import app_commands from discord
+# Import the app_commands module from discord to define slash commands
 from discord import app_commands
 
-# Import Optional from typing for optional type hints
-from typing import Optional
-
-# Import sanitize_url function from utils.helpers
+# Import the sanitize_url function from utils.helpers to clean location inputs
 from utils.helpers import sanitize_url
 
-# Import WEATHERAPI_API_KEY from config
+# Import the WEATHERAPI_API_KEY from config to access the weather API key
 from config.config import WEATHERAPI_API_KEY
 
-# Import ERROR_MESSAGE from config
+# Import the ERROR_MESSAGE from config to access the error message template
 from config.config import ERROR_MESSAGE
 
 
-# Define the WeatherCog class as a subclass of commands.Cog
+# Define a class named WeatherCog that inherits from commands.Cog
 # noinspection PyUnresolvedReferences
 class WeatherCog(commands.Cog):
 	"""
 	A Discord Cog for fetching and displaying the current weather for a specified location.
 	"""
 
-	# Initialize the WeatherCog with a bot instance
+	# Define the constructor method to initialize the WeatherCog with the bot instance
 	def __init__(self, bot: commands.Bot):
 		"""
 		Initializes the WeatherCog with the given bot instance.
@@ -56,12 +54,12 @@ class WeatherCog(commands.Cog):
 		Parameters:
 		bot (commands.Bot): The bot instance to which this cog is added.
 		"""
-		# Assign the bot instance to self.bot
+		# Assign the bot instance to the instance variable self.bot
 		self.bot = bot
 
 	# Define a slash command named "weather" with a description
 	@app_commands.command(name="weather", description="Get the current weather for a location")
-	# Describe the location and units parameters
+	# Describe the parameters for the "weather" command
 	@app_commands.describe(
 		location='The location you want the weather for (Default: Bangkok)',
 		units='Choose the unit system: Metric (°C) or Imperial (°F). (Default: Metric)'
@@ -73,7 +71,7 @@ class WeatherCog(commands.Cog):
 			app_commands.Choice(name="Freedom Units (°F)", value="imperial")
 		]
 	)
-	# Define the weather_command function with interaction, location, and optional units parameters
+	# Define the asynchronous weather_command method to handle the "weather" command
 	async def weather_command(
 		self,
 		interaction: discord.Interaction,
@@ -88,50 +86,45 @@ class WeatherCog(commands.Cog):
 		location (str): The location for which to get the current weather.
 		units (Optional[app_commands.Choice[str]]): The unit system for temperature. Defaults to Metric if not specified.
 		"""
-		# Set units_value to "metric" if units is None, else set to units.value
-		if units == '':
-			units_value = 'metric'
-		else:
-			units_value = units
-
-		# Set unit_symbol based on units_value
+		# Determine the units to use for temperature; default to 'metric' if units is None
+		units_value = units if units else 'metric'
+		# Set the unit symbol based on the units_value
 		unit_symbol = "°C" if units_value == "metric" else "°F"
 
-		# Construct the API URL with sanitized location
+		# Construct the API URL with the sanitized location
 		api_url = f"https://api.weatherapi.com/v1/current.json?key={WEATHERAPI_API_KEY}&q={sanitize_url(location)}"
 
+		# Make the API request to fetch weather data
 		response = requests.get(api_url)
 
+		# Check if the response was successful
 		if not response.ok:
+			# If the response is not successful, send an error message
 			await interaction.response.send_message(
 				f"{ERROR_MESSAGE} That's a nope. Are you sure **{location}** even exists?!"
 			)
+			return
 
 		# Parse the JSON response from the API
 		data = response.json()
 
-		# Extract city name from the response data
+		# Extract the city name from the response data
 		city = data['location']['name']
-
-		# Extract country name from the response data
+		# Extract the country name from the response data
 		country = data['location']['country']
-
-		# Extract temperature based on units_value
+		# Extract the temperature based on the units_value
 		temperature = data['current']['temp_c'] if units_value == "metric" else data['current']['temp_f']
-
-		# Extract feels_like temperature based on units_value
+		# Extract the "feels like" temperature based on the units_value
 		feels_like = data['current']['feelslike_c'] if units_value == "metric" else data['current']['feelslike_f']
-
-		# Extract humidity from the response data
+		# Extract the humidity percentage from the response data
 		humidity = data['current']['humidity']
-
-		# Extract weather condition text and convert to lowercase
+		# Extract the weather condition text and convert it to lowercase
 		condition = data['current']['condition']['text'].lower()
 
 		# Construct the output message with weather details
 		output = (
 			f"🌤️ The weather in **{city}**, **{country}** is currently {condition} with temperatures of `{temperature}{unit_symbol}` "
-			f"(feels like `{feels_like}{unit_symbol}`). **Humidity** is at `{humidity}%`."
+			f"(feels like `{feels_like}{unit_symbol}`). **Humidity** is at `{humidity}`%."
 		)
 
 		# Send the output message to the user

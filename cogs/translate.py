@@ -1,3 +1,4 @@
+# Copyright and licensing information
 #  Copyright (C) 2025 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thaikolja/discord-cocobot
@@ -16,36 +17,31 @@
 #  Date:      2014-2025
 #  Package:   Thailand Discord
 
-"""
-This module provides a Discord Cog for translating text from one language to another using AI.
-"""
+# Import necessary modules for Discord bot functionality
+import discord  # For interacting with the Discord API
 
-# Import the discord.py library for Discord functionality
-import discord
+import openai  # For interacting with OpenAI's API
 
-import openai
+from discord.ext import commands  # For creating bot commands
 
-# Import commands extension from discord.py for creating bot commands
-from discord.ext import commands
+from discord import app_commands  # For defining slash commands
 
-# Import app_commands from discord for slash command functionality
-from discord import app_commands
+from config.config import ERROR_MESSAGE  # Import custom error message from configuration
 
-# Import the error message constant from config
-from config.config import ERROR_MESSAGE
+from utils.helpers import UseAI  # Import AI helper utility
 
-# Import the UseAI helper class from utils.helpers
-from utils.helpers import UseAI
+import logging  # Import logging module for error tracking
+
+# Configure logging to track activities and errors specific to this module
+logger = logging.getLogger(__name__)
 
 
-# Define a new Cog class for translation functionality
-# noinspection PyUnresolvedReferences
 class TranslateCog(commands.Cog):
 	"""
 	A Discord Cog for translating text from one language to another.
 	"""
 
-	# Initialize the TranslateCog with a bot instance
+	# Constructor to initialize the TranslateCog class with the given bot instance
 	def __init__(self, bot: commands.Bot):
 		"""
 		Initializes the TranslateCog class with the given bot instance.
@@ -56,18 +52,15 @@ class TranslateCog(commands.Cog):
 		# Store the bot instance for later use
 		self.bot = bot
 
-	# Define a slash command for translation
 	@app_commands.command(
 		name="translate",
 		description='Translate text from one language to another'
 	)
-	# Describe the command parameters
 	@app_commands.describe(
 		text='The text to translate',
 		from_language='The language code of the source language (Default: Thai)',
 		to_language='The language code of the target language (Default: English)'
 	)
-	# Define the asynchronous function that handles the "translate" command
 	async def translate_command(
 		self,
 		interaction: discord.Interaction,
@@ -89,15 +82,26 @@ class TranslateCog(commands.Cog):
 		await interaction.response.defer()
 
 		try:
+			# Initialize the AI helper with the preferred provider
 			ai = UseAI(provider='groq')
-			output = ai.prompt(f'Translate the text "{text}" from {from_language} to {to_language}. Keep the tone and meaning of the original text.')
+			# Construct the prompt for the AI to process
+			prompt = (
+				f'Translate the text "{text}" from {from_language} to {to_language}. '
+				f'Keep the tone and meaning of the original text.'
+			)
+			# Get the response from the AI
+			output = ai.prompt(prompt)
+			# Check if the response is valid
 			if not output:
 				await interaction.followup.send(ERROR_MESSAGE)
 				return
+			# Send the translated text back to the user
 			await interaction.followup.send(f"📚️ {output}")
 		except openai.APITimeoutError:
+			# Handle API timeout errors
 			await interaction.followup.send("⏰ Request timed out after 10 seconds")
 		except Exception as e:
+			# Handle other exceptions
 			await interaction.followup.send(f"❌ Error: {str(e)}")
 
 

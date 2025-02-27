@@ -1,40 +1,40 @@
-#  Copyright (C) 2025 by Kolja Nolte
-#  kolja.nolte@gmail.com
-#  https://gitlab.com/thaikolja/discord-cocobot
+# Copyright (C) 2025 by Kolja Nolte
+# kolja.nolte@gmail.com
+# https://gitlab.com/thaikolja/discord-cocobot
 #
-#  This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
-#  You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
-#  - Give appropriate credit to the original author.
-#  - Provide a link to the license.
-#  - Distribute your contributions under the same license.
+# This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+# You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
+# - Give appropriate credit to the original author.
+# - Provide a link to the license.
+# - Distribute your contributions under the same license.
 #
-#  For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
+# For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
 #
-#  Author:    Kolja Nolte
-#  Email:     kolja.nolte@gmail.com
-#  License:   CC BY-NC-SA 4.0
-#  Date:      2014-2025
-#  Package:   Thailand Discord
+# Author:    Kolja Nolte
+# Email:     kolja.nolte@gmail.com
+# License:   CC BY-NC-SA 4.0
+# Date:      2014-2025
+# Package:   Thailand Discord
 
-# Import the requests library for making HTTP requests
+# Import the requests library to make HTTP requests to external APIs
 import requests
 
-# Import the discord library for Discord API interactions
+# Import the discord library for interacting with the Discord API
 import discord
 
-# Import the commands module from discord.ext
+# Import the commands module from discord.ext to create bot commands
 from discord.ext import commands
 
-# Import app_commands for Discord application command support
+# Import the app_commands module from discord to create slash commands
 from discord import app_commands
 
-# Import datetime for date/time handling
+# Import the datetime module for handling dates and times
 from datetime import datetime
 
-# Import configuration constants
+# Import configuration constants from the config module
 from config.config import ERROR_MESSAGE, LOCALTIME_API_KEY
 
-# Import the sanitize_url helper function from utils
+# Import the sanitize_url helper function from utils.helpers
 from utils.helpers import sanitize_url
 
 
@@ -43,7 +43,7 @@ from utils.helpers import sanitize_url
 class TimeCog(commands.Cog):
 	# Initialize the Cog with the bot instance
 	def __init__(self, bot: commands.Bot):
-		# Store the bot reference
+		# Store the bot reference for later use
 		self.bot = bot
 
 	# Define the /time command with description and parameters

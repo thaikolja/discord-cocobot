@@ -31,6 +31,12 @@ echo "Changing into /home/api/cocobot"
 # Change into the bot directory
 cd /home/api/cocobot || exit
 
+# Activate Python environment
+source ./venv/bin/activate
+
+echo "Installing requirements..."
+pip install -r requirements
+
 # Log: Pull the latest changes
 echo "Pulling the latest changes..."
 

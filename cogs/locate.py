@@ -1,40 +1,47 @@
-#  Copyright (C) 2025 by Kolja Nolte
-#  kolja.nolte@gmail.com
-#  https://gitlab.com/thaikolja/discord-cocobot
+# Copyright (C) 2025 by Kolja Nolte
+# kolja.nolte@gmail.com
+# https://gitlab.com/thaikolja/discord-cocobot
 #
-#  This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
-#  You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
-#  - Give appropriate credit to the original author.
-#  - Provide a link to the license.
-#  - Distribute your contributions under the same license.
+# This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+# You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
+# - Give appropriate credit to the original author.
+# - Provide a link to the license.
+# - Distribute your contributions under the same license.
 #
-#  For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
+# For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
 #
-#  Author:    Kolja Nolte
-#  Email:     kolja.nolte@gmail.com
-#  License:   CC BY-NC-SA 4.0
-#  Date:      2014-2025
-#  Package:   Thailand Discord
+# Author:    Kolja Nolte
+# Email:     kolja.nolte@gmail.com
+# License:   CC BY-NC-SA 4.0
+# Date:      2014-2025
+# Package:   Thailand Discord
 
-import requests  # For making HTTP requests to external APIs
-import logging  # For logging important events and errors
+# Import the requests module to make HTTP requests to external APIs
+import requests
 
-# Import Discord-related modules for bot functionality
-import discord  # Main Discord API library
-from discord.ext import commands  # For creating bot commands
-from discord import app_commands  # For slash command functionality
+# Import the logging module to log important events and errors
+import logging
 
-# Import configuration constants and helper functions
+# Import the Discord module for interacting with the Discord API
+import discord
+
+# Import the commands module from discord.ext to create bot commands
+from discord.ext import commands
+
+# Import the app_commands module from discord to create slash commands
+from discord import app_commands
+
+# Import configuration constants and helper functions from the config module
 from config.config import ERROR_MESSAGE  # Custom error message format
 from config.config import GOOGLE_MAPS_API_KEY  # API key for Google Maps
 from utils.helpers import sanitize_url  # Function to sanitize URLs
 
-# Configure logging to show timestamps and set the logging level
+# Configure the logging module to show timestamps and set the logging level
 logging.basicConfig(level=logging.INFO)  # Set logging level to INFO
-logger = logging.getLogger(__name__)  # Create logger instance for this module
+logger = logging.getLogger(__name__)  # Create a logger instance for this module
 
 
-# Define a new Cog class for location-based commands
+# Define a new Cog class for handling location-based commands
 # noinspection PyUnresolvedReferences
 class LocateCog(commands.Cog):
 	"""

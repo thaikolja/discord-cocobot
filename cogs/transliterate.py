@@ -1,95 +1,117 @@
-#  Copyright (C) 2025 by Kolja Nolte
-#  kolja.nolte@gmail.com
-#  https://gitlab.com/thaikolja/discord-cocobot
+# Copyright (C) 2025 by Kolja Nolte
+# kolja.nolte@gmail.com
+# https://gitlab.com/thaikolja/discord-cocobot
 #
-#  This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
-#  You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
-#  - Give appropriate credit to the original author.
-#  - Provide a link to the license.
-#  - Distribute your contributions under the same license.
+# This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+# You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
+# - Give appropriate credit to the original author.
+# - Provide a link to the license.
+# - Distribute your contributions under the same license.
 #
-#  For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
+# For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
 #
-#  Author:    Kolja Nolte
-#  Email:     kolja.nolte@gmail.com
-#  License:   CC BY-NC-SA 4.0
-#  Date:      2014-2025
-#  Package:   Thailand Discord
+# Author:    Kolja Nolte
+# Email:     kolja.nolte@gmail.com
+# License:   CC BY-NC-SA 4.0
+# Date:      2014-2025
+# Package:   Thailand Discord
 
-# Import the discord.py library to create Discord bots and interact with the Discord API
-import discord
+# Import necessary modules for Discord bot functionality
+import discord  # For interacting with the Discord API
 
-# Import the commands extension from discord.ext to create bot commands
-from discord.ext import commands
+from discord.ext import commands  # For creating bot commands
 
-# Import app_commands from discord to enable slash command functionality
-from discord import app_commands
+from discord import app_commands  # For defining slash commands
 
-# Import the UseAI class from utils.helpers to handle AI-based transliterations
-from utils.helpers import UseAI
+from config.config import ERROR_MESSAGE  # Import custom error message from configuration
+
+from utils.helpers import UseAI  # Import AI helper utility
+
+import logging  # Import logging module for error tracking
+
+# Configure logging to track activities and errors specific to this module
+logger = logging.getLogger(__name__)
 
 
-# Define a new Cog class named Transliterate that inherits from commands.Cog
-# This Cog will handle the transliteration functionality of the bot
-# noinspection PyUnresolvedReferences
 class Transliterate(commands.Cog):
 	"""
-	A Discord Cog for transliterating Thai text to Latin script.
+	A Discord Cog that provides functionality to transliterate Thai text into Latin script.
 
-	This class contains functionality to convert Thai text into Latin characters
-	using an AI provider for accurate transliteration.
+	This cog uses an AI service to perform the transliteration, ensuring accurate and readable results.
+	It follows the Discord.py cog structure for clean and maintainable code organization.
 	"""
 
-	# Constructor method to initialize the Transliterate Cog
+	# Initialize the Transliterate cog with the bot instance
 	def __init__(self, bot: commands.Bot):
 		"""
-		Initializes the Transliterate class with the given bot instance.
+		Initialize the Transliterate cog with the bot instance.
 
-		Parameters:
-		bot (commands.Bot): The bot instance to which this cog is added
+		Args:
+						bot (commands.Bot): The Discord bot instance this cog is attached to.
 		"""
-		# Store the bot instance for later use
 		self.bot = bot
 
-	# Define a slash command named "transliterate" with description
 	@app_commands.command(
 		name="transliterate",
-		description='Transliterate Thai text to Latin script'
+		description='Transliterate Thai text into Latin script with tone markers.'
 	)
-	# Describe the parameter for the slash command
 	@app_commands.describe(
-		text='The text to transliterate'
+		text='The Thai text to be transliterated into Latin script.'
 	)
-	# Define the asynchronous function to handle the "transliterate" command
 	async def transliterate_command(
 		self,
 		interaction: discord.Interaction,
 		text: str
 	):
-		# Defer the response immediately
+		"""
+		Handle the /transliterate command by processing the input text and returning the transliterated result.
+
+		Args:
+						interaction (discord.Interaction): The interaction that triggered this command.
+						text (str): The Thai text to be transliterated.
+		"""
+		# Defer the response to let Discord know we're processing the command
 		await interaction.response.defer()
 
-		prompt = (
-			f"Transliterate the Thai text '{text}' into Latin characters only. "
-			f"Use diacritics to display the tone markers for every consonant and vowel. "
-			f"Separate syllables with a dash. Separate words with a space. "
-			f"Make it readable for English readers."
-		)
+		try:
+			# Initialize the AI helper with the preferred provider
+			ai = UseAI(provider='google')
 
-		ai = UseAI(provider='google')
-		answer = ai.prompt(prompt)
+			# Construct the prompt for the AI to process
+			prompt = (
+				f"Transliterate the Thai text '{text}' into Latin characters only. "
+				f"Use diacritics to display the tone markers for every consonant and vowel. "
+				f"Separate syllables with a dash. Separate words with a space. "
+				f"Make it readable for English readers."
+			)
 
-		# Send the result using follow-up
-		await interaction.followup.send(f"✍️ {answer}")
+			# Get the response from the AI
+			answer = ai.prompt(prompt)
+
+			# Check if the response is valid
+			if not answer:
+				raise ValueError("No response received from the AI service.")
+
+			# Clean up the response for output
+			cleaned_answer = ' '.join(answer.strip().split())
+			cleaned_answer = cleaned_answer.replace(':', '')  # Remove any colon characters
+
+			# Send the transliterated text back to the user
+			await interaction.followup.send(f"✍️ {cleaned_answer}")
+
+		except Exception as e:
+			# Log any errors that occur during processing
+			logger.error(f"Transliteration error: {str(e)}")
+			# Send a friendly error message to the user
+			await interaction.followup.send(f"✍️ {ERROR_MESSAGE}")
 
 
-# Define the asynchronous setup function to register the Transliterate cog
+# Function to add the Transliterate cog to the bot
 async def setup(bot: commands.Bot):
 	"""
-	A setup function to add the Transliterate cog to the bot.
+	Add the Transliterate cog to the bot.
 
-	Parameters:
-	bot (commands.Bot): The bot instance to which this cog is added
+	Args:
+					bot (commands.Bot): The Discord bot instance to add the cog to.
 	"""
-	# Add the Transliterate cog to the bot using add_cog method
 	await bot.add_cog(Transliterate(bot))
