@@ -28,9 +28,6 @@ import pytest_asyncio
 # Import mocking utilities from unittest.mock
 from unittest.mock import patch, AsyncMock, MagicMock
 
-# Import requests library for HTTP request handling
-import requests
-
 # Import commands extension from discord.ext
 from discord.ext import commands
 

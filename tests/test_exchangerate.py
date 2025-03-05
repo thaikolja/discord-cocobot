@@ -1,20 +1,20 @@
-#  Copyright (C) 2025 by Kolja Nolte
-#  kolja.nolte@gmail.com
-#  https://gitlab.com/thaikolja/discord-cocobot
+# Copyright (C) 2025 by Kolja Nolte
+# kolja.nolte@gmail.com
+# https://gitlab.com/thaikolja/discord-cocobot
 #
-#  This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
-#  You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
-#  - Give appropriate credit to the original author.
-#  - Provide a link to the license.
-#  - Distribute your contributions under the same license.
+# This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
+# You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
+# - Give appropriate credit to the original author.
+# - Provide a link to the license.
+# - Distribute your contributions under the same license.
 #
-#  For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
+# For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
 #
-#  Author:    Kolja Nolte
-#  Email:     kolja.nolte@gmail.com
-#  License:   CC BY-NC-SA 4.0
-#  Date:      2014-2025
-#  Package:   Thailand Discord
+# Author:    Kolja Nolte
+# Email:     kolja.nolte@gmail.com
+# License:   CC BY-NC-SA 4.0
+# Date:      2014-2025
+# Package:   Thailand Discord
 
 # Import the pytest framework for testing
 import pytest
@@ -87,8 +87,12 @@ async def test_valid_conversion(mock_get, cog, interaction):
 	# Set the return value of the mocked requests.get to the mock response
 	mock_get.return_value = mock_response
 
+	# Access the command's callback dynamically
+	command = cog.bot.tree.get_command("exchangerate")
+	callback = command.callback
+
 	# Call the exchangerate_command method directly with test parameters
-	await cog.exchangerate_command.callback(cog, interaction, from_currency="USD", to_currency="THB", amount=100)
+	await callback(cog, interaction, from_currency="USD", to_currency="THB", amount=100)
 
 	# Assert that the send_message method was called once
 	interaction.response.send_message.assert_awaited_once()
@@ -108,8 +112,12 @@ async def test_valid_conversion(mock_get, cog, interaction):
 # Patch the requests.get method to mock API calls
 @patch('cogs.exchangerate.requests.get')
 async def test_invalid_currency_length(mock_get, cog, interaction):
+	# Access the command's callback dynamically
+	command = cog.bot.tree.get_command("exchangerate")
+	callback = command.callback
+
 	# Test the command with invalid currency codes (length not equal to 3)
-	await cog.exchangerate_command.callback(cog, interaction, from_currency="US", to_currency="TH")
+	await callback(cog, interaction, from_currency="US", to_currency="TH")
 
 	# Assert that the send_message method was called once
 	interaction.response.send_message.assert_awaited_once()
@@ -142,8 +150,12 @@ async def test_nonexistent_target_currency(mock_get, cog, interaction):
 	# Set the return value of the mocked requests.get to the mock response
 	mock_get.return_value = mock_response
 
+	# Access the command's callback dynamically
+	command = cog.bot.tree.get_command("exchangerate")
+	callback = command.callback
+
 	# Call the exchangerate_command method with the test parameters
-	await cog.exchangerate_command.callback(cog, interaction, from_currency="USD", to_currency="THB", amount=100)
+	await callback(cog, interaction, from_currency="USD", to_currency="THB", amount=100)
 
 	# Assert that the send_message method was called once
 	interaction.response.send_message.assert_awaited_once()
@@ -166,8 +178,12 @@ async def test_api_failure(mock_get, cog, interaction):
 	# Set the return value of the mocked requests.get to the mock response
 	mock_get.return_value = mock_response
 
+	# Access the command's callback dynamically
+	command = cog.bot.tree.get_command("exchangerate")
+	callback = command.callback
+
 	# Call the exchangerate_command method with the test parameters
-	await cog.exchangerate_command.callback(cog, interaction, from_currency="USD", to_currency="THB", amount=100)
+	await callback(cog, interaction, from_currency="USD", to_currency="THB", amount=100)
 
 	# Assert that the send_message method was called once
 	interaction.response.send_message.assert_awaited_once()

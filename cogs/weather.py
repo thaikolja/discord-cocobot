@@ -1,4 +1,3 @@
-# Copyright and licensing information
 #  Copyright (C) 2025 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thaikolja/discord-cocobot
