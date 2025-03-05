@@ -58,7 +58,7 @@
 
 **Returns:** "🌤️ The weather in **Bangkok**, **Thailand** is currently clear with temperatures of `23.4°C` (feels like `25.2°C`). **Humidity** is at `69%`."
 
-### Convert `50` USD to THB:
+### Convert `50` USD to THB
 
 ```bash
 /exchangerate from_currency: USD to_currency: THB amount: 50
@@ -66,7 +66,7 @@
 
 **Returns:** "💰`50` **USD** is currently `1685.96` **THB** (Updated: a day ago)"
 
-### Check air quality in Chiang Mai:
+### Check air quality in Chiang Mai
 
 ```bash
 /pollution city: Chiang Mai
@@ -82,7 +82,7 @@
 
 **Returns:** "🇹🇭 ห้องน้ำอยู่ที่ไหน"
 
-### Transliterate the translated text into the Latin alphabet:
+### Transliterate the translated text into the Latin alphabet
 
 ```bash
 /transliterate text: "ห้องน้ำอยู่ที่ไหน"

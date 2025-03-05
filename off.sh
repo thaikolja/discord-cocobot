@@ -18,7 +18,6 @@
 # Date:      2014-2025
 # Package:   Thailand Discord
 #
-# Email:     kolja.nolte@gmail.com
 
 # Log: This script is used to deploy the bot to the server.
 echo "Stopping cocobot..."

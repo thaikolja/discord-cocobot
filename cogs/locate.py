@@ -93,9 +93,8 @@ class LocateCog(commands.Cog):
 			response = requests.get(api_url, timeout=5)
 			logger.info(f"Successfully geocoded {location} in {city}")
 
-			# Check if the response was successful (status code 200)
 			if response.status_code != 200:
-				await interaction.response.send_message(response.text + str(response.status_code))
+				await interaction.response.send_message(f"{ERROR_MESSAGE} Try again some other time, I guess?")
 				return
 
 			# Parse the JSON response from the API
