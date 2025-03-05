@@ -84,6 +84,7 @@ class Transliterate(commands.Cog):
 				f"Use diacritics to display the tone markers for every consonant and vowel. "
 				f"Separate syllables with a dash. Separate words with a space. "
 				f"Make it readable for English readers."
+				f"Replace the character 'ก' with 'g', replace 'ป' with 'bp', and replace 'ต' with 'dt'. "
 			)
 
 			# Get the response from the AI
@@ -96,9 +97,10 @@ class Transliterate(commands.Cog):
 			# Clean up the response for output
 			cleaned_answer = ' '.join(answer.strip().split())
 			cleaned_answer = cleaned_answer.replace(':', '')  # Remove any colon characters
+			transliteration = cleaned_answer.strip()
 
 			# Send the transliterated text back to the user
-			await interaction.followup.send(f"✍️ {cleaned_answer}")
+			await interaction.followup.send(f"✍️ **Transliteration:** {transliteration}")
 
 		except Exception as e:
 			# Log any errors that occur during processing
