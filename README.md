@@ -1,6 +1,6 @@
 # 🥥 cocobot
 
-[![pipeline status](https://gitlab.com/thaikolja/discord-cocobot/badges/main/pipeline.svg)](https://gitlab.com/thaikolja/discord-cocobot/-/commits/main) [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-blue.svg)](LICENSE) [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+![GitLab Release](https://img.shields.io/gitlab/v/release/thaikolja%2Fdiscord-cocobot?style=flat&label=version&color=%23d87630&link=https%3A%2F%2Fgitlab.com%2Fthaikolja%2Fdiscord-cocobot) [![pipeline status](https://gitlab.com/thaikolja/discord-cocobot/badges/main/pipeline.svg)](https://gitlab.com/thaikolja/discord-cocobot/-/commits/main) [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-blue.svg)](LICENSE) [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 
 **@cocobot** is a feature-rich, customized **Discord bot** for the [**Discord Thailand** server](https://discord.gg/6JXCqVdmTZ) designed to provide useful utilities and fun interactions with a tropical twist. Built with **Python** and the `discord.py` library, cocobot offers **a variety of commands** for practical tasks like weather checking, translation, and currency conversion, all wrapped in a coconut-themed package.
 
@@ -64,7 +64,7 @@
 /exchangerate from_currency: USD to_currency: THB amount: 50
 ```
 
-**Returns:** "💰`50` **USD** is currently `1685.96` **THB** (Updated: a day ago)"
+**Returns:** "💰`50` **USD** are currently `1685.96` **THB** (Updated: a day ago)"
 
 ### Check air quality in Chiang Mai
 
@@ -80,7 +80,7 @@
 /translate text: "Where is the bathroom?" from_language: English to_language: Thai
 ```
 
-**Returns:** "🇹🇭 ห้องน้ำอยู่ที่ไหน"
+**Returns:** "🇹🇭 ห้องน้ำอยู่ที่ไหน"[^4]
 
 ### Transliterate the translated text into the Latin alphabet
 
@@ -88,28 +88,28 @@
 /transliterate text: "ห้องน้ำอยู่ที่ไหน"
 ```
 
-**Returns:** "🇺🇸 hông-náam yùu thîi-năi"
+**Returns:** "🇺🇸 hông-náam yùu thîi-năi"[^4]
 
 ---
 
 ## 🛠️ Installation
 
-In order to keep cocobot running on your Discord server, a web server with root access and feel comfortable with Bash commands **is required**. These steps assume that you're running Debian or Ubuntu and have experience in using SSH.
+To keep @cocobot running on your Discord server, you need a web server with root access and experience with Bash commands. **These steps assume you're running Debian or Ubuntu and have SSH experience**.
 
-1. Log in into your server's command line interface as user with root privileges.
+1. Log into your server's command line interface as a user with root privileges.
    1. If you don't have it yet, install Git via `sudo apt-get install git`
 
-2. For security reasons, you'd want to create a new user who belongs to a group that only has permissions to run the bot (note that both, the user and the group have the same name):
+2. For security reasons, you'd want to create a new user who belongs to a group that only has permission to run the bot (note that both the user and the group have the same name):
    1. Create group: `sudo groupapp discord-bot`
 
    2. Create user: `sudo useradd -m -g discord-bot discord-bot`
 
-3. Change (`cd`) into the newly created home directory, which would be `/home/discord-bot` and use `git clone https://gitlab.com/thaikolja/discord-cocobot.git .` to download the source code into your bot directory[^1].
+3. Change (`cd`) into the newly created home directory, which would be `/home/discord-bot,` and use `git clone https://gitlab.com/thaikolja/discord-cocobot.git .` to download the source code into your bot directory[^1].
 4. Change the permissions of the entire folder and files to match your user and group name: `sudo chown -R discord-bot:discord-bot .` (Don't leave the `.` away)
 5. Install all packages needed for installing the Discord bot: `sudo apt-get update && sudo apt-get install python3 python3-pip`
 6. To not depend on the OS' Python version, you need to create a virtual environment. In the root folder of your bot, run `python -m venv venv` to create one. Use `source venv/bin/activate` to switch into the environment.
 7. Install all dependencies via `pip install -r requirements.txt`.
-8. Copy the invisible file `.env.example` and rename it to `.env` via `cp .env.example .env`. Fill out the API keys and tokens[^2] which you can find via a simple Google search:
+8. Copy the invisible file `.env.example` and rename it to `.env` via `cp .env.example .env`. Fill out the API keys and tokens[^2], which you can find via a simple Google search:
    1. `DISCORD_BOT_TOKEN`=your_discord_bot_token
 
    2. `WEATHERAPI_API_KEY`=your_weatherapi_key
@@ -195,3 +195,4 @@ We welcome contributions via Git! Please follow these standard steps:
 [^1]: Using `.` works only if the current directory is completely empty. If not, leave don't use it and use `mv ./discord-bot/{*,.*} ../`
 [^2]: Keep your `.env` file secret and remember to add it to the `.gitignore` file. 
 [^3]: Uses Perplexity's AI LLM "Sonar Pro" and can produce inaccuracies.
+[^ 4]: Since `v2.2.0`, this is being handled by *Gemini 2.0 Flash Lite.* An API key is required, but usage of up to a million tokens is free.

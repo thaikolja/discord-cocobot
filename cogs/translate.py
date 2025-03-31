@@ -93,7 +93,7 @@ class TranslateCog(commands.Cog):
 
 		try:
 			# Initialize the AI helper with the preferred provider
-			ai = UseAI(provider='sambanova')
+			ai = UseAI(provider='google')
 			# Set AI response parameters
 			ai.temperature = 0.3
 			ai.top_p = 0.3
