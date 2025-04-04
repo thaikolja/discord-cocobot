@@ -82,7 +82,7 @@ class Transliterate(commands.Cog):
 			prompt = (
 				f"Transliterate the Thai text '{text}' into Latin characters only. "
 				f"Use diacritics to display the tone markers for every consonant and vowel. "
-				f"Separate syllables with a dash. Separate words with a space. "
+				f"Separate syllables with a dash. Separate individual words with a whitespace. "
 				f"Make it readable for English readers."
 				f"Replace the character 'ก' with 'g', replace 'ป' with 'bp', and replace 'ต' with 'dt'. "
 			)

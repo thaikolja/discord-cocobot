@@ -29,14 +29,15 @@ INITIAL_EXTENSIONS = [
 	'cogs.translate',  # Translation commands
 	'cogs.locate',  # Geolocation commands
 	'cogs.pollution',  # Air pollution information
-	'cogs.learn'  # Learning-related commands
+	'cogs.learn',  # Learning-related commands
+	#	'cogs.quiz'  # Thai vocabulary quiz commands
 ]
 
 
 # Define the main bot class inheriting from commands.Bot
 class Cocobot(commands.Bot):
 	# Version identifier for the bot
-	version: str = '2.0.2'
+	version: str = '2.2.0'
 
 	# Constructor method to initialize the bot
 	def __init__(self):
