@@ -78,7 +78,7 @@ class UseAI:
 			genai.configure(api_key=GOOGLE_API_KEY)
 			# Set up the GenerativeModel for Google with the specified model name and configuration
 			self.model = genai.GenerativeModel(
-				model_name='gemini-2.0-pro-exp-02-05',  # model_name="gemini-2.0-flash-exp",
+				model_name="gemini-2.0-flash-lite",#"gemini-2.0-flash-exp",
 				generation_config=self.GOOGLE_GENERATION_CONFIG,
 			)
 
@@ -161,10 +161,12 @@ def sanitize_url(url: str) -> str:
 	# Parse the URL into its components
 	parsed = urllib.parse.urlsplit(url)
 	# Rebuild the URL with encoded components
-	return urllib.parse.urlunsplit((
-		parsed.scheme,
-		parsed.netloc,
-		urllib.parse.quote(parsed.path, safe="/"),
-		urllib.parse.quote(parsed.query, safe="=&?"),
-		urllib.parse.quote(parsed.fragment, safe="")
-	))
+	return urllib.parse.urlunsplit(
+		(
+			parsed.scheme,
+			parsed.netloc,
+			urllib.parse.quote(parsed.path, safe="/"),
+			urllib.parse.quote(parsed.query, safe="=&?"),
+			urllib.parse.quote(parsed.fragment, safe="")
+		)
+	)
