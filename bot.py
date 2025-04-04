@@ -30,7 +30,7 @@ INITIAL_EXTENSIONS = [
 	'cogs.locate',  # Geolocation commands
 	'cogs.pollution',  # Air pollution information
 	'cogs.learn',  # Learning-related commands
-	'cogs.quiz'  # Thai vocabulary quiz commands
+	#	'cogs.quiz'  # Thai vocabulary quiz commands
 ]
 
 
