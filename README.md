@@ -1,6 +1,6 @@
 # 🥥 cocobot
 
-![GitLab Release](https://img.shields.io/gitlab/v/release/thaikolja%2Fdiscord-cocobot?style=flat&label=version&color=%23d87630&link=https%3A%2F%2Fgitlab.com%2Fthaikolja%2Fdiscord-cocobot) [![pipeline status](https://gitlab.com/thailand-discord/bots/cocobot/badges/main/pipeline.svg)](https://gitlab.com/thailand-discord/bots/cocobot/-/commits/main) [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-blue.svg)](LICENSE) [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+![GitLab Release](https://img.shields.io/gitlab/v/release/thaikolja%2Fdiscord-cocobot?style=flat&label=version&color=%23d87630&link=https%3A%2F%2Fgitlab.com%2Fthaikolja%2Fdiscord-cocobot) [![pipeline status](https://gitlab.com/thaikolja/discord-cocobot/badges/main/pipeline.svg)](https://gitlab.com/thaikolja/discord-cocobot/-/commits/main) [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-blue.svg)](LICENSE) [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 
 **@cocobot** is your friendly, feature-rich **Discord bot** designed for the [**Discord Thailand** server](https://discord.gg/6JXCqVdmTZ), bringing a tropical twist to your server with useful utilities and fun interactions. Built with **Python** and the `discord.py` library, cocobot offers **a variety of commands** for practical tasks like weather checking, translation, and currency conversion, all wrapped in a coconut-themed package.
 
@@ -66,7 +66,7 @@
 
 **Returns:** "💰`50` **USD** are currently `1685.96` **THB** (Updated: a day ago)"
 
-### Check the air quality in Chiang Mai
+### Check air quality in Chiang Mai
 
 ```bash
 /pollution city: Chiang Mai
@@ -104,7 +104,7 @@ To keep @cocobot running on your Discord server, you need a web server with root
 
    2. Create user: `sudo useradd -m -g discord-bot discord-bot`
 
-3. Change (`cd`) into the newly created home directory, which would be `/home/discord-bot`, and use `git clone https://gitlab.com/thailand-discord/bots/cocobot.git .` to download the source code into your bot directory[^1].
+3. Change (`cd`) into the newly created home directory, which would be `/home/discord-bot`, and use `git clone https://gitlab.com/thaikolja/discord-cocobot.git .` to download the source code into your bot directory[^1].
 4. Change the permissions of the entire folder and files to match your user and group name: `sudo chown -R discord-bot:discord-bot .` (Don't leave the `.` away)
 5. Install all packages needed for installing the Discord bot: `sudo apt-get update && sudo apt-get install python3 python3-pip`
 6. To not depend on the OS' Python version, you need to create a virtual environment. In the root folder of your bot, run `python3 -m venv venv` to create one. Use `source venv/bin/activate` to switch into the environment.
@@ -167,7 +167,7 @@ We recommend adding tests for any new features or bug fixes.
 
 We welcome contributions via Git! Please follow these standard steps:
 
-1. [Fork the repository](https://gitlab.com/thailand-discord/bots/cocobot/-/forks/new)
+1. [Fork the repository](https://gitlab.com/thaikolja/discord-cocobot/-/forks/new)
 2. Create a new branch for your feature/fix
 3. Commit your changes with a meaningful commit message
 4. Submit a pull request
