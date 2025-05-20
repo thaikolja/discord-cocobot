@@ -1,3 +1,19 @@
+#  Copyright (C) 2025 by Kolja Nolte
+#  kolja.nolte@gmail.com
+#  https://gitlab.com/thailand-discord/bots/cocobot
+#
+#  This work is licensed under the MIT License. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the condition that the above copyright notice and this permission notice shall be included in all
+#  copies or substantial portions of the Software.
+#
+#  For more information, visit: https://opensource.org/licenses/MIT
+#
+#  Author:    Kolja Nolte
+#  Email:     kolja.nolte@gmail.com
+#  License:   MIT
+#  Date:      2014-2025
+#  Package:   cocobot Discord Bot
+
 # Import the urllib.parse module for URL parsing and handling
 import urllib.parse
 
@@ -6,6 +22,12 @@ import openai
 
 # Import the google.generativeai module for interacting with Google's Generative AI
 import google.generativeai as genai
+
+# Import the GenerationConfig class from google.generativeai for configuring generation parameters
+from google.generativeai import GenerationConfig
+
+# Import the GenerationConfig class for configuring generation parameters
+from openai.types.chat import ChatCompletionAssistantMessageParam
 
 # Import the necessary API keys from the config module
 from config.config import (
@@ -28,7 +50,7 @@ class UseAI:
 	AVAILABLE_PROVIDERS = ['groq', 'google', 'sambanova']
 
 	# Define the configuration for Google's generative AI model
-	GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
+	GOOGLE_GENERATION_CONFIG: GenerationConfig | dict[str, float | str | int] = {
 		'temperature':        0.1,  # Controls randomness in generation
 		'top_p':              0.2,  # Controls diversity of responses
 		'top_k':              40,  # Limits the number of tokens considered
@@ -104,6 +126,8 @@ class UseAI:
 		elif self.provider == 'google':
 			return self._handle_google(prompt)
 
+		return None
+
 	# Helper method to handle OpenAI-based providers (Groq, Sambanova)
 	def _handle_openai(self, prompt: str) -> str:
 		"""
@@ -119,7 +143,7 @@ class UseAI:
 		content = prompt
 		# Create a chat completion request with the specified messages and model
 		chat = self.client.chat.completions.create(
-			messages=[{
+			messages=ChatCompletionAssistantMessageParam[{
 				"role":    "user",
 				"content": content
 			}],
@@ -160,6 +184,7 @@ def sanitize_url(url: str) -> str:
 	"""
 	# Parse the URL into its components
 	parsed = urllib.parse.urlsplit(url)
+
 	# Rebuild the URL with encoded components
 	return urllib.parse.urlunsplit(
 		(

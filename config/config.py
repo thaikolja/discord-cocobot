@@ -1,20 +1,18 @@
 #  Copyright (C) 2025 by Kolja Nolte
 #  kolja.nolte@gmail.com
-#  https://gitlab.com/thaikolja/discord-cocobot
+#  https://gitlab.com/thailand-discord/bots/cocobot
 #
-#  This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
-#  You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
-#  - Give appropriate credit to the original author.
-#  - Provide a link to the license.
-#  - Distribute your contributions under the same license.
+#  This work is licensed under the MIT License. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the condition that the above copyright notice and this permission notice shall be included in all
+#  copies or substantial portions of the Software.
 #
-#  For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
+#  For more information, visit: https://opensource.org/licenses/MIT
 #
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
-#  License:   CC BY-NC-SA 4.0
+#  License:   MIT
 #  Date:      2014-2025
-#  Package:   Thailand Discord
+#  Package:   cocobot Discord Bot
 
 """
 Configuration file for managing environment variables and application constants.
@@ -25,15 +23,15 @@ It leverages the `dotenv` library to load these values from a `.env` file,
 promoting a clean separation of configuration from code.
 """
 
-import os
 # Imports the standard 'os' module, providing functions for interacting with the operating system,
 # particularly for accessing environment variables.
+import os
 
+# Imports the 'load_dotenv' function from the 'dotenv' library, which loads environment variables
 from dotenv import load_dotenv
 
-# Imports the 'load_dotenv' function specifically from the 'dotenv' library,
-# which is used to parse `.env` files and load their key-value pairs into environment variables.
-
+# Version of the cocobot application, used for tracking and updates.
+COCOBOT_VERSION: str = "2.3.0"
 
 # Executes the function to load variables from a `.env` file located in the project's root
 # or parent directories into the system's environment variables.
