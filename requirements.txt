@@ -15,6 +15,7 @@ distro==1.9.0
 exceptiongroup==1.2.2
 filesize-cli==1.0.2
 frozenlist==1.5.0
+fuzzywuzzy==0.18.0
 google-ai-generativelanguage==0.6.15
 google-api-core==2.24.0
 google-api-python-client==2.159.0
@@ -34,6 +35,7 @@ humanize==4.11.0
 idna==3.10
 iniconfig==2.0.0
 jiter==0.8.2
+Levenshtein==0.27.1
 linecache2==1.0.0
 memcache==0.12.0
 multidict==6.1.0
@@ -52,7 +54,9 @@ pytest==8.3.3
 pytest-asyncio==0.25.3
 pytest-mock==3.14.0
 python-dotenv==1.0.1
+python-Levenshtein==0.27.1
 pytz==2024.2
+RapidFuzz==3.12.2
 requests==2.32.3
 requests-mock==1.12.1
 rsa==4.9

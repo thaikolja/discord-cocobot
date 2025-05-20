@@ -1,67 +1,90 @@
-# Configuration file for managing environment variables and application constants
-# This file contains all the necessary configurations and API keys for the application
+#  Copyright (C) 2025 by Kolja Nolte
+#  kolja.nolte@gmail.com
+#  https://gitlab.com/thailand-discord/bots/cocobot
+#
+#  This work is licensed under the MIT License. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the condition that the above copyright notice and this permission notice shall be included in all
+#  copies or substantial portions of the Software.
+#
+#  For more information, visit: https://opensource.org/licenses/MIT
+#
+#  Author:    Kolja Nolte
+#  Email:     kolja.nolte@gmail.com
+#  License:   MIT
+#  Date:      2014-2025
+#  Package:   cocobot Discord Bot
 
-# Import the os module to interact with operating system-dependent functionality
+"""
+Configuration file for managing environment variables and application constants.
+
+This module centralizes the retrieval of sensitive keys and configuration parameters
+from the environment, making them readily available as constants throughout the application.
+It leverages the `dotenv` library to load these values from a `.env` file,
+promoting a clean separation of configuration from code.
+"""
+
+# Imports the standard 'os' module, providing functions for interacting with the operating system,
+# particularly for accessing environment variables.
 import os
 
-# Import the load_dotenv function from the dotenv module to load environment variables from .env files
+# Imports the 'load_dotenv' function from the 'dotenv' library, which loads environment variables
 from dotenv import load_dotenv
 
-# Load environment variables from the .env file into the application
+# Version of the cocobot application, used for tracking and updates.
+COCOBOT_VERSION: str = "2.3.0"
+
+# Executes the function to load variables from a `.env` file located in the project's root
+# or parent directories into the system's environment variables.
 load_dotenv()
 
-# Define a friendly error message to display when something goes wrong
-# This message will be shown to users when an error occurs
+# Defines a user-facing error message string, potentially used in exception handling
+# or user feedback when an operation fails within the application.
 ERROR_MESSAGE: str = f"🥥 Oops, something's cracked, and it's **not** the coconut!"
 
-# Configure Discord-related constants
-# These constants are used to authenticate and connect to the Discord API
-
-# Retrieve the Discord Bot Token from the environment variables
-# This token is used to authenticate the bot with the Discord API
+# Retrieves the authentication token for the Discord bot account from environment variables.
+# This token is essential for the bot to connect to and interact with the Discord API.
 DISCORD_BOT_TOKEN: str = os.getenv('DISCORD_BOT_TOKEN')
 
-# Retrieve the Discord Server ID from the environment variables
-# This ID identifies the specific Discord server the bot is associated with
+# Fetches the unique identifier for the target Discord server (guild) from environment variables.
+# This ID specifies which server the bot's operations are primarily associated with.
 DISCORD_SERVER_ID: str = os.getenv('DISCORD_SERVER_ID')
 
-# Retrieve the Discord Bot ID from the environment variables
-# This ID uniquely identifies the bot within Discord
+# Obtains the unique application ID assigned to the Discord bot from environment variables.
+# Used for various API interactions and identifying the bot application itself.
 DISCORD_BOT_ID: str = os.getenv('DISCORD_BOT_ID')
 
-# Configure API keys for various services
-# These keys are used to authenticate with external APIs
-
-# Retrieve the WeatherAPI API Key from the environment variables
-# This key is used to access weather-related data from the WeatherAPI service
+# Retrieves the API key required for accessing the WeatherAPI service.
+# This key authenticates requests for fetching current weather conditions and forecasts.
 WEATHERAPI_API_KEY: str = os.getenv('WEATHERAPI_API_KEY')
 
-# Retrieve the LocalTime API Key from the environment variables
-# This key is used to access local time-related data from the LocalTime service
+# Fetches the API key for the LocalTime service (assuming a service providing time zone or local time data).
+# This key is necessary for making authenticated requests to retrieve time-related information.
 LOCALTIME_API_KEY: str = os.getenv('LOCALTIME_API_KEY')
 
-# Retrieve the CurrencyAPI API Key from the environment variables
-# This key is used to access currency conversion data from the CurrencyAPI service
+# Obtains the API key for the CurrencyAPI service, used for currency conversion functionalities.
+# This key authorizes requests to fetch real-time or historical exchange rates.
 CURRENCYAPI_API_KEY: str = os.getenv('CURRENCYAPI_API_KEY')
 
-# Retrieve the Groq API Key from the environment variables
-# This key is used to access AI-related services from Groq
+# Retrieves the API key for accessing Groq's AI services (e.g., language models).
+# This key is required to authenticate requests made to the Groq API endpoints.
 GROQ_API_KEY: str = os.getenv('GROQ_API_KEY')
 
-# Retrieve Google API key from environment variables
+# Fetches a general Google API key from environment variables.
+# This key might be used for various Google Cloud Platform services or other Google APIs.
 GOOGLE_API_KEY: str = os.getenv('GOOGLE_API_KEY')
 
-# Retrieve the Geoapify API Key from the environment variables
-# This key is used to access geolocation-related data from Geoapify
+# Obtains the API key for the Geoapify service, specializing in geolocation and map-related data.
+# This key authenticates requests for services like geocoding, routing, or map tiles.
 GEOAPFIY_API_KEY: str = os.getenv('GEOAPFIY_API_KEY')
 
-# Retrieve the Acqin API Key from the environment variables
-# This key is used to access location-based services from Acqin
+# Retrieves the API key for the AcqIn service (purpose assumed, e.g., location intelligence or data acquisition).
+# This key is needed to authenticate requests to the AcqIn platform's API.
 ACQIN_API_KEY: str = os.getenv('ACQIN_API_KEY')
 
-# Retrieve Google Maps API key from environment variables
+# Fetches the specific API key for Google Maps Platform services.
+# This key authorizes usage of APIs like Maps JavaScript API, Geocoding API, Places API, etc.
 GOOGLE_MAPS_API_KEY: str = os.getenv('GOOGLE_MAPS_API_KEY')
 
-# Retrieve the Sambanova API Key from the environment variables
-# This key is used to access AI-related services from Sambanova
+# Obtains the API key for accessing Sambanova's AI platform or services.
+# This key is required for authenticating interactions with Sambanova's AI models or infrastructure.
 SAMBANOVA_API_KEY: str = os.getenv('SAMBANOVA_API_KEY')
