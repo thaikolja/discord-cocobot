@@ -1,6 +1,6 @@
 #  Copyright (C) 2025 by Kolja Nolte
 #  kolja.nolte@gmail.com
-#  https://gitlab.com/thaikolja/discord-cocobot
+#  https://gitlab.com/thailand-discord/bots/cocobot
 #
 #  This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
 #  You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
