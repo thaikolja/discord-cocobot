@@ -5,6 +5,9 @@
 .idea
 .run
 
+
+off.sh
+on.sh
 diff.txt
 
 # Icon must end with two \r

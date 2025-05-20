@@ -1,20 +1,18 @@
 #  Copyright (C) 2025 by Kolja Nolte
 #  kolja.nolte@gmail.com
-#  https://gitlab.com/thaikolja/discord-cocobot
+#  https://gitlab.com/thailand-discord/bots/cocobot
 #
-#  This work is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
-#  You are free to use, share, and adapt this work for non-commercial purposes, provided that you:
-#  - Give appropriate credit to the original author.
-#  - Provide a link to the license.
-#  - Distribute your contributions under the same license.
+#  This work is licensed under the MIT License. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the condition that the above copyright notice and this permission notice shall be included in all
+#  copies or substantial portions of the Software.
 #
-#  For more information, visit: https://creativecommons.org/licenses/by-nc-sa/4.0/
+#  For more information, visit: https://opensource.org/licenses/MIT
 #
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
-#  License:   CC BY-NC-SA 4.0
+#  License:   MIT
 #  Date:      2014-2025
-#  Package:   Thailand Discord
+#  Package:   cocobot Discord Bot
 
 # Import the discord.py library for interacting with the Discord API
 import discord
@@ -29,7 +27,7 @@ from datetime import datetime, timedelta
 from discord.ext import commands
 
 # Import configuration constants from the config file
-from config.config import DISCORD_BOT_TOKEN, DISCORD_SERVER_ID
+from config.config import DISCORD_BOT_TOKEN, DISCORD_SERVER_ID, COCOBOT_VERSION
 
 # Import the logging module for tracking bot activities and errors
 import logging
@@ -53,7 +51,7 @@ INITIAL_EXTENSIONS = [
 	# Translation commands cog
 	'cogs.translate',
 	# Geolocation commands cog
-	'cogs.locate',
+	# 'cogs.locate', # TODO: Fix
 	# Air pollution information cog
 	'cogs.pollution',
 	# Learning-related commands cog
@@ -70,7 +68,7 @@ class Cocobot(commands.Bot):
 	Inherits from discord.ext.commands.Bot to provide bot functionalities.
 	"""
 	# Version identifier for the bot
-	version: str = '2.2.1'
+	version: str = COCOBOT_VERSION
 
 	# Constructor method to initialize the bot
 	def __init__(self):
