@@ -15,7 +15,7 @@ cache:
 
 test:
   stage: test
-  image: python:3.13
+  image: python:3.13-slim
   before_script:
     - python -m venv .venv
     - source .venv/bin/activate

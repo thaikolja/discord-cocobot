@@ -1,10 +1,16 @@
 # Changelog
 
+## v2.3.1
+
+- **Added:** Test file `test_weather.py` for automated testing via `pytest`.
+- **Fixed:** The weather toggle button now only refreshes the specific weather card it belongs to, instead of all previous weather cards.
+
 ## v2.3.0
 
-* **Improved** @cocobot's `/weather` command: You can now toggle between Fahrenheit and Celsius with a simple button underneath the weather card.
-* **Fixed** several smaller issues to adhere to Python's best practices.
-* Added `on.sh`, `off.sh`, and `deploy.sh` to `.gitignore` since they
+- **Improved:** @cocobot's `/weather` command: You can now toggle between Fahrenheit and Celsius with a simple button underneath the weather card.
+- **Fixed:** several smaller issues to adhere to Python's best practices.
+
+  Added `on.sh`, `off.sh`, and `deploy.sh` to `.gitignore` since they
 
 ## v2.2.1
 
