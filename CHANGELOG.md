@@ -2,9 +2,11 @@
 
 ## v2.3.0
 
-* **Improved** @cocobot's `/weather` command: You can now toggle between Fahrenheit and Celsius with a simple button underneath the weather card.
-* **Fixed** several smaller issues to adhere to Python's best practices.
-* Added `on.sh`, `off.sh`, and `deploy.sh` to `.gitignore` since they
+- **Improved:** @cocobot's `/weather` command: You can now toggle between Fahrenheit and Celsius with a simple button underneath the weather card.
+
+- **Fixed:** several smaller issues to adhere to Python's best practices.
+
+  Added `on.sh`, `off.sh`, and `deploy.sh` to `.gitignore` since they
 
 ## v2.2.1
 
