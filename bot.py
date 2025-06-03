@@ -55,8 +55,7 @@ INITIAL_EXTENSIONS = [
 	# Air pollution information cog
 	'cogs.pollution',
 	# Learning-related commands cog
-	'cogs.learn',
-	#	'cogs.quiz',  # TODO: Thai vocabulary quiz commands
+	'cogs.learn'
 ]
 
 

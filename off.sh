@@ -22,4 +22,4 @@ echo "Stopping cocobot..."
 systemctl stop cocobot.service
 systemctl disable cocobot.service
 
-exit 1
+exit 0
