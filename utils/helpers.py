@@ -100,7 +100,7 @@ class UseAI:
 			genai.configure(api_key=GOOGLE_API_KEY)
 			# Set up the GenerativeModel for Google with the specified model name and configuration
 			self.model = genai.GenerativeModel(
-				model_name="gemini-2.0-flash-exp",
+				model_name='gemma-3n-e4b-it',  # Old: "gemini-2.0-flash-exp",
 				generation_config=self.GOOGLE_GENERATION_CONFIG,
 			)
 
