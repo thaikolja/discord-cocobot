@@ -1,5 +1,12 @@
 # Changelog
 
+## v2.3.2
+
+- **Added:** A tribute to our lost soul, `@Nal`, whenever his username is mentioned.
+- **Improved:** Clarified and expanded code comments throughout `bot.py` for better maintainability.
+- **Fixed:** Minor cooldown logic for the `tate` command (cooldown message now says 5 minutes, logic is 3 minutes).
+- **Improved:** General code and documentation quality in `bot.py`.
+
 ## v2.3.1
 
 - **Added:** Test file `test_weather.py` for automated testing via `pytest`.

@@ -152,7 +152,7 @@ class Cocobot(commands.Bot):
 				# Calculate the time elapsed since the last usage
 				time_since = now - last_used
 				# Check if the elapsed time is less than 5 minutes
-				if time_since < timedelta(minutes=5):
+				if time_since < timedelta(minutes=3):
 					# Send a message informing the user about the cooldown
 					await message.channel.send(f"🥥 Sorry, {user.mention}, the Bottom G is tired from all the Bottom G'ing and needs a 5-minute break. ")
 					# Exit the handler as the user is on cooldown
@@ -171,6 +171,14 @@ class Cocobot(commands.Bot):
 			# Set the image URL for the embed
 			embed.set_image(url='https://c.tenor.com/fyrqnSBR4gcAAAAd/tenor.gif')
 			# Send the embed containing the GIF image to the channel where the message was received
+			await message.channel.send(embed=embed)
+		# Display a tribute to our lost soul, @Nal
+		elif '@Nal' in message.content or any(mention.name == 'nal_9345' for mention in message.mentions):
+			# Create a Discord embed object
+			embed = discord.Embed()
+			# Set the URL of the image
+			embed.set_image(url='https://smmallcdn.net/kolja/1749743431468/nal.avif')
+			# Show the image
 			await message.channel.send(embed=embed)
 
 		# Process any commands contained in the message
