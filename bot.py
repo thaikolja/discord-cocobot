@@ -136,6 +136,45 @@ class Cocobot(commands.Bot):
 			# Exit the handler if the message is from the bot
 			return
 
+		# Set the flag for sending the Cocobot info embed to False, because we don't want to spam... yet
+		send_cocobot_info_embed = False
+
+		# Strip the message content of any leading/trailing whitespace, because users love their accidental spaces
+		normalized_message_content_stripped = message.content.strip()
+
+		# Condition 1: Did someone type '!cocobot'? Maybe they're looking for the coconut overlord
+		if normalized_message_content_stripped.lower() == '!cocobot':
+			send_cocobot_info_embed = True  # Time to show off Cocobot's resume
+
+		# If the flag is set, it's showtime for Cocobot's info embed
+		if send_cocobot_info_embed:
+			embed = discord.Embed(
+				# Set the timestamp to the current time, because we want to be timely
+				timestamp=datetime.now(),
+				# Because every bot needs a dramatic entrance
+				title=f"🥥 Cocobot  at your service!",
+				# For the developers
+				url="https://gitlab.com/thailand-discord/bots/cocobot",
+				# Coconut puns included at no extra charge
+				description=f"Hi, I'm **@cocobot** `v{COCOBOT_VERSION}`, the *actual* useful brother of our dearest August Engelhardt. Type `/coco` to see what I can do for you. I "
+				            "promise "
+				            "on the holy coconut, I'm here to help.",
+				# Because green is the color of coconuts (sometimes)
+				color=discord.Color.green(),
+			)
+
+			# Add a footer to the embed, because every good bot needs a signature
+			if self.user.display_avatar:
+				# Show off that beautiful bot avatar
+				embed.set_thumbnail(url=self.user.display_avatar.url)
+
+				# Set the footer text with a coconut-themed message
+				embed.set_footer(text=f"© Coconut wisdom since 1875")
+			# Send the embed, because bots need attention too
+			await message.channel.send(embed=embed)
+			# No more processing, the coconut has spoken
+			return
+
 		# Define the regular expression pattern to detect the word 'tate' case-insensitively, ensuring it's a whole word
 		tate_pattern = r'(?<!\w)tate(?!\w)'
 		# Search for the 'tate' pattern within the message content, ignoring case
@@ -152,7 +191,7 @@ class Cocobot(commands.Bot):
 				# Calculate the time elapsed since the last usage
 				time_since = now - last_used
 				# Check if the elapsed time is less than 5 minutes
-				if time_since < timedelta(minutes=5):
+				if time_since < timedelta(minutes=3):
 					# Send a message informing the user about the cooldown
 					await message.channel.send(f"🥥 Sorry, {user.mention}, the Bottom G is tired from all the Bottom G'ing and needs a 5-minute break. ")
 					# Exit the handler as the user is on cooldown
@@ -171,6 +210,14 @@ class Cocobot(commands.Bot):
 			# Set the image URL for the embed
 			embed.set_image(url='https://c.tenor.com/fyrqnSBR4gcAAAAd/tenor.gif')
 			# Send the embed containing the GIF image to the channel where the message was received
+			await message.channel.send(embed=embed)
+		# Display a tribute to our lost soul, @Nal
+		elif '@Nal' in message.content or any(mention.name == 'nal_9345' for mention in message.mentions):
+			# Create a Discord embed object
+			embed = discord.Embed()
+			# Set the URL of the image
+			embed.set_image(url='https://smmallcdn.net/kolja/1749743431468/nal.avif')
+			# Show the image
 			await message.channel.send(embed=embed)
 
 		# Process any commands contained in the message
