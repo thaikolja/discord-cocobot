@@ -136,6 +136,45 @@ class Cocobot(commands.Bot):
 			# Exit the handler if the message is from the bot
 			return
 
+		# Set the flag for sending the Cocobot info embed to False, because we don't want to spam... yet
+		send_cocobot_info_embed = False
+
+		# Strip the message content of any leading/trailing whitespace, because users love their accidental spaces
+		normalized_message_content_stripped = message.content.strip()
+
+		# Condition 1: Did someone type '!cocobot'? Maybe they're looking for the coconut overlord
+		if normalized_message_content_stripped.lower() == '!cocobot':
+			send_cocobot_info_embed = True  # Time to show off Cocobot's resume
+
+		# If the flag is set, it's showtime for Cocobot's info embed
+		if send_cocobot_info_embed:
+			embed = discord.Embed(
+				# Set the timestamp to the current time, because we want to be timely
+				timestamp=datetime.now(),
+				# Because every bot needs a dramatic entrance
+				title=f"🥥 Cocobot  at your service!",
+				# For the developers
+				url="https://gitlab.com/thailand-discord/bots/cocobot",
+				# Coconut puns included at no extra charge
+				description=f"Hi, I'm **@cocobot** `v{COCOBOT_VERSION}`, the *actual* useful brother of our dearest August Engelhardt. Type `/coco` to see what I can do for you. I "
+				            "promise "
+				            "on the holy coconut, I'm here to help.",
+				# Because green is the color of coconuts (sometimes)
+				color=discord.Color.green(),
+			)
+
+			# Add a footer to the embed, because every good bot needs a signature
+			if self.user.display_avatar:
+				# Show off that beautiful bot avatar
+				embed.set_thumbnail(url=self.user.display_avatar.url)
+
+				# Set the footer text with a coconut-themed message
+				embed.set_footer(text=f"© Coconut wisdom since 1875")
+			# Send the embed, because bots need attention too
+			await message.channel.send(embed=embed)
+			# No more processing, the coconut has spoken
+			return
+
 		# Define the regular expression pattern to detect the word 'tate' case-insensitively, ensuring it's a whole word
 		tate_pattern = r'(?<!\w)tate(?!\w)'
 		# Search for the 'tate' pattern within the message content, ignoring case

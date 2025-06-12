@@ -1,6 +1,6 @@
 # 🥥 cocobot
 
-![GitLab Release](https://img.shields.io/gitlab/v/release/thaikolja%2Fdiscord-cocobot?style=flat&label=version&color=%23d87630&link=https%3A%2F%2Fgitlab.com%2Fthaikolja%2Fdiscord-cocobot) [![pipeline status](https://gitlab.com/thailand-discord/bots/cocobot/badges/main/pipeline.svg)](https://gitlab.com/thailand-discord/bots/cocobot/-/commits/main) [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-blue.svg)](LICENSE) [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+![GitLab Release](https://img.shields.io/gitlab/v/release/thaikolja%2Fdiscord-cocobot?style=flat&label=version&color=%23d87630&link=https%3A%2F%2Fgitlab.com%2Fthaikolja%2Fdiscord-cocobot) [![pipeline status](https://gitlab.com/thailand-discord/bots/cocobot/badges/main/pipeline.svg)](https://gitlab.com/thailand-discord/bots/cocobot/-/commits/main) ![GitLab License](https://img.shields.io/gitlab/license/thailand-discord%2Fbots%2Fcocobot?style=flat) [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 
 **@cocobot** is your friendly, feature-rich **Discord bot** designed for the [**Discord Thailand** server](https://discord.gg/6JXCqVdmTZ), bringing a tropical twist to your server with useful utilities and fun interactions. Built with **Python** and the `discord.py` library, cocobot offers **a variety of commands** for practical tasks like weather checking, translation, and currency conversion, all wrapped in a coconut-themed package.
 
@@ -82,7 +82,7 @@
 
 **Returns:** "🇹🇭 ห้องน้ำอยู่ที่ไหน"[^4]
 
-### Transliterate the translated text into the Latin alphabet
+### Transliterate Thai text into the Latin alphabet
 
 ```bash
 /transliterate text: "ห้องน้ำอยู่ที่ไหน"
@@ -178,7 +178,7 @@ We welcome contributions via Git! Please follow these standard steps:
 
 ##  📜 License
 
-**cocobot** is licensed under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License. See the [LICENSE](LICENSE) file for details.
+**cocobot** is licensed under the MIT License. See the [LICENSE](https://opensource.org/licenses/MIT) file for details.
 
 ---
 
@@ -195,4 +195,4 @@ We welcome contributions via Git! Please follow these standard steps:
 [^1]: Using `.` works only if the current directory is completely empty. If not, leave don't use it and use `mv ./discord-bot/{*,.*} ../`
 [^2]: Keep your `.env` file secret and remember to add it to the `.gitignore` file. 
 [^3]: Uses Perplexity's AI LLM "Sonar Pro" and can produce inaccuracies.
-[^4]: Since `v2.2.0`, this is being handled by *Gemini 2.0 Flash Lite.* An API key is required, but usage of up to a million tokens is free.
+[^4]: Since `v2.2.0`, this has been handled by *Gemini 2.0 Flash Lite.* An API key is required, but usage of up to a million tokens is free.

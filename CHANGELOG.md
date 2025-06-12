@@ -2,6 +2,7 @@
 
 ## v2.3.2
 
+- **Added:** `!cocobot` command which displays information about the bot itself.
 - **Added:** A tribute to our lost soul, `@Nal`, whenever his username is mentioned.
 - **Improved:** Clarified and expanded code comments throughout `bot.py` for better maintainability.
 - **Fixed:** Minor cooldown logic for the `tate` command (cooldown message now says 5 minutes, logic is 3 minutes).
@@ -57,7 +58,7 @@
 
 ## v2.0.0
 
-* cocobot v2 is a completely rewritten version of the initial cocobot Discord bot for the Thailand Discord server. At this point, all features from the first, less maintainable version have been reprogrammed in a way that allows other contributors to add functions easily. Already existing functions have been drastically improved; the output quality is at the highest rate so far.
+*cocobot v2 is a completely rewritten version of the initial cocobot Discord bot for the Thailand Discord server. At this point, all features from the first, less maintainable version have been reprogrammed in a way that allows other contributors to add functions easily. Already existing functions have been drastically improved; the output quality is at the highest rate so far.*
 
 ## v1.2.4
 
