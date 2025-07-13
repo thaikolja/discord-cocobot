@@ -50,8 +50,6 @@ INITIAL_EXTENSIONS = [
 	'cogs.transliterate',
 	# Translation commands cog
 	'cogs.translate',
-	# Geolocation commands cog
-	# 'cogs.locate', # TODO: Fix
 	# Air pollution information cog
 	'cogs.pollution',
 	# Learning-related commands cog

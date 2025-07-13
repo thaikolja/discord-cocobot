@@ -14,8 +14,11 @@
 #  Date:      2014-2025
 #  Package:   cocobot Discord Bot
 
-# Import the requests library to make HTTP requests to external APIs
-import requests
+# Import the aiohttp library for asynchronous HTTP requests
+import aiohttp
+
+# Import asyncio for handling asynchronous operations
+import asyncio
 
 # Import the discord library for interacting with the Discord API
 import discord
@@ -29,11 +32,17 @@ from discord import app_commands
 # Import the datetime module for handling dates and times
 from datetime import datetime
 
+# Import the logging module for tracking bot activities and errors
+import logging
+
 # Import configuration constants from the config module
 from config.config import ERROR_MESSAGE, LOCALTIME_API_KEY
 
-# Import the sanitize_url helper function from utils.helpers
-from utils.helpers import sanitize_url
+# Configure basic logging settings to track bot activities
+logging.basicConfig(level=logging.INFO)
+
+# Create a logger instance for discord-related logs
+logger = logging.getLogger('discord')
 
 
 # Define a new Cog class for the time command functionality
@@ -43,6 +52,13 @@ class TimeCog(commands.Cog):
 	def __init__(self, bot: commands.Bot):
 		# Store the bot reference for later use
 		self.bot = bot
+		# Create a single, reusable ClientSession for the lifetime of the cog.
+		# This is more efficient than creating a new one for every command call.
+		self.session = aiohttp.ClientSession()
+
+	async def cog_unload(self):
+		"""Clean up the aiohttp session when the cog is unloaded."""
+		await self.session.close()
 
 	# Define the /time command with description and parameters
 	@app_commands.command(
@@ -50,25 +66,27 @@ class TimeCog(commands.Cog):
 		description='Get the current time at a certain city or country'
 	)
 	@app_commands.describe(
-		location='The city or country for which to get the current time (Default: Bangkok)'
+		location='The city or country for which to get the current time (Default: Bangkok)',
 	)
 	# Main command function with default parameter for location
 	async def time_command(self, interaction: discord.Interaction, location: str = 'Bangkok'):
-		# Use try-except block for error handling
+		# The base URL for the API endpoint
+		api_url = 'https://api.ipgeolocation.io/timezone'
+
+		# Pass parameters in a dictionary for safe, automatic URL-encoding
+		params = {
+			'apiKey':   LOCALTIME_API_KEY,
+			'location': location
+		}
+
 		try:
-			# Construct and sanitize the API URL with the location parameter
-			api_url = sanitize_url(f'https://api.ipgeolocation.io/timezone?apiKey={LOCALTIME_API_KEY}&location={location}')
+			# Use the async session to make a non-blocking GET request
+			async with self.session.get(api_url, params=params, timeout=10) as response:
+				# Raise an exception if the HTTP response status is an error (4xx or 5xx)
+				response.raise_for_status()
 
-			# Make a GET request to the API endpoint
-			response = requests.get(api_url)
-
-			# Check if the response was successful
-			if not response.ok:
-				# Raise an exception if the response was not successful
-				raise requests.exceptions.RequestException()
-
-			# Parse the JSON response from the API
-			data = response.json()
+				# Parse the JSON response asynchronously
+				data = await response.json()
 
 			# Extract country from the response data
 			country = data['geo']['country']
@@ -85,9 +103,14 @@ class TimeCog(commands.Cog):
 			# Send the response back to the interaction
 			await interaction.response.send_message(output)
 
-		# Catch any exceptions that occur during the process
-		except (requests.exceptions.RequestException, KeyError):
-			# Send an error message if something goes wrong
+		# Catch specific exceptions for better error handling and debugging
+		except (aiohttp.ClientError, asyncio.TimeoutError, KeyError) as e:
+			# aiohttp.ClientError covers connection issues and bad HTTP responses
+			# asyncio.TimeoutError handles request timeouts
+			# KeyError handles cases where the API response is missing expected data
+			logger.error(f"Error fetching time for {location}: {e}")
+
+			# Send an error message back to the interaction
 			await interaction.response.send_message(
 				f"{ERROR_MESSAGE} Couldn't find time for `{location}`. Maybe it's in a coconut timezone?"
 			)

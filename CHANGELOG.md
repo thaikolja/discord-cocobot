@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.3.3
+
+* **Removed:** `/locate` feature.
+* **Added:** Logging for `/time` requests
+
 ## v2.3.2
 
 - **Added:** `!cocobot` command which displays information about the bot itself.

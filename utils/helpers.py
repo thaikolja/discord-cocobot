@@ -98,9 +98,10 @@ class UseAI:
 		elif provider == 'google':
 			# Configure the Google Generative AI with the specified API key
 			genai.configure(api_key=GOOGLE_API_KEY)
+
 			# Set up the GenerativeModel for Google with the specified model name and configuration
 			self.model = genai.GenerativeModel(
-				model_name='gemma-3n-e4b-it',  # Old: "gemini-2.0-flash-exp",
+				model_name='gemma-3n-e4b-it',
 				generation_config=self.GOOGLE_GENERATION_CONFIG,
 			)
 
