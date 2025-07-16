@@ -21,13 +21,15 @@ import discord
 import re
 
 # Import datetime and timedelta from the datetime module for time-related operations
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 # Import the commands extension from discord.py for bot command handling
 from discord.ext import commands
 
 # Import configuration constants from the config file
-from config.config import DISCORD_BOT_TOKEN, DISCORD_SERVER_ID, COCOBOT_VERSION
+from config.config import DISCORD_BOT_TOKEN, COCOBOT_VERSION, DISCORD_SERVER_ID
+
+from datetime import datetime
 
 # Import the logging module for tracking bot activities and errors
 import logging
@@ -82,6 +84,7 @@ class Cocobot(commands.Bot):
 		super().__init__(command_prefix='!', intents=intents)
 		# Dictionary to track cooldowns for the 'tate' command per user
 		self.tate_cooldowns = {}
+		self.reminded_users = set()
 
 	# Setup hook to load extensions and sync commands
 	async def setup_hook(self):
@@ -122,17 +125,30 @@ class Cocobot(commands.Bot):
 
 	# Event that triggers for every message received
 	async def on_message(self, message):
+
 		"""
 		Event handler called for every message received in channels the bot has access to.
 		Handles the 'tate' response with cooldown and processes other commands.
 
 		Args:
-			message (discord.Message): The message object received.
+				message (discord.Message): The message object received.
 		"""
 		# Check if the message author is the bot itself to prevent self-responses
 		if message.author == self.user:
 			# Exit the handler if the message is from the bot
 			return
+
+		# Visa channel nationality reminder
+		if message.channel.name == "visa" and "?" in message.content and message.author.id not in self.reminded_users:
+			await message.channel.send(
+				f"🥥 **Friendly reminder to {message.author.mention}**: Don't forget to **mention your nationality** when asking questions in this channel. Visa rules can vary "
+				f"significantly based on your nationality.",
+				silent=True,
+			)
+
+			self.reminded_users.add(message.author.id)
+
+			return  # Prevent further processing for this message
 
 		# Set the flag for sending the Cocobot info embed to False, because we don't want to spam... yet
 		send_cocobot_info_embed = False
@@ -140,9 +156,17 @@ class Cocobot(commands.Bot):
 		# Strip the message content of any leading/trailing whitespace, because users love their accidental spaces
 		normalized_message_content_stripped = message.content.strip()
 
-		# Condition 1: Did someone type '!cocobot'? Maybe they're looking for the coconut overlord
-		if normalized_message_content_stripped.lower() == '!cocobot':
-			send_cocobot_info_embed = True  # Time to show off Cocobot's resume
+		# Check if the message content is exactly '!cocobot' or if Cocobot is mentioned in the message
+		is_cocobot_command = normalized_message_content_stripped.lower() == '!cocobot'
+
+		# Check if Cocobot is mentioned in the message, because sometimes users just want to say hi
+		is_cocobot_mention = any(
+			mention.id == self.user.id for mention in message.mentions
+		)
+
+		# If the message is a Cocobot command or a mention, we want to send Cocobot's info embed
+		if is_cocobot_command or is_cocobot_mention:
+			send_cocobot_info_embed = True
 
 		# If the flag is set, it's showtime for Cocobot's info embed
 		if send_cocobot_info_embed:
@@ -150,13 +174,12 @@ class Cocobot(commands.Bot):
 				# Set the timestamp to the current time, because we want to be timely
 				timestamp=datetime.now(),
 				# Because every bot needs a dramatic entrance
-				title=f"🥥 Cocobot  at your service!",
+				title=f"🥥 Cocobot at your service!",
 				# For the developers
 				url="https://gitlab.com/thailand-discord/bots/cocobot",
 				# Coconut puns included at no extra charge
 				description=f"Hi, I'm **@cocobot** `v{COCOBOT_VERSION}`, the *actual* useful brother of our dearest August Engelhardt. Type `/coco` to see what I can do for you. I "
-				            "promise "
-				            "on the holy coconut, I'm here to help.",
+				            "promise on the holy coconut, I'm here to help.",
 				# Because green is the color of coconuts (sometimes)
 				color=discord.Color.green(),
 			)
@@ -170,11 +193,12 @@ class Cocobot(commands.Bot):
 				embed.set_footer(text=f"© Coconut wisdom since 1875")
 			# Send the embed, because bots need attention too
 			await message.channel.send(embed=embed)
-			# No more processing, the coconut has spoken
+
 			return
 
 		# Define the regular expression pattern to detect the word 'tate' case-insensitively, ensuring it's a whole word
 		tate_pattern = r'(?<!\w)tate(?!\w)'
+
 		# Search for the 'tate' pattern within the message content, ignoring case
 		if re.search(tate_pattern, message.content, re.IGNORECASE):
 			# Get the current date and time
