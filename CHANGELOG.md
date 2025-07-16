@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.3.4
+
+* **Added:** Nationality reminder for `#visa` channel.
+  - The bot now reminds users in the `#visa` channel to mention their nationality if their first message contains a question mark.
+  - This reminder is sent only once per user.
+
 ## v2.3.3
 
 * **Removed:** `/locate` feature.
