@@ -23,8 +23,8 @@ import pytest_asyncio
 # Import patch, AsyncMock, and MagicMock for mocking in tests
 from unittest.mock import patch, AsyncMock, MagicMock
 
-# Import requests library for making HTTP requests
-import requests
+# Import aiohttp for mocking async HTTP requests
+import aiohttp
 
 # Import discord library for Discord bot functionality
 import discord
@@ -45,8 +45,12 @@ async def cog():
 	# Create a new bot instance with a command prefix and default intents
 	bot = commands.Bot(command_prefix='!', intents=discord.Intents.default())
 
-	# Return an instance of TimeCog initialized with the bot
-	return TimeCog(bot)
+	# Create and return an instance of TimeCog initialized with the bot
+	cog_instance = TimeCog(bot)
+	yield cog_instance
+	
+	# Cleanup: close the session after tests
+	await cog_instance.session.close()
 
 
 # Define a fixture for mocking interaction responses
@@ -64,117 +68,117 @@ def interaction():
 
 # Mark the following function as an asyncio test
 @pytest.mark.asyncio
-# Patch the requests.get method in the cogs.time module
-@patch('cogs.time.requests.get')
-async def test_valid_time_response(mock_get, cog, interaction):
+async def test_valid_time_response(cog, interaction):
 	# Create a mock response object for a successful API call
-	mock_response = MagicMock()
+	mock_response = AsyncMock()
 
 	# Set the response status to OK
-	mock_response.ok = True
+	mock_response.raise_for_status = MagicMock()
 
 	# Define the JSON data to be returned by the mock response
-	mock_response.json.return_value = {
+	mock_response.json = AsyncMock(return_value={
 		'geo':       {
 			'country': 'Thailand',
 			'city':    'Bangkok'
 		},
 		'date_time': '2024-01-01 12:00:00'
-	}
+	})
 
-	# Set the return value of the mocked requests.get to the mock response
-	mock_get.return_value = mock_response
+	# Mock the session.get to return a context manager
+	mock_cm = MagicMock()
+	mock_cm.__aenter__ = AsyncMock(return_value=mock_response)
+	mock_cm.__aexit__ = AsyncMock(return_value=None)
+	
+	with patch.object(cog.session, 'get', return_value=mock_cm):
+		# Execute the time command with a specified location
+		await cog.time_command.callback(cog, interaction, location="Bangkok")
 
-	# Execute the time command with a specified location
-	await cog.time_command.callback(cog, interaction, location="Bangkok")
+		# Verify that the send_message method was called once
+		interaction.response.send_message.assert_awaited_once()
 
-	# Verify that the send_message method was called once
-	interaction.response.send_message.assert_awaited_once()
+		# Get the arguments passed to the send_message method
+		args, _ = interaction.response.send_message.call_args
 
-	# Get the arguments passed to the send_message method
-	args, _ = interaction.response.send_message.call_args
+		# Assert that the response contains the expected city information
+		assert "🕓 In **Bangkok**" in args[0]
 
-	# Assert that the response contains the expected city information
-	assert "🕓 In **Bangkok**" in args[0]
-
-	# Assert that the response contains the expected time
-	assert "12:00" in args[0]
+		# Assert that the response contains the expected time
+		assert "12:00" in args[0]
 
 
 # Mark the following function as an asyncio test
 @pytest.mark.asyncio
-# Patch the requests.get method in the cogs.time module
-@patch('cogs.time.requests.get')
-async def test_invalid_location(mock_get, cog, interaction):
+async def test_invalid_location(cog, interaction):
 	# Create a mock response object for a failed API call
-	mock_response = MagicMock()
+	mock_response = AsyncMock()
+	mock_response.raise_for_status = MagicMock(side_effect=aiohttp.ClientError("API Error"))
 
-	# Set the response status to not OK
-	mock_response.ok = False
+	# Mock the session.get to return a context manager
+	mock_cm = MagicMock()
+	mock_cm.__aenter__ = AsyncMock(return_value=mock_response)
+	mock_cm.__aexit__ = AsyncMock(return_value=None)
+	
+	with patch.object(cog.session, 'get', return_value=mock_cm):
+		# Execute the time command with an invalid location
+		await cog.time_command.callback(cog, interaction, location="Nowhere")
 
-	# Set the return value of the mocked requests.get to the mock response
-	mock_get.return_value = mock_response
-
-	# Execute the time command with an invalid location
-	await cog.time_command.callback(cog, interaction, location="Nowhere")
-
-	# Verify that the send_message method was called once with the expected error message
-	interaction.response.send_message.assert_awaited_once_with(
-		f"{ERROR_MESSAGE} Couldn't find time for `Nowhere`. Maybe it's in a coconut timezone?"
-	)
-
-
-# Mark the following function as an asyncio test
-@pytest.mark.asyncio
-# Patch the requests.get method in the cogs.time module
-@patch('cogs.time.requests.get')
-async def test_api_error_handling(mock_get, cog, interaction):
-	# Simulate an API error by raising a RequestException
-	mock_get.side_effect = requests.exceptions.RequestException()
-
-	# Execute the time command with a valid location
-	await cog.time_command.callback(cog, interaction, location="Bangkok")
-
-	# Verify that the send_message method was called once with the expected error message
-	interaction.response.send_message.assert_awaited_once_with(
-		f"{ERROR_MESSAGE} Couldn't find time for `Bangkok`. Maybe it's in a coconut timezone?"
-	)
+		# Verify that the send_message method was called once with the expected error message
+		interaction.response.send_message.assert_awaited_once_with(
+			f"{ERROR_MESSAGE} Couldn't find time for `Nowhere`. Maybe it's in a coconut timezone?"
+		)
 
 
 # Mark the following function as an asyncio test
 @pytest.mark.asyncio
-# Patch the requests.get method in the cogs.time module
-@patch('cogs.time.requests.get')
-async def test_default_location(mock_get, cog, interaction):
+async def test_api_error_handling(cog, interaction):
+	# Simulate an API error by raising a ClientError
+	mock_cm = MagicMock()
+	mock_cm.__aenter__ = AsyncMock(side_effect=aiohttp.ClientError("Connection error"))
+	mock_cm.__aexit__ = AsyncMock(return_value=None)
+	
+	with patch.object(cog.session, 'get', return_value=mock_cm):
+		# Execute the time command with a valid location
+		await cog.time_command.callback(cog, interaction, location="Bangkok")
+
+		# Verify that the send_message method was called once with the expected error message
+		interaction.response.send_message.assert_awaited_once_with(
+			f"{ERROR_MESSAGE} Couldn't find time for `Bangkok`. Maybe it's in a coconut timezone?"
+		)
+
+
+# Mark the following function as an asyncio test
+@pytest.mark.asyncio
+async def test_default_location(cog, interaction):
 	# Create a mock response object for a successful API call
-	mock_response = MagicMock()
-
-	# Set the response status to OK
-	mock_response.ok = True
+	mock_response = AsyncMock()
+	mock_response.raise_for_status = MagicMock()
 
 	# Define the JSON data to be returned by the mock response
-	mock_response.json.return_value = {
+	mock_response.json = AsyncMock(return_value={
 		'geo':       {
 			'country': 'Thailand',
 			'city':    'Bangkok'
 		},
 		'date_time': '2024-01-01 12:00:00'
-	}
+	})
 
-	# Set the return value of the mocked requests.get to the mock response
-	mock_get.return_value = mock_response
+	# Mock the session.get to return a context manager
+	mock_cm = MagicMock()
+	mock_cm.__aenter__ = AsyncMock(return_value=mock_response)
+	mock_cm.__aexit__ = AsyncMock(return_value=None)
+	
+	with patch.object(cog.session, 'get', return_value=mock_cm):
+		# Execute the time command without specifying a location (default)
+		await cog.time_command.callback(cog, interaction)
 
-	# Execute the time command without specifying a location (default)
-	await cog.time_command.callback(cog, interaction)
+		# Verify that the send_message method was called once
+		interaction.response.send_message.assert_awaited_once()
 
-	# Verify that the send_message method was called once
-	interaction.response.send_message.assert_awaited_once()
+		# Get the arguments passed to the send_message method
+		args, _ = interaction.response.send_message.call_args
 
-	# Get the arguments passed to the send_message method
-	args, _ = interaction.response.send_message.call_args
+		# Assert that the response contains the expected city information
+		assert "🕓 In **Bangkok**" in args[0]
 
-	# Assert that the response contains the expected city information
-	assert "🕓 In **Bangkok**" in args[0]
-
-	# Assert that the response contains the expected time
-	assert "12:00" in args[0]
+		# Assert that the response contains the expected time
+		assert "12:00" in args[0]

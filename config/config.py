@@ -31,7 +31,7 @@ import os
 from dotenv import load_dotenv
 
 # Version of the cocobot application, used for tracking and updates.
-COCOBOT_VERSION: str = "2.3.4"
+COCOBOT_VERSION: str = "2.3.3"
 
 # Executes the function to load variables from a `.env` file located in the project's root
 # or parent directories into the system's environment variables.

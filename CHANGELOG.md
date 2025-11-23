@@ -1,15 +1,10 @@
 # Changelog
 
-## v2.3.4
-
-* **Added:** Nationality reminder for `#visa` channel.
-  - The bot now reminds users in the `#visa` channel to mention their nationality if their first message contains a question mark.
-  - This reminder is sent only once per user.
-
 ## v2.3.3
 
-* **Removed:** `/locate` feature.
+* **Removed:** `/locate` feature until a better solution is found.
 * **Added:** Logging for `/time` requests
+* **Fixed:** Updated and fixed test suite for `/time` command to properly mock aiohttp sessions
 
 ## v2.3.2
 
@@ -28,8 +23,7 @@
 
 - **Improved:** @cocobot's `/weather` command: You can now toggle between Fahrenheit and Celsius with a simple button underneath the weather card.
 - **Fixed:** several smaller issues to adhere to Python's best practices.
-
-  Added `on.sh`, `off.sh`, and `deploy.sh` to `.gitignore` since they
+* Added `on.sh`, `off.sh`, and `deploy.sh` to `.gitignore` since they
 
 ## v2.2.1
 
@@ -42,7 +36,7 @@
 
 * **Prompt Enhancement:** Improved the AI prompt for clearer instructions and better transliteration accuracy.
 * **Input Validation:** Added checks for empty or whitespace-only inputs with informative messages.
-* **Logging & Error Handling:** Enhanced exception handling and logging in the `transliterate` cog to better track AI service issues.
+* **Logging and Error Handling:** Enhanced exception handling and logging in the `transliterate` cog to better track AI service issues.
 
 ### Weather Command
 
@@ -61,7 +55,7 @@
 
 ## v2.2.0
 
-* **Fixed:** Bug
+* **Fixed:** A small bug.
 
 ## v2.0.1
 
@@ -69,7 +63,7 @@
 
 ## v2.0.0
 
-*cocobot v2 is a completely rewritten version of the initial cocobot Discord bot for the Thailand Discord server. At this point, all features from the first, less maintainable version have been reprogrammed in a way that allows other contributors to add functions easily. Already existing functions have been drastically improved; the output quality is at the highest rate so far.*
+**@cocobot v2** is a completely rewritten version of the initial cocobot Discord bot for the Thailand Discord server. At this point, all features from the first, less maintainable version have been reprogrammed in a way that allows other contributors to add functions easily. Already existing functions have been drastically improved; the output quality is at the highest rate so far. Licensed under MIT.
 
 ## v1.2.4
 
