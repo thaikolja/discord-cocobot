@@ -4,6 +4,7 @@
 .LSOverride
 .idea
 .run
+.iflow
 
 logs/
 
