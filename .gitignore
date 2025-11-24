@@ -5,7 +5,7 @@
 .idea
 .run
 .iflow
-
+conversation-*.txt
 logs/
 
 # Icon must end with two \r
@@ -200,3 +200,6 @@ cython_debug/
 #.idea/
 
 /.idea/cocobot.iml
+
+.iflow/
+gha-creds-*.json
