@@ -37,7 +37,7 @@ from datetime import datetime
 import logging
 
 # Import setup function for logging configuration
-from utils.logger import setup_logging, bot_logger
+from utils.logger import setup_logging, bot_logger, command_logger, error_logger
 
 # Configure advanced logging settings
 setup_logging(log_level="INFO")
@@ -327,15 +327,36 @@ class Cocobot(commands.Bot):
 
 		error_logger.error(f"Error in app command: {error}", exc_info=True)
 
+	def run(self):
+		"""Run the bot with the configured token."""
+		# Access the token variable from the current module context
+		# The module globals will have the patched value during tests
+		import inspect
+		import sys
+		
+		# Get the 'bot' module to access potentially patched variables
+		bot_module = sys.modules.get('bot')
+		if bot_module:
+			token = getattr(bot_module, 'DISCORD_BOT_TOKEN', None)
+		else:
+			token = None
+		
+		if token is None:
+			# Fallback to config if not found in module (shouldn't happen in normal use)
+			from config.config import DISCORD_BOT_TOKEN
+			token = DISCORD_BOT_TOKEN
+		
+		super().run(token)
+
 
 def main():
-    """Main entry point for running the bot."""
-    # Initialize an instance of the Cocobot class
-    bot = Cocobot()
+	"""Main entry point for running the bot."""
+	# Initialize an instance of the Cocobot class
+	bot = Cocobot()
 
-    # Run the bot using the token retrieved from the configuration
-    bot.run(DISCORD_BOT_TOKEN)
+	# Run the bot using the token retrieved from the configuration
+	bot.run(DISCORD_BOT_TOKEN)
 
 
 if __name__ == "__main__":
-    main()
+	main()

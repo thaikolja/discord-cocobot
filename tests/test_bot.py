@@ -37,7 +37,18 @@ def bot():
          patch('bot.COCOBOT_VERSION', '1.0.0'):
         
         bot_instance = Cocobot()
-        yield bot_instance
+        
+        # Create a mock user for the bot
+        mock_user = Mock()
+        mock_user.id = 999888777
+        mock_user.name = "Cocobot"
+        mock_user.__str__ = lambda self: "Cocobot"
+        mock_user.display_avatar = Mock()
+        mock_user.display_avatar.url = "https://example.com/avatar.png"
+        
+        # Patch the user property of the bot
+        with patch.object(bot_instance.__class__, 'user', property(lambda self: mock_user)):
+            yield bot_instance
 
 
 @pytest.fixture
@@ -78,7 +89,7 @@ def mock_message(mock_user, mock_channel):
     message.author = mock_user
     message.channel = mock_channel
     message.content = "Hello"
-    message.mentions = []
+    message.mentions = []  # This should be a list to be iterable
     return message
 
 
@@ -168,19 +179,24 @@ class TestOnReady:
     @pytest.mark.asyncio
     async def test_on_ready_logs_info(self, bot, mock_guild):
         """Test that on_ready logs the correct information."""
-        bot.user = Mock()
-        bot.user.name = "Cocobot"
-        bot.user.id = 999888777
-        bot.guilds = [mock_guild]
+        # Create a mock user
+        mock_user = Mock()
+        mock_user.name = "Cocobot"
+        mock_user.id = 999888777
+        mock_user.__str__ = lambda self: "Cocobot"  # Make the string representation return the name
         
-        with patch('utils.logger.bot_logger.info') as mock_logger:
-            await bot.on_ready()
+        # Patch the user and guilds properties of the bot instance using PropertyMock
+        with patch.object(bot.__class__, 'user', property(lambda self: mock_user)), \
+             patch.object(bot.__class__, 'guilds', property(lambda self: [mock_guild])):
             
-            # Verify that bot ready message was logged
-            mock_logger.assert_called()
-            call_args = ' '.join([str(call) for call in mock_logger.call_args_list])
-            assert "Cocobot is ready" in call_args
-            assert "999888777" in call_args
+            with patch('utils.logger.bot_logger.info') as mock_logger:
+                await bot.on_ready()
+                
+                # Verify that bot ready message was logged
+                mock_logger.assert_called()
+                call_args = ' '.join([str(call) for call in mock_logger.call_args_list])
+                assert "Cocobot is ready" in call_args
+                assert "999888777" in call_args
 
 
 class TestOnMessage:
@@ -230,14 +246,15 @@ class TestOnMessage:
             assert 'embed' in call_args
             embed = call_args['embed']
             assert embed.title == "🥥 Cocobot at your service!"
-            assert COCOBOT_VERSION in embed.description
+            # The bot is initialized with the mocked COCOBOT_VERSION in the fixture
+            assert "1.0.0" in embed.description  # Using the mocked version
     
     @pytest.mark.asyncio
     async def test_on_message_cocobot_mention(self, bot, mock_message):
         """Test bot mention response."""
         mock_message.content = "Hello @Cocobot"
         mock_bot_user = Mock()
-        mock_bot_user.id = bot.user.id if bot.user else 999888777
+        mock_bot_user.id = bot.user.id
         mock_message.mentions = [mock_bot_user]
         
         with patch.object(bot, 'process_commands'):
@@ -387,7 +404,9 @@ class TestCommandErrorHandling:
         ctx.author = "TestUser"
         ctx.send = AsyncMock()
         
-        error = commands.CommandOnCooldown(Mock(), 30.5)
+        # CommandOnCooldown requires rate, per, and type parameters
+        from discord.ext.commands import BucketType
+        error = commands.CommandOnCooldown(1, 30.5, BucketType.user)
         
         with patch('utils.logger.command_logger.info'):
             await bot.on_command_error(ctx, error)
@@ -464,7 +483,7 @@ class TestBotRun:
              patch.object(commands.Bot, 'run') as mock_run:
             
             bot_instance = Cocobot()
-            bot_instance.run()
+            bot_instance.run()  # This should be called with the token from config
             
             # Verify that parent run was called with the token
             mock_run.assert_called_once_with('test_token')
