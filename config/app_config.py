@@ -7,10 +7,9 @@ type hints, and fallback mechanisms.
 
 import os
 import sys
-from typing import Optional, Dict, Any
+from typing import Optional
 from dataclasses import dataclass
 from dotenv import load_dotenv
-from pathlib import Path
 from utils.exceptions import ConfigurationError
 
 # Load environment variables
@@ -41,7 +40,7 @@ class DiscordConfig:
 		if os.getenv('ENVIRONMENT') == 'testing' or os.getenv('PYTEST_CURRENT_TEST'):
 			# In testing mode, allow missing token
 			return
-		
+
 		if not self.token:
 			raise ConfigurationError(
 				"Discord bot token is required. Please set DISCORD_BOT_TOKEN in your environment.",
@@ -68,7 +67,7 @@ class APIConfig:
 		if os.getenv('ENVIRONMENT') == 'testing' or os.getenv('PYTEST_CURRENT_TEST'):
 			# In testing mode, skip validation of required keys
 			return
-		
+
 		# Validate required keys are present
 		required_keys = ['weatherapi_key', 'currencyapi_key']
 		for key in required_keys:
@@ -111,7 +110,7 @@ class CacheConfig:
 @dataclass
 class SecurityConfig:
 	"""Security configuration settings."""
-	max_content_length: int = int(os.getenv('MAX_CONTENT_LENGTH', '10000'))  # 10KB
+	max_content_length: int = int(os.getenv('MAX_CONTENT_LENGTH', '10000'))  # 10 KB
 	allowed_mentions: bool = os.getenv('ALLOWED_MENTIONS', 'true').lower() == 'true'
 	enable_cors: bool = os.getenv('ENABLE_CORS', 'false').lower() == 'true'
 
@@ -188,7 +187,7 @@ def get_config() -> AppConfig:
 		# In testing mode, create config but bypass validation that would cause sys.exit
 		config = AppConfig()
 		return config
-	
+
 	try:
 		config = AppConfig()
 		validate_config(config)
