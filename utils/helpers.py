@@ -51,10 +51,10 @@ class UseAI:
 
 	# Define the configuration for Google's generative AI model
 	GOOGLE_GENERATION_CONFIG: GenerationConfig | dict[str, float | str | int] = {
-		'temperature':        0.1,  # Controls randomness in generation
-		'top_p':              0.2,  # Controls diversity of responses
-		'top_k':              40,  # Limits the number of tokens considered
-		'max_output_tokens':  500,  # Maximum length of the generated response
+		'temperature': 0.1,  # Controls randomness in generation
+		'top_p': 0.2,  # Controls diversity of responses
+		'top_k': 40,  # Limits the number of tokens considered
+		'max_output_tokens': 500,  # Maximum length of the generated response
 		'response_mime_type': 'text/plain',  # Format of the response
 	}
 
@@ -101,7 +101,7 @@ class UseAI:
 
 			# Set up the GenerativeModel for Google with the specified model name and configuration
 			self.model = genai.GenerativeModel(
-				model_name='gemma-3n-e4b-it',
+				model_name='gemini-2.5-flash-lite',
 				generation_config=self.GOOGLE_GENERATION_CONFIG,
 			)
 
@@ -145,7 +145,7 @@ class UseAI:
 		# Create a chat completion request with the specified messages and model
 		chat = self.client.chat.completions.create(
 			messages=ChatCompletionAssistantMessageParam[{
-				"role":    "user",
+				"role": "user",
 				"content": content
 			}],
 			model=self.model_name,

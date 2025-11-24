@@ -328,8 +328,14 @@ class Cocobot(commands.Bot):
 		error_logger.error(f"Error in app command: {error}", exc_info=True)
 
 
-# Initialize an instance of the Cocobot class
-bot = Cocobot()
+def main():
+    """Main entry point for running the bot."""
+    # Initialize an instance of the Cocobot class
+    bot = Cocobot()
 
-# Run the bot using the token retrieved from the configuration
-bot.run(DISCORD_BOT_TOKEN)
+    # Run the bot using the token retrieved from the configuration
+    bot.run(DISCORD_BOT_TOKEN)
+
+
+if __name__ == "__main__":
+    main()

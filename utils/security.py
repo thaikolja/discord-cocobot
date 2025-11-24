@@ -528,9 +528,17 @@ def safe_format_string(template: str, **kwargs) -> str:
     Returns:
         Formatted string
     """
-    # Validate that template doesn't contain dangerous format patterns
-    if re.search(r'{\s*\w*\s*[^\w\s{}:]*\s*}', template):
-        raise SecurityError("Template contains potentially dangerous format patterns")
+    # Validate that template contains only safe format patterns (simple variable names)
+    # Extract all format placeholders
+    placeholders = re.findall(r'{([^}]*)}', template)
+    
+    for placeholder in placeholders:
+        # Strip whitespace
+        clean_placeholder = placeholder.strip()
+        # Check if it contains only safe variable names (letters, numbers, underscore)
+        # This ensures no method calls, attribute access, or other dangerous operations
+        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', clean_placeholder) and clean_placeholder != '':
+            raise SecurityError("Template contains potentially dangerous format patterns")
     
     # Escape markdown in all values
     safe_kwargs = {}

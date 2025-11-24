@@ -35,15 +35,12 @@ from cogs.exchangerate import ExchangerateCog
 
 # Define a fixture for creating an instance of the ExchangerateCog
 @pytest_asyncio.fixture
-async def cog():
-	# Create a new bot instance with a command prefix and default intents
-	bot = commands.Bot(command_prefix='!', intents=discord.Intents.default())
-
-	# Add the ExchangerateCog to the bot instance
-	await bot.add_cog(ExchangerateCog(bot))
+async def cog(mock_bot):
+	# Add the ExchangerateCog to the mock bot instance
+	await mock_bot.add_cog(ExchangerateCog(mock_bot))
 
 	# Return the ExchangerateCog instance from the bot
-	return bot.get_cog('ExchangerateCog')
+	return mock_bot.get_cog('ExchangerateCog')
 
 
 # Define a fixture for creating a mock interaction object
@@ -61,17 +58,20 @@ def interaction():
 
 # Mark this function as an asynchronous test case
 @pytest.mark.asyncio
-# Patch the requests.get method to mock API calls
-@patch('cogs.exchangerate.requests.get')
-async def test_valid_conversion(mock_get, cog, interaction):
-	# Create a mock response object for a successful API call
+# Patch the aiohttp.ClientSession to mock API calls
+@patch('cogs.exchangerate.aiohttp.ClientSession')
+async def test_valid_conversion(mock_session_class, cog, interaction):
+	# Create mock session and response objects
+	mock_session = MagicMock()
 	mock_response = MagicMock()
-
-	# Set the mock response to indicate a successful request
-	mock_response.ok = True
-
-	# Define the JSON response data to return for the mock response
-	mock_response.json.return_value = {
+	
+	# Set up the async context managers
+	mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+	mock_session.__aexit__ = AsyncMock(return_value=None)
+	
+	# Set up the response
+	mock_response.status = 200
+	mock_response.json = AsyncMock(return_value={
 		'meta': {
 			'last_updated_at': '2024-01-01T12:00:00Z'
 		},
@@ -80,10 +80,19 @@ async def test_valid_conversion(mock_get, cog, interaction):
 				'value': 35.0
 			}
 		}
-	}
-
-	# Set the return value of the mocked requests.get to the mock response
-	mock_get.return_value = mock_response
+	})
+	
+	# Set up the response as an async context manager (for "async with session.get() as response:")
+	mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+	mock_response.__aexit__ = AsyncMock(return_value=None)
+	
+	# Set up session.get to return the response object (not a coroutine)
+	# When you do "async with session.get(url) as response:", Python calls session.get(url) which should return
+	# an object that can be used in an async context manager
+	mock_session.get = MagicMock(return_value=mock_response)
+	
+	# Set the mock session class to return our mock session
+	mock_session_class.return_value = mock_session
 
 	# Access the command's callback dynamically
 	command = cog.bot.tree.get_command("exchangerate")
@@ -107,9 +116,7 @@ async def test_valid_conversion(mock_get, cog, interaction):
 
 # Mark this function as an asynchronous test case
 @pytest.mark.asyncio
-# Patch the requests.get method to mock API calls
-@patch('cogs.exchangerate.requests.get')
-async def test_invalid_currency_length(mock_get, cog, interaction):
+async def test_invalid_currency_length(cog, interaction):
 	# Access the command's callback dynamically
 	command = cog.bot.tree.get_command("exchangerate")
 	callback = command.callback
@@ -126,27 +133,37 @@ async def test_invalid_currency_length(mock_get, cog, interaction):
 
 # Mark this function as an asynchronous test case
 @pytest.mark.asyncio
-# Patch the requests.get method to mock API calls
-@patch('cogs.exchangerate.requests.get')
-async def test_nonexistent_target_currency(mock_get, cog, interaction):
-	# Create a mock response object for a successful API call
+# Patch the aiohttp.ClientSession to mock API calls
+@patch('cogs.exchangerate.aiohttp.ClientSession')
+async def test_nonexistent_target_currency(mock_session_class, cog, interaction):
+	# Create mock session and response objects
+	mock_session = MagicMock()
 	mock_response = MagicMock()
-
-	# Set the mock response to indicate a successful request
-	mock_response.ok = True
-
-	# Define the JSON response data to return for the mock response, missing the target currency
-	mock_response.json.return_value = {
+	
+	# Set up the async context managers
+	mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+	mock_session.__aexit__ = AsyncMock(return_value=None)
+	
+	# Set up the response with missing target currency
+	mock_response.status = 200
+	mock_response.json = AsyncMock(return_value={
 		'meta': {
 			'last_updated_at': '2024-01-01T12:00:00Z'
 		},
 		'data': {
 			# 'THB' is intentionally missing to simulate the error case
 		}
-	}
-
-	# Set the return value of the mocked requests.get to the mock response
-	mock_get.return_value = mock_response
+	})
+	
+	# Set up the response as an async context manager
+	mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+	mock_response.__aexit__ = AsyncMock(return_value=None)
+	
+	# Set up session.get to return the response object
+	mock_session.get = MagicMock(return_value=mock_response)
+	
+	# Set the mock session class to return our mock session
+	mock_session_class.return_value = mock_session
 
 	# Access the command's callback dynamically
 	command = cog.bot.tree.get_command("exchangerate")
@@ -164,17 +181,30 @@ async def test_nonexistent_target_currency(mock_get, cog, interaction):
 
 # Mark this function as an asynchronous test case
 @pytest.mark.asyncio
-# Patch the requests.get method to mock API calls
-@patch('cogs.exchangerate.requests.get')
-async def test_api_failure(mock_get, cog, interaction):
-	# Create a mock response object for a failed API call
+# Patch the aiohttp.ClientSession to mock API calls
+@patch('cogs.exchangerate.aiohttp.ClientSession')
+async def test_api_failure(mock_session_class, cog, interaction):
+	# Create mock session and response objects
+	mock_session = MagicMock()
 	mock_response = MagicMock()
-
-	# Set the mock response to indicate a failed request
-	mock_response.ok = False
-
-	# Set the return value of the mocked requests.get to the mock response
-	mock_get.return_value = mock_response
+	
+	# Set up the async context managers
+	mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+	mock_session.__aexit__ = AsyncMock(return_value=None)
+	
+	# Set up the response to indicate a failed request
+	mock_response.status = 500
+	mock_response.json = AsyncMock(return_value={})
+	
+	# Set up the response as an async context manager
+	mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+	mock_response.__aexit__ = AsyncMock(return_value=None)
+	
+	# Set up session.get to return the response object
+	mock_session.get = MagicMock(return_value=mock_response)
+	
+	# Set the mock session class to return our mock session
+	mock_session_class.return_value = mock_session
 
 	# Access the command's callback dynamically
 	command = cog.bot.tree.get_command("exchangerate")
