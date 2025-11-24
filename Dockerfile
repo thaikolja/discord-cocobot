@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
-# Use Python 3.10 slim image as base
-FROM python:3.10-slim
+# Use Python 3.11 slim image as base to support newer dependencies
+FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \

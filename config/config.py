@@ -25,9 +25,9 @@ promoting a clean separation of configuration from code.
 
 # Import the new advanced configuration system
 from .app_config import (
-    get_discord_token as _get_discord_token,
-    get_global_config,
-    ERROR_MESSAGE
+	get_discord_token as _get_discord_token,
+	get_global_config,
+	ERROR_MESSAGE
 )
 
 # Version of the cocobot application, used for tracking and updates.

@@ -304,7 +304,7 @@ class TestOnMessage:
             # Verify that cooldown message was sent
             mock_message.channel.send.assert_awaited_once()
             call_args = mock_message.channel.send.call_args[0][0]
-            assert "needs a 5-minute break" in call_args
+            assert "needs a 3-minute break" in call_args
     
     @pytest.mark.asyncio
     async def test_on_message_nal_mention(self, bot, mock_message):

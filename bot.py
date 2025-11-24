@@ -208,8 +208,8 @@ class Cocobot(commands.Bot):
 			# Add bot avatar as thumbnail if available
 			if self.user.display_avatar:
 				embed.set_thumbnail(url=self.user.display_avatar.url)
-				# Set footer text
-				embed.set_footer(text=f"© Coconut wisdom since 1875")
+			# Set footer text
+			embed.set_footer(text=f"© Coconut wisdom since 1875")
 			# Send the embed to the channel
 			await message.channel.send(embed=embed)
 			# Prevent further processing for this message
@@ -237,16 +237,13 @@ class Cocobot(commands.Bot):
 				# Check if cooldown period has not passed
 				if time_since < timedelta(minutes=3):
 					# Inform user about cooldown
-					await message.channel.send(f"🥥 Sorry, {user.mention}, the Bottom G is tired from all the Bottom G'ing and needs a 5-minute break.")
+					await message.channel.send(f"🥥 Sorry, {user.mention}, the Bottom G is tired from all the Bottom G'ing and needs a 3-minute break.")
 
 					# Prevent further processing for this message
 					return
-				# Update last used timestamp
-				self.tate_cooldowns[user.id] = now
-			# If user is not in cooldown dictionary
-			else:
-				# Add user to cooldown dictionary
-				self.tate_cooldowns[user.id] = now
+
+			# Update last used timestamp (either for new user or after cooldown has passed)
+			self.tate_cooldowns[user.id] = now
 
 			# Create embed for 'tate' GIF
 			embed = discord.Embed()
@@ -312,18 +309,22 @@ class Cocobot(commands.Bot):
 			interaction: Discord interaction object
 			error: The exception that occurred
 		"""
-		if interaction.response.is_done():
-			# If response is already done, follow up instead
-			await interaction.followup.send(
-				"🥥 Oops, something's cracked, and it's **not** the coconut! The developers have been notified.",
-				ephemeral=True
-			)
-		else:
-			# If no response yet, send response
-			await interaction.response.send_message(
-				"🥥 Oops, something's cracked, and it's **not** the coconut! The developers have been notified.",
-				ephemeral=True
-			)
+		try:
+			if interaction.response.is_done():
+				# If response is already done, follow up instead
+				await interaction.followup.send(
+					"🥥 Oops, something's cracked, and it's **not** the coconut! The developers have been notified.",
+					ephemeral=True
+				)
+			else:
+				# If no response yet, send response
+				await interaction.response.send_message(
+					"🥥 Oops, something's cracked, and it's **not** the coconut! The developers have been notified.",
+					ephemeral=True
+				)
+		except Exception as followup_error:
+			# If we can't send an error message to the user, log it but don't fail silently
+			error_logger.error(f"Failed to send error message to user: {followup_error}", exc_info=True)
 
 		error_logger.error(f"Error in app command: {error}", exc_info=True)
 
@@ -333,19 +334,19 @@ class Cocobot(commands.Bot):
 		# The module globals will have the patched value during tests
 		import inspect
 		import sys
-		
+
 		# Get the 'bot' module to access potentially patched variables
 		bot_module = sys.modules.get('bot')
 		if bot_module:
 			token = getattr(bot_module, 'DISCORD_BOT_TOKEN', None)
 		else:
 			token = None
-		
+
 		if token is None:
 			# Fallback to config if not found in module (shouldn't happen in normal use)
 			from config.config import DISCORD_BOT_TOKEN
 			token = DISCORD_BOT_TOKEN
-		
+
 		super().run(token)
 
 
@@ -355,7 +356,7 @@ def main():
 	bot = Cocobot()
 
 	# Run the bot using the token retrieved from the configuration
-	bot.run(DISCORD_BOT_TOKEN)
+	bot.run()  # Use the custom run method that gets the token internally
 
 
 if __name__ == "__main__":

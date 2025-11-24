@@ -6,10 +6,6 @@
 .run
 
 
-off.sh
-on.sh
-diff.txt
-
 # Icon must end with two \r
 Icon
 
@@ -95,6 +91,9 @@ cover/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+
+# Project specific
+cocobot.db
 
 # Flask stuff:
 instance/

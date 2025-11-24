@@ -1,5 +1,31 @@
 # Changelog
 
+## v3.0.0
+
+### Breaking Changes
+- **Major Refactor:** Updated SQLAlchemy imports to use `sqlalchemy.orm.declarative_base()` instead of deprecated `sqlalchemy.ext.declarative.declarative_base()`
+- **Requirements Update:** Updated dependencies to use latest compatible versions
+
+### New Features
+- **Enhanced Error Handling:** Improved error handling in `on_app_command_error` with try-catch blocks to handle potential errors when sending error messages to users
+- **Virtual Environment Support:** Added proper virtual environment setup and usage instructions
+
+### Improvements
+- **Cooldown Logic Fix:** Corrected tate cooldown logic to properly update timestamps only after cooldown period has passed
+- **Cooldown Message Fix:** Updated tate cooldown message from "5-minute break" to "3-minute break" to match actual 3-minute cooldown implementation
+- **Embed Footer Fix:** Corrected embed footer setting in Cocobot info response to ensure it's set regardless of thumbnail availability
+- **Run Method Fix:** Fixed the `run()` method in main function to properly call the custom run method that retrieves the token internally
+- **Requirements Optimization:** Streamlined requirements.txt to include only essential direct dependencies instead of full dependency tree
+- **Test Updates:** Updated tests to match code changes, particularly the tate cooldown message test
+
+### Bug Fixes
+- **Dependency Issues:** Fixed missing dependencies (bleach, SQLAlchemy) that were causing test collection errors
+- **Test Compatibility:** Fixed test failures due to mismatched expected messages
+- **Import Issues:** Fixed deprecated import warnings by updating SQLAlchemy import
+
+### Documentation
+- **Changelog Update:** Comprehensive update of changelog for version 3.0.0
+
 ## v2.3.3
 
 * **Removed:** `/locate` feature until a better solution is found.
