@@ -409,6 +409,11 @@ class SecurityChecker:
             r"(\'\s*=\s*\')",
             r"(;\s*(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC))",
             r"(\'\s*(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC))",
+            r"(;\s*drop\s+table)",
+            r"(;\s*select\s+)",
+            r"(\bor\s+1\s*=\s*1\b)",
+            r"(\'\s*--)",
+            r"(\bunion\s+select\b)",
         ]
         
         for pattern in sql_patterns:

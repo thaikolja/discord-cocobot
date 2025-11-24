@@ -140,7 +140,6 @@ class TestInputValidator:
 			"usdd",  # Too long
 			"us$",  # Invalid characters
 			"123",  # Numbers
-			"usd"  # Lowercase
 		]
 
 		for code in invalid_codes:
@@ -148,6 +147,10 @@ class TestInputValidator:
 				InputValidator.validate_currency_code(code)
 			assert exc_info.value.field_name == "currency"
 			assert "Invalid" in str(exc_info.value)
+		
+		# Test that lowercase gets converted to uppercase and passes
+		validated = InputValidator.validate_currency_code("usd")
+		assert validated == "USD"
 
 	def test_validate_length_valid(self):
 		"""Test validating text length."""
