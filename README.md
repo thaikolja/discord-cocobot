@@ -4,6 +4,8 @@
 
 **@cocobot** is your friendly, feature-rich **Discord bot** designed for the [**Discord Thailand** server](https://discord.gg/6JXCqVdmTZ), bringing a tropical twist to your server with useful utilities and fun interactions. Built with **Python** and the `discord.py` library, cocobot offers **a variety of commands** for practical tasks like weather checking, translation, and currency conversion, all wrapped in a coconut-themed package.
 
+![GitHub Repository Banner](https://p.ipic.vip/7kz50a.jpg)
+
 ## 📖 Documentation
 
 For detailed information about installation, configuration, and usage, please check our comprehensive documentation in the [`docs/`](docs/) directory:
@@ -16,9 +18,29 @@ For detailed information about installation, configuration, and usage, please ch
   - [Production](docs/DEPLOYMENT_PRODUCTION.md)
   - [Docker](docs/DEPLOYMENT_DOCKER.md)
 - **[Architecture](docs/ARCHITECTURE.md)** - System design and technical architecture
-- **[Contributing](docs/CONTRIBUTING.md)** - How to contribute to the project
+- **[Contributing](CONTRIBUTING.md)** - How to contribute to the project
 - **[Security](docs/SECURITY.md)** - Security policy and best practices
-- **[Changelog](docs/CHANGELOG.md)** - Version history and release notes
+- **[Changelog](CHANGELOG.md)** - Version history and release notes
+
+## 🌟 Features
+
+- **🌤️ Weather** - Get current weather conditions for any location
+- **🕓 Time** - Check the local time in any city or country  
+- **💱 Exchange Rates** - Convert between currencies with up-to-date rates
+- **🌫️ Pollution** - Check the air quality index (AQI) for any city
+- **🔤 Transliteration** - Convert Thai text to Latin script
+- **💡 Learn** - Shows Thai words with translations and transliterations
+- **🌐 Translation** - Translate text between languages using AI
+
+## 🚀 CI/CD Pipeline
+
+cocobot features an automated CI/CD pipeline that:
+- Runs tests on every push
+- Automatically deploys to production when changes are merged to the `main` branch
+- Stops previous containers, rebuilds with new code, and starts the updated version
+- Includes health checks and status reporting
+
+For setup instructions, see the [Production Deployment Guide](docs/DEPLOYMENT_PRODUCTION.md).
 
 ## 🚀 Quick Start
 
@@ -48,23 +70,13 @@ For detailed information about installation, configuration, and usage, please ch
 
 For detailed installation instructions, see the [full documentation](docs/README.md).
 
-## 🌟 Features
-
-- **🌤️ Weather** - Get current weather conditions for any location
-- **🕓 Time** - Check the local time in any city or country  
-- **💱 Exchange Rates** - Convert between currencies with up-to-date rates
-- **🌫️ Pollution** - Check air quality index (AQI) for any city
-- **🔤 Transliteration** - Convert Thai text to Latin script
-- **💡 Learn** - Shows Thai words with translations and transliterations
-- **🌐 Translation** - Translate text between languages using AI
-
 ## 🧑‍💻 Authors and Contributors
 
 * **Kolja Nolte** (kolja.nolte@gmail.com)
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
 ## 📜 License
 

@@ -17,11 +17,13 @@
 - **Run Method Fix:** Fixed the `run()` method in main function to properly call the custom run method that retrieves the token internally
 - **Requirements Optimization:** Streamlined requirements.txt to include only essential direct dependencies instead of full dependency tree
 - **Test Updates:** Updated tests to match code changes, particularly the tate cooldown message test
+- **Docker Compatibility:** Fixed dependency conflicts in requirements.txt for Docker deployment (pytest version compatibility)
 
 ### Bug Fixes
 - **Dependency Issues:** Fixed missing dependencies (bleach, SQLAlchemy) that were causing test collection errors
 - **Test Compatibility:** Fixed test failures due to mismatched expected messages
 - **Import Issues:** Fixed deprecated import warnings by updating SQLAlchemy import
+- **Docker Build Issues:** Resolved pytest dependency conflicts that were preventing Docker builds
 
 ### Documentation
 - **Changelog Update:** Comprehensive update of changelog for version 3.0.0
