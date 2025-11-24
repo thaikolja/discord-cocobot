@@ -115,7 +115,7 @@
 
 ## v1.1.0
 
-* This version introduces a new function. The slash command \`/weather <location>\` displays the current weather and conditions at a specified location (defaults to Bangkok).
+* This version introduces a new function. The slash command `/weather <location>` displays the current weather and conditions at a specified location (defaults to Bangkok).
 
 ## v1.0.0
 
