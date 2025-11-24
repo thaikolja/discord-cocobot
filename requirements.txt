@@ -16,9 +16,13 @@ exceptiongroup==1.2.2
 filesize-cli==1.0.2
 frozenlist==1.5.0
 fuzzywuzzy==0.18.0
+SQLAlchemy==2.0.36
+bleach==6.1.0
 google-ai-generativelanguage==0.6.15
 google-api-core==2.24.0
 google-api-python-client==2.159.0
+psutil==6.1.0
+redis==5.2.0
 google-auth==2.37.0
 google-auth-httplib2==0.2.0
 google-generativeai==0.8.4

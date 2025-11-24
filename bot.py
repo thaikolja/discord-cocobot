@@ -36,8 +36,11 @@ from datetime import datetime
 # Import the logging module for tracking bot activities and errors
 import logging
 
-# Configure basic logging settings to track bot activities
-logging.basicConfig(level=logging.INFO)
+# Import setup function for logging configuration
+from utils.logger import setup_logging, bot_logger
+
+# Configure advanced logging settings
+setup_logging(log_level="INFO")
 
 # Create a logger instance for discord-related logs
 logger = logging.getLogger('discord')
@@ -139,7 +142,11 @@ class Cocobot(commands.Bot):
 		Logs a confirmation message indicating the bot is online.
 		"""
 		# Log an informational message indicating the bot is ready, including its username
-		logger.info(f'🥥 {self.user} is ready!')
+		bot_logger.info(f'🥥 {self.user} is ready! (ID: {self.user.id})')
+
+		# Log guild information where the bot is present
+		for guild in self.guilds:
+			bot_logger.info(f'Connected to guild: {guild.name} (ID: {guild.id})')
 
 	# Event that triggers for every message received
 	async def on_message(self, message):
@@ -257,6 +264,68 @@ class Cocobot(commands.Bot):
 
 		# Process any commands contained in the message
 		await self.process_commands(message)
+
+	# Global error handler for commands
+	async def on_command_error(self, ctx, error):
+		"""
+		Global error handler for command errors.
+
+		Args:
+			ctx: Command context
+			error: The exception that occurred
+		"""
+		# Handle command not found errors
+		if isinstance(error, commands.CommandNotFound):
+			await ctx.send(f"❌ Command '{ctx.command}' not found. Use `/help` to see available commands.")
+			command_logger.warning(f"Command not found: {ctx.command} by {ctx.author}")
+			return
+
+		# Handle missing required arguments
+		elif isinstance(error, commands.MissingRequiredArgument):
+			await ctx.send(f"❌ Missing required argument: {error.param.name}")
+			command_logger.warning(f"Missing required argument in {ctx.command}: {error.param.name}")
+			return
+
+		# Handle bad argument errors
+		elif isinstance(error, commands.BadArgument):
+			await ctx.send(f"❌ Invalid argument provided: {error}")
+			command_logger.warning(f"Bad argument in {ctx.command}: {error}")
+			return
+
+		# Handle command on cooldown errors
+		elif isinstance(error, commands.CommandOnCooldown):
+			await ctx.send(f"⏳ This command is on cooldown. Try again in {error.retry_after:.2f}s")
+			command_logger.info(f"Command on cooldown: {ctx.command} by {ctx.author}")
+			return
+
+		# Log other errors
+		else:
+			await ctx.send("🥥 Oops, something's cracked, and it's **not** the coconut! The developers have been notified.")
+			error_logger.error(f"Error in command {ctx.command}: {error}", exc_info=True)
+
+	# Global error handler for application commands (slash commands)
+	async def on_app_command_error(self, interaction, error):
+		"""
+		Global error handler for application command errors.
+
+		Args:
+			interaction: Discord interaction object
+			error: The exception that occurred
+		"""
+		if interaction.response.is_done():
+			# If response is already done, follow up instead
+			await interaction.followup.send(
+				"🥥 Oops, something's cracked, and it's **not** the coconut! The developers have been notified.",
+				ephemeral=True
+			)
+		else:
+			# If no response yet, send response
+			await interaction.response.send_message(
+				"🥥 Oops, something's cracked, and it's **not** the coconut! The developers have been notified.",
+				ephemeral=True
+			)
+
+		error_logger.error(f"Error in app command: {error}", exc_info=True)
 
 
 # Initialize an instance of the Cocobot class
