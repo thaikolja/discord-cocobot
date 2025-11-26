@@ -12,7 +12,7 @@ systemctl stop cocobot.service || echo "Service was not running"
 
 # Change into the bot directory
 echo "📁 Changing to bot directory..."
-cd /home/api/cocobot || { echo "❌ Failed to change directory"; exit 1; }
+cd /opt/bots/cocobot || { echo "❌ Failed to change directory"; exit 1; }
 
 # Activate Python environment
 echo "🐍 Activating virtual environment..."
