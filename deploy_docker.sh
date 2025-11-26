@@ -1,6 +1,6 @@
 #!/bin/bash
 # Deployment script for Cocobot Docker container
-# This script stops the current container, pulls the latest code, rebuilds the image, and starts the new container
+# This script stops the current container, pulls the latest code, rebuilds the image, and starts the new container.
 
 set -e  # Exit on any error
 
