@@ -1,6 +1,6 @@
 #!/bin/bash
 # Deployment script for cocobot
-# This script deploys the bot to the production server
+# This script deploys the bot to the production server.
 
 set -e  # Exit on any error
 
