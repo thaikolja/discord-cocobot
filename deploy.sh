@@ -1,61 +1,12 @@
 #!/bin/bash
-#  Copyright (C) 2025 by Kolja Nolte
-#  kolja.nolte@gmail.com
-#  https://gitlab.com/thailand-discord/bots/cocobot
-#
-#  This work is licensed under the MIT License. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-#  and to permit persons to whom the Software is furnished to do so, subject to the condition that the above copyright notice and this permission notice shall be included in all
-#  copies or substantial portions of the Software.
-#
-#  For more information, visit: https://opensource.org/licenses/MIT
-#
-#  Author:    Kolja Nolte
-#  Email:     kolja.nolte@gmail.com
-#  License:   MIT
-#  Date:      2014-2025
-#  Package:   cocobot Discord Bot
+# Template for remote deployment script
+# This script should be placed on the target server and configured with the correct path to your cocobot directory
 
-# Log: This script is used to deploy the bot to the server.
-echo "Starting deployment..."
+# Set the path to your cocobot directory
+COCOBOT_DIR="/opt/bots/cocobot"
 
-# Stop the service
-systemctl stop cocobot.service
+# Navigate to the cocobot directory
+cd $COCOBOT_DIR || { echo "❌ Cocobot directory not found: $COCOBOT_DIR"; exit 1; }
 
-# Log: Change into the bot directory
-echo "Changing into /home/api/cocobot"
-
-# Change into the bot directory
-cd /home/api/cocobot || exit
-
-# Activate Python environment
-source ./venv/bin/activate
-
-echo "Installing requirements..."
-pip install -r requirements
-
-# Log: Pull the latest changes
-echo "Pulling the latest changes..."
-
-# Pull the latest changes
-git pull origin main
-
-# Log: Install dependencies
-echo "Installing dependencies..."
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Log: Enable the service
-echo "Enabling the service..."
-
-# Log: Enable the service
-systemctl enable cocobot.service
-
-# Log: Restart the service
-echo "Restarting the service... "
-
-# Restart the service
-systemctl start cocobot.service
-
-# Log: Check the status
-echo "Deployment complete!"
+# Run the deployment script
+./deploy_docker.sh

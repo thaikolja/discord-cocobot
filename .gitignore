@@ -4,11 +4,9 @@
 .LSOverride
 .idea
 .run
-
-
-off.sh
-on.sh
-diff.txt
+.iflow
+conversation-*.txt
+logs/
 
 # Icon must end with two \r
 Icon
@@ -96,6 +94,9 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
+# Project specific
+cocobot.db
+
 # Flask stuff:
 instance/
 .webassets-cache
@@ -165,6 +166,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+commit.txt
 
 # Spyder project settings
 .spyderproject
@@ -198,3 +200,6 @@ cython_debug/
 #.idea/
 
 /.idea/cocobot.iml
+
+.iflow/
+gha-creds-*.json

@@ -1,0 +1,55 @@
+services:
+  cocobot:
+    build: .
+    container_name: cocobot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql://cocobot:password@db:5432/cocobot
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./logs:/app/logs
+      - ./metrics:/app/metrics
+    networks:
+      - cocobot-network
+
+  db:
+    image: postgres:15-alpine
+    container_name: cocobot-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=cocobot
+      - POSTGRES_USER=cocobot
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - cocobot-db-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - cocobot-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: cocobot-redis
+    restart: unless-stopped
+    volumes:
+      - cocobot-redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - cocobot-network
+    command: redis-server --appendonly yes
+
+volumes:
+  cocobot-db-data:
+  cocobot-redis-data:
+
+networks:
+  cocobot-network:
+    driver: bridge

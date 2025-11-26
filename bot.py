@@ -20,20 +20,27 @@ import discord
 # Import the regular expression module for pattern matching in text
 import re
 
-# Import datetime and timedelta from the datetime module for time-related operations
-from datetime import datetime, timedelta
+# Import timedelta for time-related operations
+from datetime import timedelta
 
 # Import the commands extension from discord.py for bot command handling
 from discord.ext import commands
+from discord.ext.commands import HelpCommand
 
 # Import configuration constants from the config file
-from config.config import DISCORD_BOT_TOKEN, DISCORD_SERVER_ID, COCOBOT_VERSION
+from config.config import DISCORD_BOT_TOKEN, COCOBOT_VERSION, DISCORD_SERVER_ID
+
+# Import datetime for current time operations
+from datetime import datetime
 
 # Import the logging module for tracking bot activities and errors
 import logging
 
-# Configure basic logging settings to track bot activities
-logging.basicConfig(level=logging.INFO)
+# Import setup function for logging configuration
+from utils.logger import setup_logging, bot_logger, command_logger, error_logger
+
+# Configure advanced logging settings
+setup_logging(log_level="INFO")
 
 # Create a logger instance for discord-related logs
 logger = logging.getLogger('discord')
@@ -50,8 +57,6 @@ INITIAL_EXTENSIONS = [
 	'cogs.transliterate',
 	# Translation commands cog
 	'cogs.translate',
-	# Geolocation commands cog
-	# 'cogs.locate', # TODO: Fix
 	# Air pollution information cog
 	'cogs.pollution',
 	# Learning-related commands cog
@@ -62,9 +67,15 @@ INITIAL_EXTENSIONS = [
 # Define the main bot class inheriting from commands.Bot
 class Cocobot(commands.Bot):
 	"""
-	The main bot class that handles initialization, command loading, and event processing.
+	Represents the Cocobot, an advanced Discord bot providing various features and interactions.
 
-	Inherits from discord.ext.commands.Bot to provide bot functionalities.
+	Cocobot is designed to enhance the user experience in Discord servers through commands,
+	events, and member reminders. It includes capabilities for custom command handling,
+	cooldown management, and contextual reminders within specific channels. The bot responds
+	intuitively based on the content of the messages it receives and performs actions accordingly.
+
+	Attributes:
+	    version (str): The version identifier for the bot.
 	"""
 	# Version identifier for the bot
 	version: str = COCOBOT_VERSION
@@ -76,14 +87,21 @@ class Cocobot(commands.Bot):
 		"""
 		# Initialize default Discord intents
 		intents = discord.Intents.default()
+
 		# Enable member-related intents for tracking member information
 		intents.members = True
+
 		# Enable message content intent to read message content
 		intents.message_content = True
+
 		# Call the parent class constructor with command prefix and intents
 		super().__init__(command_prefix='!', intents=intents)
+
 		# Dictionary to track cooldowns for the 'tate' command per user
 		self.tate_cooldowns = {}
+
+		# Set to track users reminded in the visa channel
+		self.reminded_users = set()
 
 	# Setup hook to load extensions and sync commands
 	async def setup_hook(self):
@@ -97,6 +115,7 @@ class Cocobot(commands.Bot):
 			try:
 				# Asynchronously load the extension
 				await self.load_extension(extension)
+
 				# Log successful loading of the extension
 				logger.info(f'Loaded extension: {extension}')
 			# Catch any exception during extension loading
@@ -106,10 +125,13 @@ class Cocobot(commands.Bot):
 
 		# Create a discord.Object representing the target guild using its ID
 		guild = discord.Object(id=DISCORD_SERVER_ID)
+
 		# Copy global application commands to the specified guild
 		self.tree.copy_global_to(guild=guild)
+
 		# Synchronize the application command tree with the specified guild
 		await self.tree.sync(guild=guild)
+
 		# Log that the command tree synchronization is complete
 		logger.info('Command tree synced.')
 
@@ -120,111 +142,222 @@ class Cocobot(commands.Bot):
 		Logs a confirmation message indicating the bot is online.
 		"""
 		# Log an informational message indicating the bot is ready, including its username
-		logger.info(f'🥥 {self.user} is ready!')
+		bot_logger.info(f'🥥 {self.user} is ready! (ID: {self.user.id})')
+
+		# Log guild information where the bot is present
+		for guild in self.guilds:
+			bot_logger.info(f'Connected to guild: {guild.name} (ID: {guild.id})')
 
 	# Event that triggers for every message received
 	async def on_message(self, message):
+
 		"""
 		Event handler called for every message received in channels the bot has access to.
 		Handles the 'tate' response with cooldown and processes other commands.
 
 		Args:
-			message (discord.Message): The message object received.
+				message (discord.Message): The message object received.
 		"""
 		# Check if the message author is the bot itself to prevent self-responses
 		if message.author == self.user:
 			# Exit the handler if the message is from the bot
 			return
 
-		# Set the flag for sending the Cocobot info embed to False, because we don't want to spam... yet
-		send_cocobot_info_embed = False
-
-		# Strip the message content of any leading/trailing whitespace, because users love their accidental spaces
-		normalized_message_content_stripped = message.content.strip()
-
-		# Condition 1: Did someone type '!cocobot'? Maybe they're looking for the coconut overlord
-		if normalized_message_content_stripped.lower() == '!cocobot':
-			send_cocobot_info_embed = True  # Time to show off Cocobot's resume
-
-		# If the flag is set, it's showtime for Cocobot's info embed
-		if send_cocobot_info_embed:
-			embed = discord.Embed(
-				# Set the timestamp to the current time, because we want to be timely
-				timestamp=datetime.now(),
-				# Because every bot needs a dramatic entrance
-				title=f"🥥 Cocobot  at your service!",
-				# For the developers
-				url="https://gitlab.com/thailand-discord/bots/cocobot",
-				# Coconut puns included at no extra charge
-				description=f"Hi, I'm **@cocobot** `v{COCOBOT_VERSION}`, the *actual* useful brother of our dearest August Engelhardt. Type `/coco` to see what I can do for you. I "
-				            "promise "
-				            "on the holy coconut, I'm here to help.",
-				# Because green is the color of coconuts (sometimes)
-				color=discord.Color.green(),
+		# Check for visa channel nationality reminder condition
+		if message.channel.name == "visa" and "?" in message.content and message.author.id not in self.reminded_users:
+			# Send a reminder to mention nationality in the visa channel
+			await message.channel.send(
+				f"🥥 **Friendly reminder to {message.author.mention}**: Don't forget to **mention your nationality** when asking questions in this channel. Visa rules can vary "
+				f"significantly based on your nationality.",
+				silent=True,
 			)
-
-			# Add a footer to the embed, because every good bot needs a signature
-			if self.user.display_avatar:
-				# Show off that beautiful bot avatar
-				embed.set_thumbnail(url=self.user.display_avatar.url)
-
-				# Set the footer text with a coconut-themed message
-				embed.set_footer(text=f"© Coconut wisdom since 1875")
-			# Send the embed, because bots need attention too
-			await message.channel.send(embed=embed)
-			# No more processing, the coconut has spoken
+			# Add user to reminded set
+			self.reminded_users.add(message.author.id)
+			# Prevent further processing for this message
 			return
 
-		# Define the regular expression pattern to detect the word 'tate' case-insensitively, ensuring it's a whole word
+		# Flag for sending Cocobot info embed
+		send_cocobot_info_embed = False
+
+		# Strip whitespace from message content
+		normalized_message_content_stripped = message.content.strip()
+
+		# Check if message is exactly '!cocobot'
+		is_cocobot_command = normalized_message_content_stripped.lower() == '!cocobot'
+
+		# Check if Cocobot is mentioned in the message
+		is_cocobot_mention = any(
+			mention.id == self.user.id for mention in message.mentions
+		)
+
+		# Set flag if command or mention detected
+		if is_cocobot_command or is_cocobot_mention:
+			send_cocobot_info_embed = True
+
+		# Send Cocobot info embed if flag is set
+		if send_cocobot_info_embed:
+			# Create embed for Cocobot info
+			embed = discord.Embed(
+				timestamp=datetime.now(),
+				title=f"🥥 Cocobot at your service!",
+				url="https://gitlab.com/thailand-discord/bots/cocobot",
+				description=f"Hi, I'm **@cocobot** `v{COCOBOT_VERSION}`, the *actual* useful brother of our dearest August Engelhardt. Type `/coco` to see what I can do for you. I "
+				            "promise on the holy coconut, I'm here to help.",
+				color=discord.Color.green(),
+			)
+			# Add bot avatar as thumbnail if available
+			if self.user.display_avatar:
+				embed.set_thumbnail(url=self.user.display_avatar.url)
+			# Set footer text
+			embed.set_footer(text=f"© Coconut wisdom since 1875")
+			# Send the embed to the channel
+			await message.channel.send(embed=embed)
+			# Prevent further processing for this message
+			return
+
+		# Regular expression pattern to detect the word 'tate'
 		tate_pattern = r'(?<!\w)tate(?!\w)'
-		# Search for the 'tate' pattern within the message content, ignoring case
+
+		# Search for 'tate' in message content
 		if re.search(tate_pattern, message.content, re.IGNORECASE):
-			# Get the current date and time
+			# Get current time
 			now = datetime.now()
-			# Get the author of the message
+
+			# Get message author
 			user = message.author
 
-			# Check if the user ID exists in the tate_cooldowns dictionary
+			# Check if user is in cooldown dictionary
 			if user.id in self.tate_cooldowns:
-				# Retrieve the timestamp of the last time the user triggered the 'tate' response
+				# Get last used timestamp
 				last_used = self.tate_cooldowns[user.id]
-				# Calculate the time elapsed since the last usage
+
+				# Calculate time since last use
 				time_since = now - last_used
-				# Check if the elapsed time is less than 5 minutes
+
+				# Check if cooldown period has not passed
 				if time_since < timedelta(minutes=3):
-					# Send a message informing the user about the cooldown
-					await message.channel.send(f"🥥 Sorry, {user.mention}, the Bottom G is tired from all the Bottom G'ing and needs a 5-minute break. ")
-					# Exit the handler as the user is on cooldown
+					# Inform user about cooldown
+					await message.channel.send(f"🥥 Sorry, {user.mention}, the Bottom G is tired from all the Bottom G'ing and needs a 3-minute break.")
+
+					# Prevent further processing for this message
 					return
 
-				# Update the last usage timestamp for the user in the cooldowns dictionary
-				self.tate_cooldowns[user.id] = now
+			# Update last used timestamp (either for new user or after cooldown has passed)
+			self.tate_cooldowns[user.id] = now
 
-			# If the user is not in the cooldowns dictionary (first time or cooldown expired)
-			else:
-				# Add the user to the cooldowns dictionary with the current timestamp
-				self.tate_cooldowns[user.id] = now
-
-			# Create a Discord embed object
+			# Create embed for 'tate' GIF
 			embed = discord.Embed()
-			# Set the image URL for the embed
 			embed.set_image(url='https://c.tenor.com/fyrqnSBR4gcAAAAd/tenor.gif')
-			# Send the embed containing the GIF image to the channel where the message was received
+
+			# Send the embed to the channel
 			await message.channel.send(embed=embed)
-		# Display a tribute to our lost soul, @Nal
+		# Check for tribute to @Nal
 		elif '@Nal' in message.content or any(mention.name == 'nal_9345' for mention in message.mentions):
-			# Create a Discord embed object
+			# Create embed for Nal tribute
 			embed = discord.Embed()
-			# Set the URL of the image
 			embed.set_image(url='https://smmallcdn.net/kolja/1749743431468/nal.avif')
-			# Show the image
+			# Send the embed to the channel
 			await message.channel.send(embed=embed)
 
 		# Process any commands contained in the message
 		await self.process_commands(message)
 
+	# Global error handler for commands
+	async def on_command_error(self, ctx, error):
+		"""
+		Global error handler for command errors.
 
-# Initialize an instance of the Cocobot class
-bot = Cocobot()
-# Run the bot using the token retrieved from the configuration
-bot.run(DISCORD_BOT_TOKEN)
+		Args:
+			ctx: Command context
+			error: The exception that occurred
+		"""
+		# Handle command not found errors
+		if isinstance(error, commands.CommandNotFound):
+			await ctx.send(f"❌ Command '{ctx.command}' not found. Use `/help` to see available commands.")
+			command_logger.warning(f"Command not found: {ctx.command} by {ctx.author}")
+			return
+
+		# Handle missing required arguments
+		elif isinstance(error, commands.MissingRequiredArgument):
+			await ctx.send(f"❌ Missing required argument: {error.param.name}")
+			command_logger.warning(f"Missing required argument in {ctx.command}: {error.param.name}")
+			return
+
+		# Handle bad argument errors
+		elif isinstance(error, commands.BadArgument):
+			await ctx.send(f"❌ Invalid argument provided: {error}")
+			command_logger.warning(f"Bad argument in {ctx.command}: {error}")
+			return
+
+		# Handle command on cooldown errors
+		elif isinstance(error, commands.CommandOnCooldown):
+			await ctx.send(f"⏳ This command is on cooldown. Try again in {error.retry_after:.2f}s")
+			command_logger.info(f"Command on cooldown: {ctx.command} by {ctx.author}")
+			return
+
+		# Log other errors
+		else:
+			await ctx.send("🥥 Oops, something's cracked, and it's **not** the coconut! The developers have been notified.")
+			error_logger.error(f"Error in command {ctx.command}: {error}", exc_info=True)
+
+	# Global error handler for application commands (slash commands)
+	async def on_app_command_error(self, interaction, error):
+		"""
+		Global error handler for application command errors.
+
+		Args:
+			interaction: Discord interaction object
+			error: The exception that occurred
+		"""
+		try:
+			if interaction.response.is_done():
+				# If response is already done, follow up instead
+				await interaction.followup.send(
+					"🥥 Oops, something's cracked, and it's **not** the coconut! The developers have been notified.",
+					ephemeral=True
+				)
+			else:
+				# If no response yet, send response
+				await interaction.response.send_message(
+					"🥥 Oops, something's cracked, and it's **not** the coconut! The developers have been notified.",
+					ephemeral=True
+				)
+		except Exception as followup_error:
+			# If we can't send an error message to the user, log it but don't fail silently
+			error_logger.error(f"Failed to send error message to user: {followup_error}", exc_info=True)
+
+		error_logger.error(f"Error in app command: {error}", exc_info=True)
+
+	def run(self):
+		"""Run the bot with the configured token."""
+		# Access the token variable from the current module context
+		# The module globals will have the patched value during tests
+		import inspect
+		import sys
+
+		# Get the 'bot' module to access potentially patched variables
+		bot_module = sys.modules.get('bot')
+		if bot_module:
+			token = getattr(bot_module, 'DISCORD_BOT_TOKEN', None)
+		else:
+			token = None
+
+		if token is None:
+			# Fallback to config if not found in module (shouldn't happen in normal use)
+			from config.config import DISCORD_BOT_TOKEN
+			token = DISCORD_BOT_TOKEN
+
+		super().run(token)
+
+
+def main():
+	"""Main entry point for running the bot."""
+	# Initialize an instance of the Cocobot class
+	bot = Cocobot()
+
+	# Run the bot using the token retrieved from the configuration
+	bot.run()  # Use the custom run method that gets the token internally
+
+
+if __name__ == "__main__":
+	main()

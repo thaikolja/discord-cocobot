@@ -55,19 +55,24 @@ def interaction():
 
 # Mark the test as asynchronous using pytest_asyncio
 @pytest.mark.asyncio
-# Use patch to mock the requests.get method
-@patch('cogs.pollution.requests.get')
+# Use patch to mock the aiohttp ClientSession
+@patch('cogs.pollution.aiohttp.ClientSession')
 # Define the test function with mocked dependencies
-async def test_valid_city_response(mock_get, cog, interaction):
-	# Create a mock response object
+async def test_valid_city_response(mock_session_class, cog, interaction):
+	# Create mock session and response objects
+	mock_session = MagicMock()
 	mock_response = MagicMock()
-	# Set the response.ok property to True
-	mock_response.ok = True
-	# Define the mock JSON response data
-	mock_response.json.return_value = {
+	
+	# Set up the async context managers
+	mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+	mock_session.__aexit__ = AsyncMock(return_value=None)
+	
+	# Set up the response
+	mock_response.status = 200
+	mock_response.json = AsyncMock(return_value={
 		'status': 'ok',
-		'data':   {
-			'aqi':  42,
+		'data': {
+			'aqi': 42,
 			'city': {
 				'name': 'Bangkok'
 			},
@@ -75,9 +80,17 @@ async def test_valid_city_response(mock_get, cog, interaction):
 				'iso': '2024-01-01T12:00:00Z'
 			}
 		}
-	}
-	# Set the mock_get return value to the mock_response
-	mock_get.return_value = mock_response
+	})
+	
+	# Set up the response as an async context manager
+	mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+	mock_response.__aexit__ = AsyncMock(return_value=None)
+	
+	# Set up session.get to return the response object
+	mock_session.get = MagicMock(return_value=mock_response)
+	
+	# Set the mock session class to return our mock session
+	mock_session_class.return_value = mock_session
 
 	# Call the command's callback directly with test parameters
 	await cog.pollution_command.callback(cog, interaction, city="Bangkok")

@@ -14,8 +14,8 @@
 #  Date:      2014-2025
 #  Package:   cocobot Discord Bot
 
-# Import the requests library for making HTTP requests
-import requests
+# Import the aiohttp library for asynchronous HTTP requests
+import aiohttp
 
 # Import the discord library for Discord functionality
 import discord
@@ -85,32 +85,38 @@ class ExchangerateCog(commands.Cog):
 		# Construct the API URL with the sanitized currency codes and API key
 		api_url = f'https://api.currencyapi.com/v3/latest?apikey={CURRENCYAPI_API_KEY}&currencies={to_currency}&base_currency={from_currency}'
 
-		# Make a GET request to the API URL
-		response = requests.get(api_url)
+		try:
+			# Create an aiohttp session and make the API request
+			async with aiohttp.ClientSession() as session:
+				async with session.get(api_url) as response:
+					# Check if the response status is not OK (i.e., not in the 200-399 range)
+					if response.status != 200:
+						# Construct an error message if the request was unsuccessful
+						output = f"{ERROR_MESSAGE} Couldn't convert **{from_currency}** into **{to_currency}**. Are you sure they even exist? Coconut money doesn't count."
+					else:
+						# Parse the JSON data from the response
+						data = await response.json()
 
-		# Check if the response status is not OK (i.e., not in the 200-399 range)
-		if not response.ok:
-			# Construct an error message if the request was unsuccessful
-			output = f"{ERROR_MESSAGE} Couldn't convert **{from_currency}** into **{to_currency}**. Are you sure they even exist? Coconut money doesn't count."
-		else:
-			# Parse the JSON data from the response
-			data = response.json()
+						# Check if the target currency exists in the response data
+						if to_currency not in data.get('data', {}):
+							output = f"{ERROR_MESSAGE} Invalid target currency **{to_currency}**. Please check the currency code and try again."
+						else:
+							# Convert the last updated time to a human-readable format
+							updated_humanized = naturaltime(datetime.strptime(data['meta']['last_updated_at'], '%Y-%m-%dT%H:%M:%SZ'))
 
-			# Check if the target currency exists in the response data
-			if to_currency not in data.get('data', {}):
-				output = f"{ERROR_MESSAGE} Invalid target currency **{to_currency}**. Please check the currency code and try again."
-			else:
-				# Convert the last updated time to a human-readable format
-				updated_humanized = naturaltime(datetime.strptime(data['meta']['last_updated_at'], '%Y-%m-%dT%H:%M:%SZ'))
+							# Calculate the converted value and round it to 2 decimal places
+							value = round(data['data'][to_currency]['value'] * amount, 2)
 
-				# Calculate the converted value and round it to 2 decimal places
-				value = round(data['data'][to_currency]['value'] * amount, 2)
+							# Construct the output message with the exchange rate details
+							output = f"💰 `{amount}` **{from_currency}** is currently `{value}` **{to_currency}** (Updated: {updated_humanized})"
 
-				# Construct the output message with the exchange rate details
-				output = f"💰 `{amount}` **{from_currency}** is currently `{value}` **{to_currency}** (Updated: {updated_humanized})"
+			# Send the output message to the user
+			await interaction.response.send_message(output)
 
-		# Send the output message to the user
-		await interaction.response.send_message(output)
+		except Exception as e:
+			# Handle any unexpected errors
+			output = f"{ERROR_MESSAGE} An error occurred while fetching exchange rate: {str(e)}"
+			await interaction.response.send_message(output)
 
 
 # Define the asynchronous setup function to add the ExchangerateCog to the bot

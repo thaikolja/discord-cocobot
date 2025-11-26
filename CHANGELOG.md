@@ -1,5 +1,39 @@
 # Changelog
 
+## v3.0.0
+
+### Breaking Changes
+- **Major Refactor:** Updated SQLAlchemy imports to use `sqlalchemy.orm.declarative_base()` instead of deprecated `sqlalchemy.ext.declarative.declarative_base()`
+- **Requirements Update:** Updated dependencies to use latest compatible versions
+
+### New Features
+- **Enhanced Error Handling:** Improved error handling in `on_app_command_error` with try-catch blocks to handle potential errors when sending error messages to users
+- **Virtual Environment Support:** Added proper virtual environment setup and usage instructions
+
+### Improvements
+- **Cooldown Logic Fix:** Corrected tate cooldown logic to properly update timestamps only after cooldown period has passed
+- **Cooldown Message Fix:** Updated tate cooldown message from "5-minute break" to "3-minute break" to match actual 3-minute cooldown implementation
+- **Embed Footer Fix:** Corrected embed footer setting in Cocobot info response to ensure it's set regardless of thumbnail availability
+- **Run Method Fix:** Fixed the `run()` method in main function to properly call the custom run method that retrieves the token internally
+- **Requirements Optimization:** Streamlined requirements.txt to include only essential direct dependencies instead of full dependency tree
+- **Test Updates:** Updated tests to match code changes, particularly the tate cooldown message test
+- **Docker Compatibility:** Fixed dependency conflicts in requirements.txt for Docker deployment (pytest version compatibility)
+
+### Bug Fixes
+- **Dependency Issues:** Fixed missing dependencies (bleach, SQLAlchemy) that were causing test collection errors
+- **Test Compatibility:** Fixed test failures due to mismatched expected messages
+- **Import Issues:** Fixed deprecated import warnings by updating SQLAlchemy import
+- **Docker Build Issues:** Resolved pytest dependency conflicts that were preventing Docker builds
+
+### Documentation
+- **Changelog Update:** Comprehensive update of changelog for version 3.0.0
+
+## v2.3.3
+
+* **Removed:** `/locate` feature until a better solution is found.
+* **Added:** Logging for `/time` requests
+* **Fixed:** Updated and fixed test suite for `/time` command to properly mock aiohttp sessions
+
 ## v2.3.2
 
 - **Added:** `!cocobot` command which displays information about the bot itself.
@@ -17,8 +51,7 @@
 
 - **Improved:** @cocobot's `/weather` command: You can now toggle between Fahrenheit and Celsius with a simple button underneath the weather card.
 - **Fixed:** several smaller issues to adhere to Python's best practices.
-
-  Added `on.sh`, `off.sh`, and `deploy.sh` to `.gitignore` since they
+* Added `on.sh`, `off.sh`, and `deploy.sh` to `.gitignore` since they
 
 ## v2.2.1
 
@@ -31,7 +64,7 @@
 
 * **Prompt Enhancement:** Improved the AI prompt for clearer instructions and better transliteration accuracy.
 * **Input Validation:** Added checks for empty or whitespace-only inputs with informative messages.
-* **Logging & Error Handling:** Enhanced exception handling and logging in the `transliterate` cog to better track AI service issues.
+* **Logging and Error Handling:** Enhanced exception handling and logging in the `transliterate` cog to better track AI service issues.
 
 ### Weather Command
 
@@ -50,7 +83,7 @@
 
 ## v2.2.0
 
-* **Fixed:** Bug
+* **Fixed:** A small bug.
 
 ## v2.0.1
 
@@ -58,7 +91,7 @@
 
 ## v2.0.0
 
-*cocobot v2 is a completely rewritten version of the initial cocobot Discord bot for the Thailand Discord server. At this point, all features from the first, less maintainable version have been reprogrammed in a way that allows other contributors to add functions easily. Already existing functions have been drastically improved; the output quality is at the highest rate so far.*
+**@cocobot v2** is a completely rewritten version of the initial cocobot Discord bot for the Thailand Discord server. At this point, all features from the first, less maintainable version have been reprogrammed in a way that allows other contributors to add functions easily. Already existing functions have been drastically improved; the output quality is at the highest rate so far. Licensed under MIT.
 
 ## v1.2.4
 
@@ -110,7 +143,7 @@
 
 ## v1.1.0
 
-* This version introduces a new function. The slash command \`/weather <location>\` displays the current weather and conditions at a specified location (defaults to Bangkok).
+* This version introduces a new function. The slash command `/weather <location>` displays the current weather and conditions at a specified location (defaults to Bangkok).
 
 ## v1.0.0
 

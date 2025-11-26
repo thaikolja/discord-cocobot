@@ -14,8 +14,8 @@
 #  Date:      2014-2025
 #  Package:   cocobot Discord Bot
 
-# Import the requests module to make HTTP requests to external APIs
-import requests
+# Import the aiohttp module for asynchronous HTTP requests
+import aiohttp
 
 # Import the Discord API library for interacting with the Discord API
 import discord
@@ -71,17 +71,17 @@ class PollutionCog(commands.Cog):
 		# Sanitize the city name for use in the URL and construct the API request URL
 		api_url = sanitize_url(f'https://api.waqi.info/feed/{city}/?token={ACQIN_API_KEY}')
 
-		# Make a GET request to the pollution API
-		response = requests.get(api_url)
+		# Make an async GET request to the pollution API
+		async with aiohttp.ClientSession() as session:
+			async with session.get(api_url) as response:
+				# Check if the response was successful
+				if response.status != 200:
+					# Send an error message if the request failed
+					await interaction.response.send_message(f"{ERROR_MESSAGE} Looks like there's been some connection error. Give it another shot.")
+					return
 
-		# Check if the response was successful
-		if not response.ok:
-			# Send an error message if the request failed
-			await interaction.response.send_message(f"{ERROR_MESSAGE} Looks like there's been some connection error. Give it another shot.")
-			return
-
-		# Parse the JSON response from the API
-		data = response.json()
+				# Parse the JSON response from the API
+				data = await response.json()
 
 		# Check if the API returned a successful status
 		if data['status'] != 'ok':
