@@ -184,19 +184,28 @@ class TestOnReady:
         mock_user.name = "Cocobot"
         mock_user.id = 999888777
         mock_user.__str__ = lambda self: "Cocobot"  # Make the string representation return the name
-        
+
         # Patch the user and guilds properties of the bot instance using PropertyMock
         with patch.object(bot.__class__, 'user', property(lambda self: mock_user)), \
-             patch.object(bot.__class__, 'guilds', property(lambda self: [mock_guild])):
-            
+             patch.object(bot.__class__, 'guilds', property(lambda self: [mock_guild])), \
+             patch.object(bot, 'change_presence') as mock_change_presence:
+
             with patch('utils.logger.bot_logger.info') as mock_logger:
                 await bot.on_ready()
-                
+
                 # Verify that bot ready message was logged
                 mock_logger.assert_called()
                 call_args = ' '.join([str(call) for call in mock_logger.call_args_list])
                 assert "Cocobot is ready" in call_args
                 assert "999888777" in call_args
+
+                # Verify that change_presence was called with the correct activity
+                mock_change_presence.assert_called_once()
+                args, kwargs = mock_change_presence.call_args
+                assert 'activity' in kwargs
+                activity = kwargs['activity']
+                assert hasattr(activity, 'name')
+                assert activity.name == "Waiting for a coconut to fall"
 
 
 class TestOnMessage:
