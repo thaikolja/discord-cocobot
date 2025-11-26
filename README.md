@@ -4,83 +4,187 @@
 
 **@cocobot** is your friendly, feature-rich **Discord bot** designed for the [**Discord Thailand** server](https://discord.gg/6JXCqVdmTZ), bringing a tropical twist to your server with useful utilities and fun interactions. Built with **Python** and the `discord.py` library, cocobot offers **a variety of commands** for practical tasks like weather checking, translation, and currency conversion, all wrapped in a coconut-themed package.
 
-![GitHub Repository Banner](https://p.ipic.vip/7kz50a.jpg)
+![GitHub Repository Banner](https://p.ipic.vip/srmtct.jpg)
 
-## 📖 Documentation
+[TOC]
 
-For detailed information about installation, configuration, and usage, please check our comprehensive documentation in the [`docs/`](docs/) directory:
+---
 
-- **[Getting Started](docs/README.md)** - Complete setup guide and feature overview
-- **[Developer Guide](docs/DEVELOPER_GUIDE.md)** - Development setup and contribution guide
-- **[API Documentation](docs/API_DOCUMENTATION.md)** - Technical API reference
-- **[Deployment Guides](docs/)**
-  - [Development](docs/DEPLOYMENT_DEVELOPMENT.md)
-  - [Production](docs/DEPLOYMENT_PRODUCTION.md)
-  - [Docker](docs/DEPLOYMENT_DOCKER.md)
-- **[Architecture](docs/ARCHITECTURE.md)** - System design and technical architecture
-- **[Contributing](CONTRIBUTING.md)** - How to contribute to the project
-- **[Security](docs/SECURITY.md)** - Security policy and best practices
-- **[Changelog](CHANGELOG.md)** - Version history and release notes
+## 🌴 Features
 
-## 🌟 Features
+**cocobot** comes packed with useful commands. Parameters displayed in `<...>` are mandatory, whereas `[...]` are optional parameters that default to a specific value.
 
-- **🌤️ Weather** - Get current weather conditions for any location
-- **🕓 Time** - Check the local time in any city or country  
-- **💱 Exchange Rates** - Convert between currencies with up-to-date rates
-- **🌫️ Pollution** - Check the air quality index (AQI) for any city
-- **🔤 Transliteration** - Convert Thai text to Latin script
-- **💡 Learn** - Shows Thai words with translations and transliterations
-- **🌐 Translation** - Translate text between languages using AI
+- **🌤️ Weather**: Get current weather conditions for any location
+  - `/weather [location]` *(string)* **Default:** Bangkok
 
-## 🚀 CI/CD Pipeline
+- **🕓 Time**: Check the local time in any city or country
+  - `/time [location]` *(string)* **Default:** Thailand
 
-cocobot features an automated CI/CD pipeline that:
-- Runs tests on every push
-- Automatically deploys to production when changes are merged to the `main` branch
-- Stops previous containers, rebuilds with new code, and starts the updated version
-- Includes health checks and status reporting
+- **💱 Exchange Rates**: Convert between currencies with up-to-date rates
+  - `/exchangerates`
+    - `[from_currency]` *(string)* **Default:** `USD`
+    - `[to_currency]` *(string)* **Default:** `THB`
+    - `[amount]` *(number)* **Default:** `1`
 
-For setup instructions, see the [Production Deployment Guide](docs/DEPLOYMENT_PRODUCTION.md).
+- **📍 Location**: Find addresses and get a Google Maps link
+  - `/locate`
+    - `<location>` *(string)* **Required**
+    - `[city]` *(string)* **Default:** Bangkok
 
-## 🚀 Quick Start
+- **🌫️ Pollution**: Check air quality index (AQI) for any city
+  - `/pollution <city>` *(string)*
 
-1. **Clone the repository**
+- **🔤 Transliteration**: Convert Thai text to Latin script[^3]
+  - `/transliterate <text>` *(string)* Change Thai script into the Latin alphabet
+
+- 💡 **Learn:** Shows one of the 250 core Thai words and its translation and transliteration
+  - `/learn`
+  
+- **🌐 Translation**: Translate text between languages using AI[^3]
+  - `/translate`
+    - `<text>` *(string)* The text to be translated
+    - `[from_language]` *(string)* **Default:** Thai
+    - `[to_language]` *(string)* **Default:** English
+
+## 🥥 Examples
+
+**cocobot** uses [slash commands](https://support-apps.discord.com/hc/en-us/articles/26501837786775-Slash-Commands-FAQ). Here are some examples. The parameter with the colon (`:`) at the end are the parameters you can choose as described in the **Features** section.
+
+### Get the current weather in Bangkok
+
+```bash
+/weather location: Bangkok
+```
+
+**Returns:** "🌤️ The weather in **Bangkok**, **Thailand** is currently clear with temperatures of `23.4°C` (feels like `25.2°C`). **Humidity** is at `69%`."
+
+### Convert `50` USD to THB
+
+```bash
+/exchangerate from_currency: USD to_currency: THB amount: 50
+```
+
+**Returns:** "💰`50` **USD** are currently `1685.96` **THB** (Updated: a day ago)"
+
+### Check the air quality in Chiang Mai
+
+```bash
+/pollution city: Chiang Mai
+```
+
+**Returns:** "🟠 PM2.5 level in **Chiang Mai** is at `136` **AQI**. Not great, not terrible. Stay in, unless you fancy a diet of delusions. Wear a mask. (Last checked: 7 hours ago)"
+
+### Translate text
+
+```bash
+/translate text: "Where is the bathroom?" from_language: English to_language: Thai
+```
+
+**Returns:** "🇹🇭 ห้องน้ำอยู่ที่ไหน"[^4]
+
+### Transliterate Thai text into the Latin alphabet
+
+```bash
+/transliterate text: "ห้องน้ำอยู่ที่ไหน"
+```
+
+**Returns:** "🇺🇸 hâwng-nám yùu-tìi-nǎi"[^4]
+
+---
+
+## 🛠️ Installation
+
+### Prerequisites
+- A server with root access (Debian/Ubuntu recommended)
+- Git, Python 3.8+, and pip installed
+
+### Setup Steps
+
+1. **Clone the repository:**
    ```bash
    git clone https://gitlab.com/thailand-discord/bots/cocobot.git
    cd cocobot
    ```
 
-2. **Set up the environment**
+2. **Install dependencies:**
    ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   python3 -m venv venv
+   source venv/bin/activate
    pip install -r requirements.txt
    ```
 
-3. **Configure the bot**
+3. **Configure environment:**
    ```bash
    cp .env.example .env
-   # Edit .env with your Discord bot token and API keys
    ```
+   Edit `.env` with your API keys (see `.env.example` for required values)
 
-4. **Run the bot**
-   ```bash
-   python bot.py
-   ```
+4. **Run as a service:**
+   - Create service file: `sudo nano /etc/systemd/system/cocobot.service`
+   - Copy and paste the [service configuration](https://gitlab.com/-/snippets/4800805)
+   - Start the service:
+     ```bash
+     sudo systemctl daemon-reload
+     sudo systemctl enable cocobot.service
+     sudo systemctl start cocobot.service
+     ```
 
-For detailed installation instructions, see the [full documentation](docs/README.md).
+5. **Invite bot to server:**
+   - Create bot at [Discord Developer Portal](https://discord.com/developers/applications)
+   - Enable `Message Content Intent` in Privileged Gateway Intents
+   - Use OAuth2 URL with `bot` scope and required permissions
+   - Add bot to your server
+
+Your bot should now be online with the `/coco` command available.
+
+---
+
+## ⚙️ Configuration
+
+**cocobot** is highly configurable through the `config/config.py` file and environment variables. Key configuration options include:
+
+- API keys for various services
+- Default locations and currencies
+- Error messages and bot behavior
+
+---
+
+## 🧪 Testing
+
+**cocobot** includes unit tests in the `tests/` directory. To run tests:
+
+```bash
+pytest tests/
+```
+
+We recommend adding tests for any new features or bug fixes.
+
+---
 
 ## 🧑‍💻 Authors and Contributors
 
 * **Kolja Nolte** (kolja.nolte@gmail.com)
 
-## 🤝 Contributing
+---
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+## 🤝 Contribute to cocobot
 
-## 📜 License
+We welcome contributions via Git! Please follow these standard steps:
 
-**cocobot** is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+1. [Fork the repository](https://gitlab.com/thailand-discord/bots/cocobot/-/forks/new)
+2. Create a new branch for your feature/fix
+3. Commit your changes with a meaningful commit message
+4. Submit a pull request
+
+**Please ensure your code follows the existing style and includes appropriate documentation.**
+
+---
+
+##  📜 License
+
+**cocobot** is licensed under the MIT License. See the [LICENSE](https://opensource.org/licenses/MIT) file for details.
+
+---
 
 ## 🙏 Acknowledgements
 
@@ -92,4 +196,8 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ---
 
-For complete documentation, visit the [`docs/`](docs/) directory. 🥥
+[^1]: Using `.` works only if the current directory is completely empty. If not, leave don't use it and use `mv ./discord-bot/{*,.*} ../`
+[^2]: Keep your `.env` file secret and remember to add it to the `.gitignore` file.
+
+[^3]: Uses Google's Gemini 2.5 Flash and can produce inaccuracies.
+[^4]: Since `v2.2.0`, this has been handled by *Gemini 2.5 Flash Lite.* An API key is required, but usage of up to a million tokens is free.

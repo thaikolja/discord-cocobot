@@ -30,7 +30,7 @@ services:
       - cocobot-db-data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - cocobot-network
 
@@ -41,7 +41,7 @@ services:
     volumes:
       - cocobot-redis-data:/data
     ports:
-      - "6379:6379"
+      - "6380:6379"
     networks:
       - cocobot-network
     command: redis-server --appendonly yes

@@ -144,6 +144,9 @@ class Cocobot(commands.Bot):
 		# Log an informational message indicating the bot is ready, including its username
 		bot_logger.info(f'🥥 {self.user} is ready! (ID: {self.user.id})')
 
+		# Set the bot's activity status
+		await self.change_presence(activity=discord.Game(name="Waiting for a coconut to fall"))
+
 		# Log guild information where the bot is present
 		for guild in self.guilds:
 			bot_logger.info(f'Connected to guild: {guild.name} (ID: {guild.id})')

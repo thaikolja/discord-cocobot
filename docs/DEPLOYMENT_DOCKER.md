@@ -43,8 +43,8 @@ nano .env  # or use your preferred text editor
 - `SAMBANOVA_API_KEY=` - Sambanova API key
 - `DISCORD_SERVER_ID=` - Your Discord server ID
 - `DISCORD_BOT_ID=` - Your Discord bot ID
-- `DATABASE_URL=postgresql://cocobot:password@db:5432/cocobot`
-- `REDIS_URL=redis://redis:6379/0`
+- `DATABASE_URL=postgresql://cocobot:password@db:5432/cocobot` (internal; exposed on host port 5433)
+- `REDIS_URL=redis://redis:6379/0` (internal; exposed on host port 6380)
 - `ENVIRONMENT=production`
 - `LOG_LEVEL=INFO`
 
@@ -252,10 +252,10 @@ docker compose up -d  # Note: without the hyphen
 ```
 
 ### 12.5 Port conflicts
-If ports 5432 or 6379 are already in use:
+If ports 5433 (PostgreSQL) or 6380 (Redis) are already in use:
 - The containers use internal Docker networking
 - External ports are only exposed for debugging
-- You can comment out the 'ports' sections in `docker-compose.yml`
+- You can modify the port mappings in `docker-compose.yml` to use different host ports
 
 ## Step 13: Production Considerations
 
@@ -310,6 +310,6 @@ docker-compose top
 ## Common Issues and Solutions
 
 - **"Permission denied" errors**: Make sure you're not running Docker commands with sudo unnecessarily
-- **"Port already allocated"**: Other services might be using the exposed ports (5432, 6379)
+- **"Port already allocated"**: Other services might be using the exposed ports (5433 for PostgreSQL, 6380 for Redis)
 - **"Connection refused"**: The database or Redis might still be starting up; wait a minute and check logs
 - **High memory usage**: Check for memory leaks in your code or increase container limits in docker-compose.yml
