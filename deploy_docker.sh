@@ -6,6 +6,8 @@ set -e  # Exit on any error
 
 echo "🥥 Starting Cocobot Docker deployment..."
 
+cd /opt/bots/cocobot
+
 # Check if we're in the correct directory
 if [ ! -f "docker-compose.yml" ]; then
     echo "❌ docker-compose.yml not found in current directory"
