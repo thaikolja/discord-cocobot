@@ -6,10 +6,10 @@ set -e  # Exit on any error
 
 echo "🥥 Starting Cocobot Docker deployment..."
 
-cd /opt/bots/cocobot
+cd "/opt/bots/cocobot"
 
 # Check if we're in the correct directory
-if [ ! -f "docker-compose.yml" ]; then
+if [ ! -f "/opt/bots/cocobot/docker-compose.yml" ]; then
     echo "❌ docker-compose.yml not found in current directory"
     exit 1
 fi
@@ -19,10 +19,6 @@ echo "📂 Current directory: $(pwd)"
 # Pull the latest changes
 echo "📥 Pulling latest changes from GitLab..."
 git pull origin main
-
-# Log into registry if needed (for private images)
-# If using a private registry, uncomment and configure the following lines:
-# echo $CI_REGISTRY_PASSWORD | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
 
 # Stop existing containers (if running)
 echo "🛑 Stopping existing containers (if any)..."
