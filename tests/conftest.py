@@ -14,9 +14,10 @@
 #  Date:      2014-2025
 #  Package:   cocobot Discord Bot
 
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import discord
+import pytest
 from discord.ext import commands
 
 
@@ -62,10 +63,10 @@ def mock_bot_tree_sync():
     """
     Mock the bot's command tree sync to prevent actual API calls.
     """
-    with patch('discord.app_commands.CommandTree.sync', new_callable=AsyncMock) as mock_sync, \
-         patch('discord.app_commands.CommandTree.copy_global_to', new_callable=MagicMock) as mock_copy:
+    with patch(
+        'discord.app_commands.CommandTree.sync', new_callable=AsyncMock
+    ) as mock_sync:
         yield mock_sync
-
 
 
 @pytest.fixture
@@ -75,12 +76,9 @@ def mock_bot():
     """
     # Create a bot with mocked internals
     bot = commands.Bot(command_prefix='!', intents=discord.Intents.default())
-    
+
     # Mock the internal connection to prevent actual Discord connection
     bot._connection = MagicMock()
     bot._connection.intents = discord.Intents.default()
-    
+
     return bot
-
-
-
