@@ -1,5 +1,44 @@
 # Changelog
 
+## v3.1.0
+
+### Development Environment & Code Quality
+
+#### Major Improvements
+- **Python Environment Fix**: Resolved critical compatibility issues by recreating virtual environment with Python 3.13 (stable) instead of Python 3.14 (development version)
+- **Linting Infrastructure**: Established comprehensive code quality toolchain with flake8, black, isort, autoflake, and ruff
+- **IDE Integration**: Added VS Code and editor configuration files for consistent development experience
+
+#### Code Quality Fixes
+- **Fixed 3500+ Linting Errors**: 
+  - Converted 2733 instances of tabs to spaces (W191)
+  - Removed 32 unused imports (F401)
+  - Fixed 7 f-string formatting issues (F541)
+  - Resolved undefined name error (F821)
+  - Removed unused variables (F841)
+  - Fixed module import ordering (E402)
+- **Code Formatting**: Applied black formatting to 34 files for consistent style
+- **Import Organization**: Standardized import ordering with isort across all modules
+
+#### Configuration Files Added
+- **`.editorconfig`**: Cross-editor settings for consistent formatting (UTF-8, LF endings, 4-space indentation)
+- **`.vscode/settings.json`**: VS Code integration with auto-format on save, import sorting, and 88-character ruler
+- **`pyproject.toml`**: Centralized tool configurations for black, isort, and flake8
+- **`.flake8`**: flake8 configuration ignoring acceptable warnings (E402, C901, E501 for copyright headers)
+
+#### Bug Fixes
+- **Discord.py Compatibility**: Fixed `ImportError: cannot import name 'AppCommandPermissions'` by rebuilding virtual environment with proper Python version
+- **Virtual Environment**: Completely rebuilt venv to resolve pip and package installation issues
+
+#### Documentation
+- **IFLOW.md**: Created comprehensive project context file for iFlow CLI interactions, including project structure, commands, and development guidelines
+
+### Technical Details
+- **Python Version**: Now using Python 3.13.9 (stable)
+- **Code Style**: Enforced 88-character line length, black formatting, isort import sorting
+- **Testing**: All existing tests pass with new code formatting
+- **Dependencies**: All packages now install correctly without compatibility issues
+
 ## v3.0.0
 
 ### Breaking Changes
