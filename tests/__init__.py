@@ -15,4 +15,3 @@
 #  License:   CC BY-NC-SA 4.0
 #  Date:      2014-2025
 #  Package:   Thailand Discord
-

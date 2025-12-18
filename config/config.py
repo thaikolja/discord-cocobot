@@ -24,10 +24,9 @@ promoting a clean separation of configuration from code.
 """
 
 # Import the new advanced configuration system
+from .app_config import get_discord_token as _get_discord_token
 from .app_config import (
-	get_discord_token as _get_discord_token,
-	get_global_config,
-	ERROR_MESSAGE
+    get_global_config,
 )
 
 # Version of the cocobot application, used for tracking and updates.
@@ -81,3 +80,6 @@ GOOGLE_MAPS_API_KEY: str = get_global_config().api.google_maps_api_key
 # Obtains the API key for accessing Sambanova's AI platform or services.
 # This key is required for authenticating interactions with Sambanova's AI models or infrastructure.
 SAMBANOVA_API_KEY: str = get_global_config().api.sambanova_api_key
+
+# Import and re-export the error message from app_config
+from .app_config import ERROR_MESSAGE

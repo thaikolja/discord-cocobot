@@ -2,11 +2,20 @@
 .DS_Store
 .AppleDouble
 .LSOverride
-.idea
+.idea/
 .run
 .iflow
+.clavix
 conversation-*.txt
-logs/
+logs/*.log
+*.md
+!*README.md
+!LICENSE
+!CHANGELOG.md
+.vscode/
+cocobot.db
+docs/
+*.log
 
 # Icon must end with two \r
 Icon
