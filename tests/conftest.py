@@ -14,9 +14,10 @@
 #  Date:      2014-2025
 #  Package:   cocobot Discord Bot
 
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import discord
+import pytest
 from discord.ext import commands
 
 
@@ -62,10 +63,10 @@ def mock_bot_tree_sync():
     """
     Mock the bot's command tree sync to prevent actual API calls.
     """
-    with patch('discord.app_commands.CommandTree.sync', new_callable=AsyncMock) as mock_sync, \
-         patch('discord.app_commands.CommandTree.copy_global_to', new_callable=MagicMock) as mock_copy:
+    with patch(
+        'discord.app_commands.CommandTree.sync', new_callable=AsyncMock
+    ) as mock_sync:
         yield mock_sync
-
 
 
 @pytest.fixture
@@ -75,12 +76,34 @@ def mock_bot():
     """
     # Create a bot with mocked internals
     bot = commands.Bot(command_prefix='!', intents=discord.Intents.default())
-    
+
     # Mock the internal connection to prevent actual Discord connection
     bot._connection = MagicMock()
     bot._connection.intents = discord.Intents.default()
-    
+
     return bot
 
 
+@pytest.fixture(autouse=True)
+def cleanup_visa_reminders():
+    """
+    Clean up visa reminder entries in the database before each test to ensure test isolation.
+    """
+    from utils.database import init_db, get_db_session, VisaReminder
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
 
+    # Initialize database
+    init_db()
+
+    # Remove all visa reminder entries to ensure test isolation
+    with next(get_db_session()) as db:
+        db.query(VisaReminder).delete()
+        db.commit()
+
+    yield  # This is where the test runs
+
+    # Optionally clean up after the test as well
+    with next(get_db_session()) as db:
+        db.query(VisaReminder).delete()
+        db.commit()

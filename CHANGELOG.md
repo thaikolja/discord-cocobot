@@ -1,5 +1,66 @@
 # Changelog
 
+## v3.2.0
+
+### New Features
+- **Visa Reminder Database**: Implemented persistent visa reminder tracking using a database instead of in-memory storage
+- **Admin Testing Command**: Added `!reset_reminder` command for admins to reset user visa reminder status for testing
+- **Case-Insensitive Visa Matching**: Visa reminder now triggers on any case of the word `visa`
+
+### Improvements
+- **Persistent Storage**: Visa reminder status now persists across bot restarts using the database
+- **Enhanced Error Handling**: Added robust error handling with fallback to in-memory storage for test environments
+- **Test Isolation**: Added database cleanup fixture to ensure test isolation for visa reminder functionality
+- **Backward Compatibility**: Maintained compatibility with existing tests while adding new functionality
+
+### Bug Fixes
+- **Test Version Mismatch**: Fixed version mismatch in @cocobot command test by making version reference dynamic
+- **`ERROR_MESSAGE` Import**: Fixed the incorrect `ERROR_MESSAGE` function definition that was overriding the actual error message constant
+- **Database Isolation**: Fixed test isolation issues with the `visa` reminder database entries
+
+### Dependencies
+- **Updated**: Modernized dependencies to the latest compatible versions:
+  - discord.py 2.6.4,
+  - pytest 8.3.3,
+  - etc.
+
+
+## v3.1.0
+
+### Development Environment & Code Quality
+
+#### Major Improvements
+- **Python Environment Fix**: Resolved critical compatibility issues by recreating the virtual environment with Python 3.13 (stable) instead of Python 3.14 (development version)
+- **Linting Infrastructure**: Established a comprehensive code quality toolchain with `flake8`, `black`, `isort`, `autoflake`, and `ruff`
+- **IDE Integration**: Added VS Code and editor configuration files for a consistent development experience
+
+#### Code Quality Fixes
+- **Fixed 3500+ Linting Errors**: 
+  - Converted 2733 instances of tabs to spaces (W191)
+  - Removed 32 unused imports (F401)
+  - Fixed 7 f-string formatting issues (F541)
+  - Resolved undefined name error (F821)
+  - Removed unused variables (F841)
+  - Fixed module import ordering (E402)
+- **Code Formatting**: Applied black formatting to 34 files for consistent style
+- **Import Organization**: Standardized import ordering with isort across all modules
+
+#### Configuration Files Added
+- **`.editorconfig`**: Cross-editor settings for consistent formatting (UTF-8, LF endings, 4-space indentation)
+- **`.vscode/settings.json`**: VS Code integration with auto-format on save, import sorting, and 88-character ruler
+- **`pyproject.toml`**: Centralized tool configurations for black, isort, and flake8
+- **`.flake8`**: flake8 configuration ignoring acceptable warnings (E402, C901, E501 for copyright headers)
+
+#### Bug Fixes
+- **Discord.py Compatibility**: Fixed `ImportError: cannot import name 'AppCommandPermissions'` by rebuilding virtual environment with proper Python version
+- **Virtual Environment**: Completely rebuilt `venv` to resolve pip and package installation issues
+
+### Technical Details
+- **Python Version**: Now using Python 3.13.9 (stable)
+- **Code Style**: Enforced 88-character line length, black formatting, isort import sorting
+- **Testing**: All existing tests pass with new code formatting
+- **Dependencies**: All packages now install correctly without compatibility issues
+
 ## v3.0.0
 
 ### Breaking Changes
