@@ -98,7 +98,7 @@
 - A server with root access (Debian/Ubuntu recommended)
 - Git, Python 3.8+, and pip installed
 
-### Setup Steps
+### As Service
 
 1. **Clone the repository:**
    ```bash
