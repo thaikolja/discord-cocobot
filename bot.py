@@ -17,14 +17,10 @@
 #  Date:      2014-2025
 #  Package:   cocobot Discord Bot
 
-# Import the logging module for tracking bot activities and errors
-import logging
-
 # Import the regular expression module for pattern matching in text
 import re
 
 # Import datetime for current time operations
-# Import timedelta for time-related operations
 from datetime import datetime, timedelta
 
 # Import the discord.py library for interacting with the Discord API
@@ -42,11 +38,11 @@ from utils.logger import bot_logger, command_logger, error_logger, setup_logging
 # Import database functions
 from utils.database import init_db, get_db_session, DatabaseManager
 
+# Import SQLAlchemy error for database exception handling
+from sqlalchemy.exc import SQLAlchemyError
+
 # Configure advanced logging settings
 setup_logging(log_level="INFO")
-
-# Create a logger instance for discord-related logs
-logger = logging.getLogger('discord')
 
 # List of initial extensions (cogs) to load on startup
 INITIAL_EXTENSIONS = [
@@ -72,19 +68,23 @@ INITIAL_EXTENSIONS = [
 # Define the main bot class inheriting from commands.Bot
 class Cocobot(commands.Bot):
     """
-    Represents the Cocobot, an advanced Discord bot providing various features and
-    interactions.
+    Represents a Discord bot with specific functionalities such as command handling,
+    custom events, interaction tracking, and cooldown management.
 
-    Cocobot is designed to enhance the user experience in Discord servers through
-    commands,
-    events, and member reminders. It includes capabilities for custom command handling,
-    cooldown management, and contextual reminders within specific channels. The bot
-    responds
-    intuitively based on the content of the messages it receives and performs actions
-    accordingly.
+    This class is designed to act as a custom Discord bot by extending the
+    `commands.Bot` class and adding additional features. It enables tracking of
+    command usages, manages reminders, synchronizes commands with a specific server,
+    and handles bot-related events such as startup and incoming messages. The bot
+    is designed with modularity and testability in mind, incorporating database
+    interactions and logging functionalities.
 
     Attributes:
         version (str): The version identifier for the bot.
+        tate_cooldowns (dict): Tracks cooldowns for the 'tate' command on a per-user basis. Keys are
+            user identifiers, and values store cooldown-related data for managing the command's usage.
+        reminded_users (set): Keeps track of users who have received reminders in the visa channel. This
+            is maintained mainly for compatibility with existing tests, even though reminders are now
+            handled through database interactions.
     """
 
     # Version identifier for the bot
@@ -93,7 +93,17 @@ class Cocobot(commands.Bot):
     # Constructor method to initialize the bot
     def __init__(self):
         """
-        Initializes the Cocobot instance, setting up intents and command prefix.
+        Initializes a Discord bot with custom intents and attributes for tracking user actions
+        and reminders. Sets up default functionality for command handling and manages specific
+        features like 'tate' command cooldowns and user reminders.
+
+        Attributes:
+            tate_cooldowns (dict): A dictionary to track cooldowns for the 'tate' command on a
+                per-user basis. Keys are identifiers for users, and values store cooldown-related
+                data.
+            reminded_users (set): A set to track users who have been reminded in the visa channel.
+                This is kept for compatibility with tests, although reminder logic has transitioned
+                to using a database.
         """
         # Initialize default Discord intents
         intents = discord.Intents.default()
@@ -117,9 +127,17 @@ class Cocobot(commands.Bot):
     # Setup hook to load extensions and sync commands
     async def setup_hook(self):
         """
-        Asynchronous setup hook called after login but before connecting to the
-        websocket.
-        Loads initial extensions (cogs) and synchronizes the application command tree.
+        Performs setup operations for the application, including database initialization,
+        extension loading, and command tree synchronization.
+
+        This method initializes the database, loads predefined extensions, and synchronizes
+        application commands with a specific Discord server. It manages errors during the
+        extension loading process and logs the corresponding outcomes.
+
+        Raises:
+            ImportError: If an import operation fails while loading an extension.
+            ModuleNotFoundError: If an extension module cannot be found.
+            AttributeError: If an attribute required for loading an extension is missing.
         """
         # Initialize database
         init_db()
@@ -128,16 +146,14 @@ class Cocobot(commands.Bot):
         for extension in INITIAL_EXTENSIONS:
             # Try to load the current extension
             try:
-                # Asynchronously load the extension
+                # Asynchronously load the extension (discord.py will log this automatically)
                 await self.load_extension(extension)
-
-                # Log successful loading of the extension
-                logger.info(f'Loaded extension: {extension}')
-            # Catch any exception during extension loading
-            except Exception as e:
+            # Catch extension loading errors (ImportError, ModuleNotFoundError, etc.)
+            except (ImportError, ModuleNotFoundError, AttributeError) as e:
                 # Log the failure to load the extension along with the error details
-                logger.error(
-                    f'Failed to load extension {extension}. {type(e).__name__}: {e}'
+                bot_logger.error(
+                    f'Failed to load extension {extension}. {type(e).__name__}: {e}',
+                    exc_info=True
                 )
 
         # Create a discord.Object representing the target guild using its ID
@@ -150,14 +166,22 @@ class Cocobot(commands.Bot):
         await self.tree.sync(guild=guild)
 
         # Log that the command tree synchronization is complete
-        logger.info('Command tree synced.')
+        bot_logger.info('Command tree synced.')
 
     # Event that triggers when the bot is ready and online
     async def on_ready(self):
         """
-        Event handler called when the bot has successfully connected to Discord and
-        is ready.
-        Logs a confirmation message indicating the bot is online.
+        Logs the bot's readiness and sets up activity status and guild connections upon startup.
+
+        This method is an event listener triggered when the bot has successfully connected to Discord.
+        It performs the following main actions:
+        1. Logs a readiness message, including the bot's username and ID.
+        2. Sets the bot's activity status to display a custom message.
+        3. Logs the name and ID of each guild the bot is connected to.
+
+        Raises:
+            No explicit errors are raised by this method.
+
         """
         # Log an informational message indicating the bot is ready, including its
         # username
@@ -175,12 +199,19 @@ class Cocobot(commands.Bot):
     # Event that triggers for every message received
     async def on_message(self, message):
         """
-        Event handler called for every message received in channels the bot has
-        access to.
-        Handles the 'tate' response with cooldown and processes other commands.
+        Handles incoming messages sent in Discord channels and performs various actions
+        based on message content or channel context. This method checks for specific
+        keywords, commands, and user interactions to send contextual messages, reminders,
+        or embeds, while also managing cooldowns and ensuring database consistency.
 
         Args:
-                        message (discord.Message): The message object received.
+            message (discord.Message): The message object containing information such as
+                the sender, channel, and content.
+
+        Raises:
+            SQLAlchemyError: If an error occurs while interacting with the database during
+                user reminder checks or updates.
+
         """
         # Check if the message author is the bot itself to prevent self-responses
         if message.author == self.user:
@@ -197,14 +228,14 @@ class Cocobot(commands.Bot):
             user_already_reminded = False
             try:
                 # Initialize database if not already done
-                from utils.database import init_db
                 init_db()  # Safe to call multiple times
 
                 # Check database if user has already been reminded
-                with next(get_db_session()) as db:
+                with get_db_session() as db:
                     user_already_reminded = DatabaseManager.has_been_reminded_about_visa(db, str(message.author.id))
-            except Exception:
-                # If database access fails, fall back to in-memory check
+            except SQLAlchemyError as e:
+                # Log the exception and fall back to in-memory check
+                error_logger.error(f"Database error checking visa reminder: {e}")
                 user_already_reminded = message.author.id in self.reminded_users
 
             if not user_already_reminded:
@@ -218,14 +249,14 @@ class Cocobot(commands.Bot):
                 )
                 # Mark user as reminded in the database if available, otherwise in-memory
                 try:
-                    from utils.database import init_db
                     init_db()  # Ensure database is initialized
 
-                    with next(get_db_session()) as db:
+                    with get_db_session() as db:
                         DatabaseManager.mark_user_as_reminded_about_visa(db, str(message.author.id))
-                except Exception:
-                    # If database fails, use in-memory set for fallback
-                    pass
+                except SQLAlchemyError as e:
+                    # Log the exception instead of failing silently
+                    error_logger.error(f"Database error marking user as reminded: {e}")
+
                 # Always add to in-memory set for backward compatibility with tests
                 self.reminded_users.add(message.author.id)
                 # Prevent further processing for this message
@@ -330,11 +361,17 @@ class Cocobot(commands.Bot):
     # Global error handler for commands
     async def on_command_error(self, ctx, error):
         """
-        Global error handler for command errors.
+        Handles errors triggered by command execution in the bot.
+
+        This handler processes various types of errors encountered during the execution of
+        commands and provides user-friendly feedback. Additionally, it logs significant
+        information regarding the error events for further analysis.
 
         Args:
-                ctx: Command context
-                error: The exception that occurred
+            ctx (commands.Context): The context in which the command was invoked.
+            error (commands.CommandError): The error object containing details about the
+                encountered issue.
+
         """
         # Handle command not found errors
         if isinstance(error, commands.CommandNotFound):
@@ -378,7 +415,8 @@ class Cocobot(commands.Bot):
             )
 
     # Global error handler for application commands (slash commands)
-    async def on_app_command_error(self, interaction, error):
+    @staticmethod
+    async def on_app_command_error(interaction, error):
         """
         Global error handler for application command errors.
 
@@ -401,18 +439,29 @@ class Cocobot(commands.Bot):
                     "developers have been notified.",
                     ephemeral=True,
                 )
-        except Exception as followup_error:
-            # If we can't send an error message to the user, log it but don't fail
-            # silently
+        except (discord.HTTPException, discord.InteractionResponded, discord.NotFound) as followup_error:
+            # If we can't send an error message to the user due to Discord API issues,
+            # log it for debugging but don't crash the error handler
             error_logger.error(
                 f"Failed to send error message to user: {followup_error}", exc_info=True
             )
 
         error_logger.error(f"Error in app command: {error}", exc_info=True)
 
-    async def reset_visa_reminder_for_user(self, user_id: str):
-        """Reset the visa reminder status for a specific user (for admin testing)."""
-        with next(get_db_session()) as db:
+    @staticmethod
+    async def reset_visa_reminder_for_user(user_id: str):
+        """
+        Resets the visa reminder for a specified user by deleting the existing reminder from the database,
+        if present. This method ensures that only one active reminder exists per user.
+
+        Args:
+            user_id (str): The Discord ID of the user whose visa reminder is to be reset.
+
+        Returns:
+            bool: True if a visa reminder was deleted, False if no reminder was found.
+
+        """
+        with get_db_session() as db:
             # Find and delete any existing visa reminder for the user
             from utils.database import VisaReminder
             reminder = db.query(VisaReminder).filter(VisaReminder.user_discord_id == user_id).first()
@@ -422,8 +471,19 @@ class Cocobot(commands.Bot):
                 return True
             return False
 
-    def run(self):
-        """Run the bot with the configured token."""
+    def run(self, **kwargs):
+        """
+        Fetches the Discord bot token and starts the bot.
+
+        This method retrieves the token from the 'bot' module if available. If the token
+        is not found in the module (e.g., during standard operations), it falls back to
+        reading the token from a configuration file. The token is then passed to the
+        parent class's `run` method to initialize and start the bot.
+
+        Args:
+            **kwargs: Arbitrary keyword arguments, typically passed during initialization
+                and execution of the bot's runtime context.
+        """
         # Access the token variable from the current module context
         # The module globals will have the patched value during tests
         import sys
@@ -445,7 +505,15 @@ class Cocobot(commands.Bot):
 
 
 def main():
-    """Main entry point for running the bot."""
+    """
+    The main entry point of the application. This function initializes and starts a bot instance.
+
+    This function is responsible for creating an instance of the `Cocobot` class and executing its
+    custom `run` method to start the bot using the necessary configuration details.
+
+    Raises:
+        Any exception related to bot initialization or runtime errors.
+    """
     # Initialize an instance of the Cocobot class
     bot = Cocobot()
 

@@ -24,62 +24,38 @@ promoting a clean separation of configuration from code.
 """
 
 # Import the new advanced configuration system
-from .app_config import get_discord_token as _get_discord_token
-from .app_config import (
-    get_global_config,
-)
+from config.app_config import get_discord_token as _get_discord_token
+from config.app_config import get_global_config
 
-# Version of the cocobot application, used for tracking and updates.
-# This is now managed by the new configuration system
+# Version of the cocobot application, used for tracking and updates
 COCOBOT_VERSION: str = get_global_config().version
 
-# Retrieves the authentication token for the Discord bot account from environment variables.
-# This token is essential for the bot to connect to and interact with the Discord API.
+# Discord bot authentication token
 DISCORD_BOT_TOKEN: str = _get_discord_token()
 
-# Fetches the unique identifier for the target Discord server (guild) from environment variables.
-# This ID specifies which server the bot's operations are primarily associated with.
+# Target Discord server (guild) ID
 DISCORD_SERVER_ID: str = get_global_config().discord.server_id
 
-# Obtains the unique application ID assigned to the Discord bot from environment variables.
-# Used for various API interactions and identifying the bot application itself.
+# Discord bot application ID
 DISCORD_BOT_ID: str = get_global_config().discord.bot_id
 
-# Retrieves the API key required for accessing the WeatherAPI service.
-# This key authenticates requests for fetching current weather conditions and forecasts.
+# WeatherAPI service API key
 WEATHERAPI_API_KEY: str = get_global_config().api.weatherapi_key
 
-# Fetches the API key for the LocalTime service (assuming a service providing time zone or local time data).
-# This key is necessary for making authenticated requests to retrieve time-related information.
+# LocalTime service API key
 LOCALTIME_API_KEY: str = get_global_config().api.localtime_key
 
-# Obtains the API key for the CurrencyAPI service, used for currency conversion functionalities.
-# This key authorizes requests to fetch real-time or historical exchange rates.
+# CurrencyAPI service API key
 CURRENCYAPI_API_KEY: str = get_global_config().api.currencyapi_key
 
-# Retrieves the API key for accessing Groq's AI services (e.g., language models).
-# This key is required to authenticate requests made to the Groq API endpoints.
+# Groq AI services API key
 GROQ_API_KEY: str = get_global_config().api.groq_api_key
 
-# Fetches a general Google API key from environment variables.
-# This key might be used for various Google Cloud Platform services or other Google APIs.
+# General Google API key
 GOOGLE_API_KEY: str = get_global_config().api.google_api_key
 
-# Obtains the API key for the Geoapify service, specializing in geolocation and map-related data.
-# This key authenticates requests for services like geocoding, routing, or map tiles.
-GEOAPFIY_API_KEY: str = get_global_config().api.geoapify_api_key
-
-# Retrieves the API key for the AcqIn service (purpose assumed, e.g., location intelligence or data acquisition).
-# This key is needed to authenticate requests to the AcqIn platform's API.
+# AcqIn service API key
 ACQIN_API_KEY: str = get_global_config().api.acqin_api_key
 
-# Fetches the specific API key for Google Maps Platform services.
-# This key authorizes usage of APIs like Maps JavaScript API, Geocoding API, Places API, etc.
-GOOGLE_MAPS_API_KEY: str = get_global_config().api.google_maps_api_key
-
-# Obtains the API key for accessing Sambanova's AI platform or services.
-# This key is required for authenticating interactions with Sambanova's AI models or infrastructure.
-SAMBANOVA_API_KEY: str = get_global_config().api.sambanova_api_key
-
-# Import and re-export the error message from app_config
-from .app_config import ERROR_MESSAGE
+# Standard error message to display to users when something goes wrong
+ERROR_MESSAGE: str = "🥥 Oops, something's cracked, and it's **not** the coconut!"

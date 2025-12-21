@@ -29,11 +29,8 @@ test:
     - export CURRENCYAPI_API_KEY=test_key
     - export LOCALTIME_API_KEY=test_key
     - export GOOGLE_API_KEY=test_key
-    - export GOOGLE_MAPS_API_KEY=test_key
-    - export GEOAPFIY_API_KEY=test_key
     - export ACQIN_API_KEY=test_key
     - export GROQ_API_KEY=test_key
-    - export SAMBANOVA_API_KEY=test_key
     - export ENVIRONMENT=testing
     - pytest tests/ -v
 

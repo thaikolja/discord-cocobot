@@ -1,6 +1,6 @@
-# Contributing to Cocobot
+# Contributing to cocobot
 
-We welcome contributions to the Cocobot Discord bot! This guide will help you get started with contributing to the project.
+We welcome contributions to the **cocobot Discord bot**! This way-too-long guide will help you get started contributing to the project.
 
 ## Table of Contents
 
@@ -21,6 +21,7 @@ We welcome contributions to the Cocobot Discord bot! This guide will help you ge
 - Git
 - A Discord account and developer application
 - Basic knowledge of Python and Discord bots
+- API keys listed in `.env.example`
 
 ### Fork and Clone
 
@@ -69,9 +70,6 @@ cp .env.example .env
 ```bash
 # Run the test suite
 pytest tests/
-
-# Run with coverage
-pytest tests/ --cov=cogs --cov=utils --cov-report=html
 ```
 
 ### 4. Run the Bot
@@ -87,7 +85,7 @@ We follow Python's PEP 8 style guide with some additional conventions:
 ### Formatting
 
 - Use Black for code formatting: `black .`
-- Maximum line length: 88 characters
+- Maximum line length: 120 characters
 - Use f-strings for string formatting
 - Prefer type hints where appropriate
 
@@ -107,19 +105,22 @@ We follow Python's PEP 8 style guide with some additional conventions:
 - Add inline comments for complex logic
 
 ```python
-def process_weather_data(location: str) -> WeatherData:
-    """Process weather data for a given location.
-    
-    Args:
-        location: The location to get weather data for.
-        
-    Returns:
-        WeatherData object with processed weather information.
-        
-    Raises:
-        APIError: If the weather API request fails.
-    """
-    # Implementation here
+async def interaction_check(self, interaction: discord.Interaction) -> bool:
+  """
+  Checks the validity of a given interaction and stores it for later use.
+
+  This function evaluates the provided Discord interaction and determines
+  whether it is valid for the current context. If valid, it stores the
+  interaction for future reference and allows it to proceed.
+
+  Args:
+      interaction (discord.Interaction): The interaction object that
+          represents the user's action within the Discord server.
+
+  Returns:
+      bool: Returns True if the interaction is allowed to proceed; otherwise,
+          False.
+  """
 ```
 
 ## Submitting Changes
@@ -207,21 +208,17 @@ class TestWeatherCog:
 
 ```bash
 # Run all tests
-pytest
+pytest tests/
 
 # Run specific test file
 pytest tests/test_weather.py
 
 # Run with verbose output
 pytest -v
-
-# Run with coverage
-pytest --cov=cogs --cov=utils --cov-report=html
 ```
 
 ### Test Coverage
 
-- Aim for >80% code coverage
 - Focus on critical paths and edge cases
 - Mock external API calls
 - Test error conditions
@@ -301,7 +298,7 @@ Add any other context or screenshots about the feature request here.
 ### Adding New Commands
 
 1. Create a new cog or add to an existing one
-2. Use discord.py's slash commands (`@app_commands.command`)
+2. Use discord.py's slash (`/`) commands (`@app_commands.command`)
 3. Include proper error handling
 4. Add comprehensive tests
 5. Update documentation
@@ -358,9 +355,9 @@ Add any other context or screenshots about the feature request here.
 
 Contributors are recognized in several ways:
 
-- Contributor list in README
+- Contributor list in `README.md`
 - Changelog mentions for significant contributions
-- Special roles in Discord community
+- Special roles in the Discord community
 - Opportunities for maintainership
 
 ## License
@@ -375,4 +372,4 @@ If you have questions about contributing, feel free to:
 - Ask in our Discord server
 - Contact the maintainers directly
 
-Thank you for contributing to Cocobot! 🥥
+Thank you for contributing to cocobot! 🥥

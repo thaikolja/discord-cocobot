@@ -71,8 +71,20 @@ def setup_logging(
             f"Warning: Cannot write to log file {log_file}, continuing with console only"
         )
 
-    # Suppress overly verbose loggers
-    logging.getLogger('discord').setLevel(logging.WARNING)
+    # Suppress overly verbose loggers and prevent duplicate logs
+    discord_logger = logging.getLogger('discord')
+    discord_logger.setLevel(logging.INFO)
+    # Clear any existing handlers to prevent duplicates
+    for handler in discord_logger.handlers[:]:
+        discord_logger.removeHandler(handler)
+    discord_logger.propagate = False  # Prevent propagation to root logger
+    # Add only console handler to discord logger
+    discord_console = logging.StreamHandler(sys.stdout)
+    discord_console.setFormatter(formatter)
+    discord_logger.addHandler(discord_console)
+
+    logging.getLogger('discord.client').setLevel(logging.WARNING)
+    logging.getLogger('discord.gateway').setLevel(logging.WARNING)
     logging.getLogger('websockets').setLevel(logging.WARNING)
     logging.getLogger('aiohttp').setLevel(logging.WARNING)
 

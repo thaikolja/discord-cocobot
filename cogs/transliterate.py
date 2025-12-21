@@ -65,9 +65,18 @@ class Transliterate(commands.Cog):
                 interaction (discord.Interaction): The context for the command invocation.
                 text (str): The Thai input string, assuming it is indeed Thai.
         """
-        # Notify the user that a response may take a while
-        # noinspection PyUnresolvedReferences
-        await interaction.response.defer()
+        try:
+            # Notify the user that a response may take a while
+            # noinspection PyUnresolvedReferences
+            await interaction.response.defer()
+        except discord.errors.NotFound:
+            # Interaction has already expired, log and return
+            logger.warning(f"Interaction expired for transliterate command by {interaction.user}")
+            return
+        except Exception as e:
+            # Log other defer errors but continue
+            logger.error(f"Failed to defer interaction: {e}")
+            return
 
         # Check if the input is just whitespace
         if not text or text.isspace():
