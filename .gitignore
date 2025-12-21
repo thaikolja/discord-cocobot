@@ -103,13 +103,9 @@ cover/
 *.pot
 
 # Django stuff:
-*.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
-
-# Project specific
-cocobot.db
 
 # Flask stuff:
 instance/
@@ -185,9 +181,6 @@ commit.txt
 # Spyder project settings
 .spyderproject
 .spyproject
-
-# Rope project settings
-.ropeproject
 
 # mkdocs documentation
 /site
