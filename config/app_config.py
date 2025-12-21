@@ -20,7 +20,24 @@ load_dotenv()
 
 @dataclass
 class DatabaseConfig:
-    """Database configuration settings."""
+    """
+    Configuration class for database connection settings.
+
+    This class encapsulates configurations necessary for connecting to a database.
+    It retrieves values from environment variables with defaults specified for each
+    attribute. This makes it highly adaptable for different environments such as
+    development, testing, and production.
+
+    Attributes:
+        url (str): The database connection URL. Defaults to the value of the
+            'DATABASE_URL' environment variable or 'sqlite:///cocobot.db' if the
+            variable is not set.
+        pool_size (int): The size of the connection pool. Defaults to the value of
+            the 'DB_POOL_SIZE' environment variable, with a default value of '5'.
+        echo (bool): A flag to enable SQL query logging. Defaults to the value of
+            the 'DB_ECHO' environment variable, interpreted as a boolean. If not
+            set, the flag is False.
+    """
 
     url: str = os.getenv('DATABASE_URL', 'sqlite:///cocobot.db')
     pool_size: int = int(os.getenv('DB_POOL_SIZE', '5'))
@@ -29,7 +46,23 @@ class DatabaseConfig:
 
 @dataclass
 class DiscordConfig:
-    """Discord bot configuration settings."""
+    """
+    Configuration class for Discord bot settings.
+
+    This class is used to configure various settings required to run a Discord bot, such as
+    authentication token, bot and server ID, command prefix, and other related settings. It
+    also includes validation to ensure that mandatory configurations are specified unless the
+    application is running in a testing environment.
+
+    Attributes:
+        token (str): The bot authentication token required to connect to the Discord API.
+        bot_id (Optional[str]): The unique identifier of the Discord bot (if applicable).
+        server_id (Optional[str]): The unique identifier of the Discord server (if applicable).
+        command_prefix (str): The command prefix used to trigger bot commands (default is '!').
+        max_messages (int): The maximum number of messages to cache in memory (default is 1000).
+        shard_count (Optional[int]): The number of shards to use when connecting to Discord
+            (if sharding is enabled).
+    """
 
     token: str
     bot_id: Optional[str] = None
@@ -55,19 +88,44 @@ class DiscordConfig:
 
 @dataclass
 class APIConfig:
-    """API configuration settings."""
+    """
+    Encapsulates configuration settings for various API integrations.
+
+    This class is designed to hold API keys required for interacting with different
+    service providers, including Weather API, Currency API, Google API, and others.
+    It includes validation logic to ensure essential keys are provided unless the
+    application is running in a testing environment.
+
+    Attributes:
+        weatherapi_key (Optional[str]): API key for accessing the Weather API.
+        currencyapi_key (Optional[str]): API key for accessing the Currency API.
+        localtime_key (Optional[str]): API key for obtaining local time data.
+        google_api_key (Optional[str]): Google API key for accessing Google services.
+        geoapify_api_key (Optional[str]): API key for Geoapify services.
+        groq_api_key (Optional[str]): API key for Groq-related operations.
+    """
 
     weatherapi_key: Optional[str] = None
     currencyapi_key: Optional[str] = None
     localtime_key: Optional[str] = None
     google_api_key: Optional[str] = None
-    google_maps_api_key: Optional[str] = None
     geoapify_api_key: Optional[str] = None
-    acqin_api_key: Optional[str] = None
     groq_api_key: Optional[str] = None
-    sambanova_api_key: Optional[str] = None
 
     def __post_init__(self):
+        """
+        Ensures that required API keys are present in the configuration unless the application is running
+        in a testing environment.
+
+        During initialization, this method checks if the required API keys are set for weather and currency
+        services. If running in a test environment, the validation is skipped to allow more flexibility in
+        testing scenarios. An error is raised if any required API key is missing and the environment is not
+        configured properly.
+
+        Raises:
+            ConfigurationError: If a required API key is missing in the environment and the application is not
+                                running in testing mode.
+        """
         # Check if we're in a testing environment to be more permissive
         import os
 
@@ -89,7 +147,24 @@ class APIConfig:
 
 @dataclass
 class RateLimitConfig:
-    """Rate limiting configuration settings."""
+    """
+    Configuration for rate limits across various contexts.
+
+    This class provides configuration options to define rate limits for commands
+    and other operations in different contexts such as user, channel, and guild.
+    It is designed to help manage and enforce limits to prevent abuse and ensure
+    fair usage.
+
+    Attributes:
+        default_commands_per_minute (int): The default number of commands a user
+            is allowed to execute per minute.
+        user_global_per_minute (int): The global limit on commands a specific user
+            can execute per minute across all contexts.
+        channel_per_minute (int): The number of commands allowed per minute within
+            a single channel.
+        guild_per_minute (int): The number of commands allowed per minute within
+            a single guild.
+    """
 
     default_commands_per_minute: int = 10
     user_global_per_minute: int = 20
@@ -99,7 +174,25 @@ class RateLimitConfig:
 
 @dataclass
 class LoggingConfig:
-    """Logging configuration settings."""
+    """
+    Configuration class for setting up logging details.
+
+    This class defines the configuration parameters for a logging system, including log
+    level, file path, file rotation parameters, and log message formatting. It aims to
+    provide an easy way to control logging behavior based on environment variables while
+    specifying default values when they are not provided.
+
+    Attributes:
+        level (str): The logging level defining the severity of messages to capture
+            (e.g., DEBUG, INFO, WARNING, ERROR). Defaults to 'INFO'.
+        file_path (str): The file path for storing the log file. Defaults to
+            'logs/cocobot.log'.
+        max_bytes (int): Maximum size in bytes before the log file is rotated. Defaults
+            to 10MB.
+        backup_count (int): The number of rotated log files to retain. Defaults to 5.
+        format (str): The logging message format string. Defaults to
+            '%(asctime)s [%(levelname)s] %(name)s:%(lineno)d - %(message)s'.
+    """
 
     level: str = os.getenv('LOG_LEVEL', 'INFO')
     file_path: str = os.getenv('LOG_FILE', 'logs/cocobot.log')
@@ -162,11 +255,8 @@ class AppConfig:
                 currencyapi_key=os.getenv('CURRENCYAPI_API_KEY'),
                 localtime_key=os.getenv('LOCALTIME_API_KEY'),
                 google_api_key=os.getenv('GOOGLE_API_KEY'),
-                google_maps_api_key=os.getenv('GOOGLE_MAPS_API_KEY'),
                 geoapify_api_key=os.getenv('GEOAPFIY_API_KEY'),
-                acqin_api_key=os.getenv('ACQIN_API_KEY'),
-                groq_api_key=os.getenv('GROQ_API_KEY'),
-                sambanova_api_key=os.getenv('SAMBANOVA_API_KEY'),
+                groq_api_key=os.getenv('GROQ_API_KEY')
             )
 
         if self.database is None:

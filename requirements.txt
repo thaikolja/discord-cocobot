@@ -3,7 +3,7 @@ audioop-lts~=0.2.1; python_version >= '3.13'
 bleach~=6.1
 discord.py~=2.6
 fuzzywuzzy~=0.18
-google-generativeai~=0.8
+google-genai>=1.0
 groq>=0
 humanize~=4.11
 openai>=1
