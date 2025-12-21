@@ -87,8 +87,17 @@ class TranslateCog(commands.Cog):
         to_language (str): The language code of the target language (Default: English)
         """
 
-        # Defer the response to avoid timeout
-        await interaction.response.defer()
+        try:
+            # Defer the response immediately to avoid timeout
+            await interaction.response.defer()
+        except discord.errors.NotFound:
+            # Interaction has already expired, log and return
+            logger.warning(f"Interaction expired for translate command by {interaction.user}")
+            return
+        except Exception as e:
+            # Log other defer errors but continue
+            logger.error(f"Failed to defer interaction: {e}")
+            return
 
         try:
             # Initialize the AI helper with the preferred provider
@@ -118,6 +127,7 @@ class TranslateCog(commands.Cog):
             await interaction.followup.send("⏰ Request timed out after 10 seconds")
         except Exception as e:
             # Handle other exceptions
+            logger.error(f"Translation error: {e}", exc_info=True)
             await interaction.followup.send(f"❌ Error: {str(e)}")
 
 

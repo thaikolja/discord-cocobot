@@ -17,22 +17,16 @@
 # Import the urllib.parse module for URL parsing and handling
 import urllib.parse
 
-# Import the google.generativeai module for interacting with Google's Generative AI
-import google.generativeai as genai
+# Import the google.genai module for interacting with Google's Generative AI
+from google import genai
 
 # Import the openai module for interacting with OpenAI's API
 import openai
-
-# Import the GenerationConfig class from google.generativeai for configuring generation parameters
-from google.generativeai import GenerationConfig
-
-# Import the GenerationConfig class for configuring generation parameters
-from openai.types.chat import ChatCompletionAssistantMessageParam
+from openai.types.chat import ChatCompletionUserMessageParam
 
 # Import the necessary API keys from the config module
 from config.config import GOOGLE_API_KEY  # API key for Google services
 from config.config import GROQ_API_KEY  # API key for Groq services
-from config.config import SAMBANOVA_API_KEY  # API key for Sambanova services
 
 
 # Define a class named UseAI to handle interactions with various AI providers
@@ -45,27 +39,29 @@ class UseAI:
     """
 
     # Define a list of available AI providers
-    AVAILABLE_PROVIDERS = ['groq', 'google', 'sambanova']
+    AVAILABLE_PROVIDERS = ['groq', 'google']
 
     # Define the configuration for Google's generative AI model
-    GOOGLE_GENERATION_CONFIG: GenerationConfig | dict[str, float | str | int] = {
-        'temperature': 0.1,  # Controls randomness in generation
-        'top_p': 0.2,  # Controls diversity of responses
-        'top_k': 40,  # Limits the number of tokens considered
-        'max_output_tokens': 500,  # Maximum length of the generated response
+    GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
+        'temperature':        0.1,  # Controls randomness in generation
+        'top_p':              0.2,  # Controls diversity of responses
+        'top_k':              40,  # Limits the number of tokens considered
+        'max_output_tokens':  500,  # Maximum length of the generated response
         'response_mime_type': 'text/plain',  # Format of the response
     }
 
     # Constructor method to initialize the UseAI instance with the specified provider
     def __init__(self, provider: str):
         """
-        Initialize the UseAI instance with the specified provider.
+        Initializes an instance with a specified provider and sets up the appropriate client
+        and model configuration based on the selected provider.
 
         Args:
-                                        provider (str): The AI provider to use. Must be one of AVAILABLE_PROVIDERS.
+            provider (str): The provider to use. Must be one of the available providers
+                listed in the class attribute `AVAILABLE_PROVIDERS`.
 
         Raises:
-                                        ValueError: If the provider is not supported.
+            ValueError: If the provided provider is not in the list of available providers.
         """
         # Check if the provided provider is in the list of available providers
         if provider not in self.AVAILABLE_PROVIDERS:
@@ -84,68 +80,64 @@ class UseAI:
             )
             # Set the model name for Groq
             self.model_name = "llama-3.3-70b-versatile"
-        elif provider == 'sambanova':
-            # Set up the OpenAI client for Sambanova with the specified API key and base URL
-            self.client = openai.OpenAI(
-                base_url='https://api.sambanova.ai/v1',
-                api_key=SAMBANOVA_API_KEY,
-            )
-            # Set the model name for Sambanova
-            self.model_name = 'Meta-Llama-3.3-70B-Instruct'
-            self.temperature = 0.1
-
         elif provider == 'google':
-            # Configure the Google Generative AI with the specified API key
-            genai.configure(api_key=GOOGLE_API_KEY)
-
-            # Set up the GenerativeModel for Google with the specified model name and configuration
-            self.model = genai.GenerativeModel(
-                model_name='gemini-2.5-flash-lite',
-                generation_config=self.GOOGLE_GENERATION_CONFIG,
-            )
+            # Initialize the Google Generative AI client with the specified API key
+            self.client = genai.Client(api_key=GOOGLE_API_KEY)
+            # Set the model name for Google
+            self.model_name = 'gemini-2.5-flash-lite'
 
     # Method to send a prompt to the AI provider and get the response
     def prompt(self, prompt: str, strict: bool = True) -> str | None:
         """
-        Send a prompt to the AI provider and get the response.
+        Generates and processes a response based on the provided prompt and provider.
+
+        This function modifies the input prompt based on the strict flag and invokes the
+        appropriate handler for the configured provider. If the provider is recognized,
+        it processes the prompt and returns the response. For unrecognized providers,
+        it returns None.
 
         Args:
-                                        prompt (str): The prompt to send to the AI.
-                                        strict (bool): If True, instructs the AI to only return the result.
+            prompt (str): The input string used to generate a response.
+            strict (bool, optional): If True, appends additional instructions to the
+                prompt for stricter result formatting. Defaults to True.
 
         Returns:
-                                        str | None: The response from the AI, or None if there's an error.
+            str | None: A processed string response from the provider, or None if the
+                provider is not supported.
         """
         # Append instruction to the prompt if strict mode is enabled
         if strict:
             prompt = f"{prompt}. Only return the result, nothing else."
 
         # Handle the prompt based on the selected provider
-        if self.provider in ('groq', 'gpt', 'sambanova'):
+        if self.provider in ('groq'):
             return self._handle_openai(prompt)
         elif self.provider == 'google':
             return self._handle_google(prompt)
 
         return None
 
-    # Helper method to handle OpenAI-based providers (Groq, Sambanova)
     def _handle_openai(self, prompt: str) -> str:
         """
-        Handle the prompt using OpenAI's API.
+        Handles communication with the OpenAI API to generate a chat completion response
+        based on the provided prompt.
 
         Args:
-                                        prompt (str): The prompt to send.
+            prompt (str): The input string to be passed to the OpenAI API for generating
+            a response.
 
         Returns:
-                                        str: The response from OpenAI.
+            str: The content of the first message choice returned by the OpenAI API.
         """
         # Assign the prompt to the content variable
         content = prompt
         # Create a chat completion request with the specified messages and model
+        message: ChatCompletionUserMessageParam = {
+            "role":    "user",
+            "content": content
+        }
         chat = self.client.chat.completions.create(
-            messages=ChatCompletionAssistantMessageParam[
-                {"role": "user", "content": content}
-            ],
+            messages=[message],
             model=self.model_name,
         )
         # Return the content of the first choice's message
@@ -162,10 +154,17 @@ class UseAI:
         Returns:
                                         str: The response from Google.
         """
-        # Start a new chat session with an empty history
-        chat_session = self.model.start_chat(history=[])
-        # Send the prompt message and get the response
-        response = chat_session.send_message(prompt)
+        # Generate content using the model with the specified configuration
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=prompt,
+            config=genai.types.GenerateContentConfig(
+                temperature=self.GOOGLE_GENERATION_CONFIG['temperature'],
+                top_p=self.GOOGLE_GENERATION_CONFIG['top_p'],
+                top_k=self.GOOGLE_GENERATION_CONFIG['top_k'],
+                max_output_tokens=self.GOOGLE_GENERATION_CONFIG['max_output_tokens'],
+            )
+        )
         # Return the stripped text of the response
         return response.text.strip()
 

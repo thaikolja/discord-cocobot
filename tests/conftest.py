@@ -90,8 +90,6 @@ def cleanup_visa_reminders():
     Clean up visa reminder entries in the database before each test to ensure test isolation.
     """
     from utils.database import init_db, get_db_session, VisaReminder
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
 
     # Initialize database
     init_db()

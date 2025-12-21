@@ -1,41 +1,68 @@
 # Changelog
 
+## v3.3.0
+
+### Improvements
+
+- Updated database schema and added `psycopg2` dependency for improved database support
+- Refactored deployment scripts: renamed `deploy_docker.sh` to `deploy-as-docker.sh` for consistency
+- Improved configuration management and modularized config files
+- Enhanced image assets: added new AVIF and WebP images, removed outdated banners
+- Updated requirements and dependencies for better compatibility
+
+### Bug Fixes
+
+- Fixed issues in translation, transliteration, and weather cogs
+- Improved logging and helper utilities for better maintainability
+
+### Documentation
+
+- Removed outdated documentation files from `docs/`
+- Updated `CONTRIBUTING.md` for new development workflow
+
+---
+
 ## v3.2.0
 
 ### New Features
+
 - **Visa Reminder Database**: Implemented persistent visa reminder tracking using a database instead of in-memory storage
 - **Admin Testing Command**: Added `!reset_reminder` command for admins to reset user visa reminder status for testing
 - **Case-Insensitive Visa Matching**: Visa reminder now triggers on any case of the word `visa`
 
 ### Improvements
+
 - **Persistent Storage**: Visa reminder status now persists across bot restarts using the database
 - **Enhanced Error Handling**: Added robust error handling with fallback to in-memory storage for test environments
 - **Test Isolation**: Added database cleanup fixture to ensure test isolation for visa reminder functionality
 - **Backward Compatibility**: Maintained compatibility with existing tests while adding new functionality
 
 ### Bug Fixes
+
 - **Test Version Mismatch**: Fixed version mismatch in @cocobot command test by making version reference dynamic
 - **`ERROR_MESSAGE` Import**: Fixed the incorrect `ERROR_MESSAGE` function definition that was overriding the actual error message constant
 - **Database Isolation**: Fixed test isolation issues with the `visa` reminder database entries
 
 ### Dependencies
+
 - **Updated**: Modernized dependencies to the latest compatible versions:
   - discord.py 2.6.4,
   - pytest 8.3.3,
   - etc.
-
 
 ## v3.1.0
 
 ### Development Environment & Code Quality
 
 #### Major Improvements
+
 - **Python Environment Fix**: Resolved critical compatibility issues by recreating the virtual environment with Python 3.13 (stable) instead of Python 3.14 (development version)
 - **Linting Infrastructure**: Established a comprehensive code quality toolchain with `flake8`, `black`, `isort`, `autoflake`, and `ruff`
 - **IDE Integration**: Added VS Code and editor configuration files for a consistent development experience
 
 #### Code Quality Fixes
-- **Fixed 3500+ Linting Errors**: 
+
+- **Fixed 3500+ Linting Errors**:
   - Converted 2733 instances of tabs to spaces (W191)
   - Removed 32 unused imports (F401)
   - Fixed 7 f-string formatting issues (F541)
@@ -46,16 +73,19 @@
 - **Import Organization**: Standardized import ordering with isort across all modules
 
 #### Configuration Files Added
+
 - **`.editorconfig`**: Cross-editor settings for consistent formatting (UTF-8, LF endings, 4-space indentation)
 - **`.vscode/settings.json`**: VS Code integration with auto-format on save, import sorting, and 88-character ruler
 - **`pyproject.toml`**: Centralized tool configurations for black, isort, and flake8
 - **`.flake8`**: flake8 configuration ignoring acceptable warnings (E402, C901, E501 for copyright headers)
 
 #### Bug Fixes
+
 - **Discord.py Compatibility**: Fixed `ImportError: cannot import name 'AppCommandPermissions'` by rebuilding virtual environment with proper Python version
 - **Virtual Environment**: Completely rebuilt `venv` to resolve pip and package installation issues
 
 ### Technical Details
+
 - **Python Version**: Now using Python 3.13.9 (stable)
 - **Code Style**: Enforced 88-character line length, black formatting, isort import sorting
 - **Testing**: All existing tests pass with new code formatting
@@ -64,14 +94,17 @@
 ## v3.0.0
 
 ### Breaking Changes
+
 - **Major Refactor:** Updated SQLAlchemy imports to use `sqlalchemy.orm.declarative_base()` instead of deprecated `sqlalchemy.ext.declarative.declarative_base()`
 - **Requirements Update:** Updated dependencies to use latest compatible versions
 
 ### New Features
+
 - **Enhanced Error Handling:** Improved error handling in `on_app_command_error` with try-catch blocks to handle potential errors when sending error messages to users
 - **Virtual Environment Support:** Added proper virtual environment setup and usage instructions
 
 ### Improvements
+
 - **Cooldown Logic Fix:** Corrected tate cooldown logic to properly update timestamps only after cooldown period has passed
 - **Cooldown Message Fix:** Updated tate cooldown message from "5-minute break" to "3-minute break" to match actual 3-minute cooldown implementation
 - **Embed Footer Fix:** Corrected embed footer setting in Cocobot info response to ensure it's set regardless of thumbnail availability
@@ -81,12 +114,14 @@
 - **Docker Compatibility:** Fixed dependency conflicts in requirements.txt for Docker deployment (pytest version compatibility)
 
 ### Bug Fixes
+
 - **Dependency Issues:** Fixed missing dependencies (bleach, SQLAlchemy) that were causing test collection errors
 - **Test Compatibility:** Fixed test failures due to mismatched expected messages
 - **Import Issues:** Fixed deprecated import warnings by updating SQLAlchemy import
 - **Docker Build Issues:** Resolved pytest dependency conflicts that were preventing Docker builds
 
 ### Documentation
+
 - **Changelog Update:** Comprehensive update of changelog for version 3.0.0
 
 ## v2.3.3
@@ -112,6 +147,7 @@
 
 - **Improved:** @cocobot's `/weather` command: You can now toggle between Fahrenheit and Celsius with a simple button underneath the weather card.
 - **Fixed:** several smaller issues to adhere to Python's best practices.
+
 * Added `on.sh`, `off.sh`, and `deploy.sh` to `.gitignore` since they
 
 ## v2.2.1

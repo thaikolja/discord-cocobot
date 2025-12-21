@@ -47,17 +47,42 @@ logger = logging.getLogger(__name__)
 
 class WeatherView(discord.ui.View):
     """
-    A View with a button to toggle weather units between Celsius and Fahrenheit.
+    Represents a custom Discord UI view for toggling weather temperature units.
+
+    This class provides a Discord interactive user interface allowing users to
+    toggle between temperature units, either metric or imperial, directly via
+    a button. It fetches weather data based on the user's specified location
+    and updates the Discord embed with relevant weather information.
+
+    Attributes:
+        location (str): The user's location, which is used for making API requests
+            to retrieve weather data.
+        current_units (str): The current temperature unit system, either "metric"
+            or "imperial".
+        weather_cog: The reference to the weather cog instance that is used
+            to handle API requests and related logic.
+        button_custom_id (str): A unique ID for the toggle button, ensuring
+            functionality is specific to this view instance.
+        toggle_button (discord.ui.Button): The interactive button used for toggling
+            temperature units.
     """
 
-    def __init__(self, location: str, initial_units: str, weather_cog):
+    def __init__(self, location: str, initial_units: str, weather_cog: "WeatherCog") -> None:
         """
-        Initializes the WeatherView.
+        Initializes a view containing a button for toggling weather temperature units.
+
+        This class represents a custom Discord UI view featuring a button that allows
+        users to toggle between temperature units (e.g., metric and imperial). It holds
+        additional attributes to manage the user's selected location, the current
+        temperature unit system, and a reference to the weather cog which provides
+        logic for retrieving weather data.
 
         Args:
-                        location (str): The location the weather is for.
-                        initial_units (str): The units currently displayed ('metric' or 'imperial').
-                        weather_cog (WeatherCog): Reference to the WeatherCog instance for API calls.
+            location (str): The user's location used for API requests.
+            initial_units (str): Initial temperature unit system; can be either "metric"
+                or "imperial".
+            weather_cog: The weather cog instance, used for interacting with weather
+                APIs.
         """
         # Initialize with no timeout for persistent button functionality
         super().__init__(timeout=None)
@@ -100,13 +125,19 @@ class WeatherView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         """
-        Store the last interaction for timeout editing.
+        Checks the validity of a given interaction and stores it for later use.
+
+        This function evaluates the provided Discord interaction and determines
+        whether it is valid for the current context. If valid, it stores the
+        interaction for future reference and allows it to proceed.
 
         Args:
-                        interaction: The Discord interaction object.
+            interaction (discord.Interaction): The interaction object that
+                represents the user's action within the Discord server.
 
         Returns:
-                        bool: Always returns True to allow the interaction.
+            bool: Returns True if the interaction is allowed to proceed; otherwise,
+                False.
         """
         # Store the interaction object for later reference
         self._last_interaction = interaction
@@ -114,13 +145,14 @@ class WeatherView(discord.ui.View):
         # Allow the interaction to proceed
         return True
 
-    async def on_toggle_units(self, interaction: discord.Interaction):
+    async def on_toggle_units(self, interaction: discord.Interaction) -> None:
         """
-        Callback for the toggle units button.
-        Fetches weather data in the opposite unit system and updates the message.
+        Handles the user interaction to toggle between metric and imperial weather units
+        and updates the weather information display accordingly.
 
         Args:
-                        interaction: The Discord interaction object.
+            interaction (discord.Interaction): The interaction object representing the user's
+                action in Discord, used to trigger this handler.
         """
         # Acknowledge the interaction without immediate visible response
         # noinspection PyUnresolvedReferences
@@ -285,7 +317,19 @@ class WeatherView(discord.ui.View):
 
 class WeatherCog(commands.Cog):
     """
-    A Cog representing weather-related commands for a Discord bot.
+    A Discord bot cog for retrieving and displaying weather information using the WeatherAPI.
+
+    WeatherCog is designed to integrate with a Discord bot and provide weather reports for
+    specific locations using a command-based interface. It establishes and manages an HTTP
+    session for making requests to the WeatherAPI, processes the received data, and formats
+    it into a user-friendly Discord embed. Additionally, it supports persistent interactive
+    views for user interaction.
+
+    Attributes:
+        bot (commands.Bot): Reference to the bot instance the cog is attached to.
+        session (aiohttp.ClientSession): An aiohttp session for making API requests.
+        persistent_views (list): A list used to retain persistent views registered with
+            the bot.
     """
 
     def __init__(self, bot: commands.Bot):
@@ -338,12 +382,29 @@ class WeatherCog(commands.Cog):
         units: app_commands.Choice[str] = None,
     ):
         """
-        Slash the command handler for /weather that displays weather for a location.
+        Handles the `weather` command which retrieves current weather information for a
+        specified location using the WeatherAPI and displays it to the user as a Discord embed
+        with relevant weather details.
 
         Args:
-                        interaction: The Discord interaction object.
-                        location: The location to get weather for.
-                        units: Choice of units (metric or imperial).
+            interaction (discord.Interaction): The interaction object for the Discord command
+                invocation.
+            location (str, optional): The location to retrieve weather data for. Defaults
+                to "Bangkok".
+            units (app_commands.Choice[str], optional): Unit system to use for weather data.
+                Choices are "metric" (°C) or "imperial" (°F). If not provided, defaults to "metric".
+
+        Raises:
+            aiohttp.ContentTypeError: Raised if the JSON parsing of the API response fails.
+            aiohttp.ClientResponseError: Raised for HTTP response errors from the WeatherAPI.
+            aiohttp.ClientError: Raised for general network or client errors during the API
+                request.
+            timeout_error: Raised if the request to the WeatherAPI server times out.
+            Exception: Raised for any unexpected errors encountered.
+
+        Returns:
+            None: The function sends an embed or error message directly to the user on successful
+                execution or on failure.
         """
         # Defer response to allow time for API call
         # noinspection PyUnresolvedReferences
@@ -524,10 +585,15 @@ class WeatherCog(commands.Cog):
 
 async def setup(bot: commands.Bot):
     """
-    A setup function to add the WeatherCog to the bot.
+    Registers the WeatherCog with the given bot instance.
+
+    The method sets up the WeatherCog as a component of the provided bot,
+    allowing the bot to utilize all functionalities defined in the WeatherCog.
 
     Args:
-                    bot: The Discord bot instance.
+        bot (commands.Bot): The bot instance to which the WeatherCog will be
+            registered.
+
     """
     # Register the WeatherCog with the bot
     await bot.add_cog(WeatherCog(bot))
