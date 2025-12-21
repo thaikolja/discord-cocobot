@@ -17,9 +17,6 @@
 #  Date:      2014-2025
 #  Package:   cocobot Discord Bot
 
-# Import the logging module for tracking bot activities and errors
-import logging
-
 # Import the regular expression module for pattern matching in text
 import re
 

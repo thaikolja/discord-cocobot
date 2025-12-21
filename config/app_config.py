@@ -110,7 +110,8 @@ class APIConfig:
     localtime_key: Optional[str] = None
     google_api_key: Optional[str] = None
     geoapify_api_key: Optional[str] = None
-    groq_api_key: Optional[str] = None
+    groq_api_key: Optional[str] = None,
+    acqin_api_key: Optional[str] = None
 
     def __post_init__(self):
         """
@@ -256,7 +257,8 @@ class AppConfig:
                 localtime_key=os.getenv('LOCALTIME_API_KEY'),
                 google_api_key=os.getenv('GOOGLE_API_KEY'),
                 geoapify_api_key=os.getenv('GEOAPFIY_API_KEY'),
-                groq_api_key=os.getenv('GROQ_API_KEY')
+                groq_api_key=os.getenv('GROQ_API_KEY'),
+                acqin_api_key=os.getenv('ACQIN_API_KEY'),
             )
 
         if self.database is None:

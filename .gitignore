@@ -4,18 +4,23 @@
 .LSOverride
 .idea/
 .run
+.qwen
 .iflow
+logs/*
 .clavix
+.ropeproject
 conversation-*.txt
 logs/*.log
 *.md
 !*README.md
 !LICENSE
 !CHANGELOG.md
+!CONTRIBUTING.md
 .vscode/
 cocobot.db
 docs/
 *.log
+metrics/*
 
 # Icon must end with two \r
 Icon
