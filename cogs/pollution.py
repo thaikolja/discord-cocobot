@@ -14,7 +14,7 @@
 #  Package:   cocobot Discord Bot
 
 # Import the datetime class from the datetime module for handling dates and times
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Import the aiohttp module for asynchronous HTTP requests
 import aiohttp
@@ -111,7 +111,7 @@ class PollutionCog(commands.Cog):
         city = data['city']['name']
 
         # Calculate how long ago the data was updated
-        updated_ago = naturaltime(datetime.fromisoformat(data['time']['iso']))
+        updated_ago = naturaltime(datetime.now(timezone.utc) - datetime.fromisoformat(data['time']['iso']))
 
         # Construct the base output message with AQI value
         pre_output = f"The PM2.5 level in **{city}** is at `{aqi}` **AQI**."
