@@ -1,5 +1,19 @@
 # Changelog
 
+## v3.3.1
+
+### Bug Fixes
+
+- Fixed incorrect timestamp display in the `/pollution` command
+
+  - Changed from UTC timezone to Bangkok timezone `(Asia/Bangkok)` for accurate local time calculations
+  - Fixed time difference calculation to always display "ago" correctly by using absolute value
+-
+- Updated imports to use `zoneinfo.ZoneInfo` instead of `datetime.timezone` for proper timezone handling
+- Fixed an error in the unit test file for `/transliterate`
+
+---
+
 ## v3.3.0
 
 ### Improvements

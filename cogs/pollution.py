@@ -14,7 +14,8 @@
 #  Package:   cocobot Discord Bot
 
 # Import the datetime class from the datetime module for handling dates and times
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 # Import the aiohttp module for asynchronous HTTP requests
 import aiohttp
@@ -111,7 +112,12 @@ class PollutionCog(commands.Cog):
         city = data['city']['name']
 
         # Calculate how long ago the data was updated
-        updated_ago = naturaltime(datetime.now(timezone.utc) - datetime.fromisoformat(data['time']['iso']))
+        parsed_time = datetime.fromisoformat(data['time']['iso'])
+        bangkok_now = datetime.now(ZoneInfo('Asia/Bangkok'))
+        time_diff = bangkok_now - parsed_time
+
+        # Force "ago" by using absolute value if time difference is negative
+        updated_ago = naturaltime(abs(time_diff.total_seconds()))
 
         # Construct the base output message with AQI value
         pre_output = f"The PM2.5 level in **{city}** is at `{aqi}` **AQI**."
@@ -120,7 +126,7 @@ class PollutionCog(commands.Cog):
         if aqi <= 50:
             emoji, message = (
                 "🟢",
-                "The air is so clean, it’s like a vacuum sealed coconut fresh off the tree. August Engelhardt would be proud (and probably try to worship it, too).",
+                "The air is so clean, it's like a vacuum sealed coconut fresh off the tree. August Engelhardt would be proud (and probably try to worship it, too).",
             )
         elif aqi <= 100:
             emoji, message = (
