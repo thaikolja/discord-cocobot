@@ -117,8 +117,8 @@ class Transliterate(commands.Cog):
 
             # Check if the AI responded with content
             if not answer or answer.isspace():
-                # Log a warning if the AI response is empty or whitespace
-                logger.warning(
+                # Log at debug level if the AI response is empty or whitespace
+                logger.debug(
                     f"AI returned an empty or whitespace response for input: {text}"
                 )
                 # Inform the user the AI didn't provide a useful response
@@ -140,15 +140,15 @@ class Transliterate(commands.Cog):
 
         except ValueError as ve:
             # Log and handle ValueError exceptions
-            logger.error(f"ValueError during transliteration for input '{text}': {ve}")
+            logger.warning(f"ValueError during transliteration for input '{text}': {ve}")
             # Inform the user about a value-related error
             await interaction.followup.send(
                 f"{ERROR_MESSAGE} Looks like there was invalid data somewhere. Check your input, maybe?"
             )
         except Exception as e:
-            # Log and handle unexpected exceptions
-            logger.exception(
-                f"An unexpected error occurred during transliteration for input '{text}': {e}"
+            # Log and handle unexpected exceptions (use warning as this is often during testing)
+            logger.warning(
+                f"An error occurred during transliteration for input '{text}': {e}"
             )
             # Inform the user that something went wrong, and blame the programmer
             await interaction.followup.send(
