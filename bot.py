@@ -62,6 +62,8 @@ INITIAL_EXTENSIONS = [
     'cogs.learn',
     # Administrative commands cog
     'cogs.admin',
+    # Chat summarize command cog
+    'cogs.summarize',
 ]
 
 
