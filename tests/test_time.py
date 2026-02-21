@@ -68,7 +68,9 @@ def interaction():
 
 # Mark the following function as an asyncio test
 @pytest.mark.asyncio
-async def test_valid_time_response(cog, interaction):
+@patch('cogs.time.DatabaseManager.async_get_cache_entry', return_value=None)
+@patch('cogs.time.DatabaseManager.async_set_cache_entry')
+async def test_time_command_success(mock_set_cache, mock_get_cache, cog, interaction):
     # Create a mock response object for a successful API call
     mock_response = AsyncMock()
 
@@ -107,7 +109,9 @@ async def test_valid_time_response(cog, interaction):
 
 # Mark the following function as an asyncio test
 @pytest.mark.asyncio
-async def test_invalid_location(cog, interaction):
+@patch('cogs.time.DatabaseManager.async_get_cache_entry', return_value=None)
+@patch('cogs.time.DatabaseManager.async_set_cache_entry')
+async def test_invalid_location(mock_set_cache, mock_get_cache, cog, interaction):
     # Create a mock response object for a failed API call
     mock_response = AsyncMock()
     mock_response.raise_for_status = MagicMock(
@@ -131,7 +135,9 @@ async def test_invalid_location(cog, interaction):
 
 # Mark the following function as an asyncio test
 @pytest.mark.asyncio
-async def test_api_error_handling(cog, interaction):
+@patch('cogs.time.DatabaseManager.async_get_cache_entry', return_value=None)
+@patch('cogs.time.DatabaseManager.async_set_cache_entry')
+async def test_api_error_handling(mock_set_cache, mock_get_cache, cog, interaction):
     # Simulate an API error by raising a ClientError
     mock_cm = MagicMock()
     mock_cm.__aenter__ = AsyncMock(side_effect=aiohttp.ClientError("Connection error"))
@@ -149,7 +155,9 @@ async def test_api_error_handling(cog, interaction):
 
 # Mark the following function as an asyncio test
 @pytest.mark.asyncio
-async def test_default_location(cog, interaction):
+@patch('cogs.time.DatabaseManager.async_get_cache_entry', return_value=None)
+@patch('cogs.time.DatabaseManager.async_set_cache_entry')
+async def test_default_location(mock_set_cache, mock_get_cache, cog, interaction):
     # Create a mock response object for a successful API call
     mock_response = AsyncMock()
     mock_response.raise_for_status = MagicMock()

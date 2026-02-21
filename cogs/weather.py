@@ -17,7 +17,7 @@
 # Import the logging library
 import logging
 
-# Import the uuid module to generate unique IDs
+import json
 import uuid
 
 # Import the timeout error exception from the socket module
@@ -36,10 +36,12 @@ from discord import app_commands
 from discord.ext import commands
 
 # Import required configuration constants
-from config.config import ERROR_MESSAGE, WEATHERAPI_API_KEY
+from config.config import ERROR_MESSAGE, WEATHERAPI_API_KEY, CACHE_BYPASS_PRIVILEGED
 
-# Import the URL sanitization helper function
 from utils.helpers import sanitize_url
+
+# Import the database manager for caching
+from utils.database import DatabaseManager
 
 # Configure the logger for this module
 logger = logging.getLogger(__name__)
@@ -173,18 +175,35 @@ class WeatherView(discord.ui.View):
         # Sanitize the location string for the API request
         sanitized = sanitize_url(self.location)
 
-        # Construct the API URL with the API key and location
         url = f"https://api.weatherapi.com/v1/current.json?key={WEATHERAPI_API_KEY}&q={sanitized}"
+        cache_key = f"weather:{sanitized}:{target_units}"
+
+        # Bypass the cache for privileged users (admins, owners, moderators) if configured
+        user_is_privileged = (
+            CACHE_BYPASS_PRIVILEGED
+            and interaction.guild is not None
+            and (
+                interaction.user.id == interaction.guild.owner_id
+                or interaction.user.guild_permissions.administrator
+                or interaction.user.guild_permissions.manage_guild
+            )
+        )
 
         try:
-            # Make the API request with a timeout
-            async with self.weather_cog.session.get(url, timeout=10) as resp:
+            cached_data = None if user_is_privileged else await DatabaseManager.async_get_cache_entry(cache_key)
+            if cached_data:
+                data = json.loads(cached_data)
+            else:
+                # Make the API request with a timeout
+                async with self.weather_cog.session.get(url, timeout=10) as resp:
+                    # Raise an exception for HTTP errors
+                    resp.raise_for_status()
 
-                # Raise an exception for HTTP errors
-                resp.raise_for_status()
+                    # Parse the JSON response data
+                    data = await resp.json()
 
-                # Parse the JSON response data
-                data = await resp.json()
+                # Cache the response for 10 minutes (600 seconds)
+                await DatabaseManager.async_set_cache_entry(cache_key, json.dumps(data), 600)
 
             # Check for required data sections
             if not data.get("location") or not data.get("current"):
@@ -425,18 +444,36 @@ class WeatherCog(commands.Cog):
         # Sanitize location for API request
         sanitized = sanitize_url(location)
 
-        # Construct the API URL
         url = f"https://api.weatherapi.com/v1/current.json?key={WEATHERAPI_API_KEY}&q={sanitized}"
+        cache_key = f"weather:{sanitized}:{units_val}"
+
+        # Bypass the cache for privileged users (admins, owners, moderators) if configured
+        user_is_privileged = (
+            CACHE_BYPASS_PRIVILEGED
+            and interaction.guild is not None
+            and (
+                interaction.user.id == interaction.guild.owner_id
+                or interaction.user.guild_permissions.administrator
+                or interaction.user.guild_permissions.manage_guild
+            )
+        )
 
         try:
-            # Make the API request with a timeout
-            async with self.session.get(url, timeout=10) as resp:
+            cached_data = None if user_is_privileged else await DatabaseManager.async_get_cache_entry(cache_key)
+            if cached_data:
+                data = json.loads(cached_data)
+            else:
+                # Make the API request with a timeout
+                async with self.session.get(url, timeout=10) as resp:
 
-                # Raise exception for HTTP errors
-                resp.raise_for_status()
+                    # Raise exception for HTTP errors
+                    resp.raise_for_status()
 
-                # Parse the JSON response
-                data = await resp.json()
+                    # Parse the JSON response
+                    data = await resp.json()
+
+                # Cache the response for 10 minutes (600 seconds)
+                await DatabaseManager.async_set_cache_entry(cache_key, json.dumps(data), 600)
 
             # Check for required data sections
             if not data.get("location") or not data.get("current"):

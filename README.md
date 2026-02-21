@@ -39,7 +39,7 @@
 
 - 💡 **Learn:** Shows one of the 250 core Thai words and its translation and transliteration
   - `/learn`
-  
+
 - **🌐 Translation**: Translate text between languages using AI[^3]
   - `/translate`
     - `<text>` *(string)* The text to be translated
@@ -146,6 +146,22 @@ Your bot should now be online with the `/coco` command available.
 - API keys for various services
 - Default locations and currencies
 - Error messages and bot behavior
+
+### API Response Caching
+
+As of `v3.4.0`, all external API responses (`/weather`, `/time`, `/exchangerate`, `/pollution`) are cached in the local database for **10 minutes** to reduce latency and API usage.
+
+The `CACHE_BYPASS_PRIVILEGED` constant in `config/config.py` controls whether privileged users skip the cache:
+
+```python
+# config/config.py
+
+# When True, guild owners, administrators, and users with Manage Server permission
+# always receive a fresh API response, bypassing the 10-minute cache.
+CACHE_BYPASS_PRIVILEGED: bool = True
+```
+
+Set it to `False` to apply the cache equally to all users.
 
 ---
 

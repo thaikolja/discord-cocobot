@@ -195,9 +195,9 @@ class LoggingConfig:
             '%(asctime)s [%(levelname)s] %(name)s:%(lineno)d - %(message)s'.
     """
 
-    level: str = os.getenv('LOG_LEVEL', 'INFO')
+    level: str = os.getenv('LOG_LEVEL', 'WARNING')
     file_path: str = os.getenv('LOG_FILE', 'logs/cocobot.log')
-    max_bytes: int = int(os.getenv('LOG_MAX_BYTES', '10485760'))  # 10MB
+    max_bytes: int = int(os.getenv('LOG_MAX_BYTES', '1485760'))  # ~1MB
     backup_count: int = int(os.getenv('LOG_BACKUP_COUNT', '5'))
     format: str = os.getenv(
         'LOG_FORMAT', '%(asctime)s [%(levelname)s] %(name)s:%(lineno)d - %(message)s'
@@ -226,7 +226,7 @@ class SecurityConfig:
 class AppConfig:
     """Main application configuration."""
 
-    version: str = "3.3.1"  # Updated version
+    version: str = "3.4.0"
     name: str = "cocobot"
     description: str = "A feature-rich Discord bot for the Thailand Discord server"
     environment: str = os.getenv('ENVIRONMENT', 'development')

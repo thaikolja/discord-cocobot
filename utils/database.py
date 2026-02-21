@@ -5,15 +5,15 @@ This module provides database models, connection handling, and repository patter
 for persistent data storage.
 """
 
+import asyncio
+import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
 
 from sqlalchemy import (
-    Boolean,
     Column,
     DateTime,
-    Float,
     Integer,
     String,
     Text,
@@ -24,53 +24,6 @@ from sqlalchemy.sql import func
 
 # Create base class for SQLAlchemy models
 Base = declarative_base()
-
-
-class User(Base):
-    """User model for storing user information."""
-
-    __tablename__ = 'users'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    discord_id = Column(String(32), unique=True, nullable=False, index=True)
-    username = Column(String(100), nullable=False)
-    discriminator = Column(String(4), nullable=True)  # For legacy Discord tags
-    avatar_url = Column(Text, nullable=True)
-    is_premium = Column(Boolean, default=False)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-    last_command_at = Column(DateTime, nullable=True)
-
-
-class Guild(Base):
-    """Guild model for storing server information."""
-
-    __tablename__ = 'guilds'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    discord_id = Column(String(32), unique=True, nullable=False, index=True)
-    name = Column(String(200), nullable=False)
-    owner_id = Column(String(32), nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-    is_active = Column(Boolean, default=True)
-    prefix = Column(String(10), default='!')
-
-
-class CommandUsage(Base):
-    """Command usage tracking model."""
-
-    __tablename__ = 'command_usage'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    command_name = Column(String(100), nullable=False, index=True)
-    user_id = Column(Integer, nullable=False, index=True)  # Foreign key to users table
-    guild_id = Column(Integer, nullable=True, index=True)  # Foreign key to guilds table
-    channel_id = Column(String(32), nullable=False)
-    executed_at = Column(DateTime, server_default=func.now())
-    execution_time_ms = Column(Float, nullable=True)
-    success = Column(Boolean, default=True)
-    error_message = Column(Text, nullable=True)
 
 
 class CacheEntry(Base):
@@ -114,18 +67,6 @@ class VisaReminder(Base):
     created_at = Column(DateTime, server_default=func.now())
 
 
-class BotSetting(Base):
-    """Bot settings model for storing configuration values."""
-
-    __tablename__ = 'bot_settings'
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    key = Column(String(100), unique=True, nullable=False, index=True)
-    value = Column(Text, nullable=False)
-    description = Column(Text, nullable=True)
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
-
-
 # Database session management
 _engine = None
 _SessionLocal = None
@@ -156,6 +97,14 @@ def init_db(database_url: Optional[str] = None) -> None:
 
     # Create all tables
     Base.metadata.create_all(bind=_engine)
+
+    # Enforce an immediate connection to strictly write the .db file at startup
+    try:
+        with _engine.connect() as conn:
+            from sqlalchemy import text
+            conn.execute(text("SELECT 1"))
+    except Exception as e:
+        logging.getLogger(__name__).error(f"Failed to verify database creation: {e}")
 
 
 def get_db_session():
@@ -191,67 +140,8 @@ class DatabaseManager:
     """High-level database operations manager."""
 
     @staticmethod
-    def get_user_by_discord_id(db, discord_id: str):
-        """Get user by Discord ID."""
-        return db.query(User).filter(User.discord_id == discord_id).first()
-
-    @staticmethod
-    def create_or_update_user(
-        db,
-        discord_id: str,
-        username: str,
-        discriminator: Optional[str] = None,
-        avatar_url: Optional[str] = None,
-    ):
-        """Create or update user in the database."""
-        user = DatabaseManager.get_user_by_discord_id(db, discord_id)
-        if user:
-            user.username = username
-            user.discriminator = discriminator
-            user.avatar_url = avatar_url
-            user.updated_at = datetime.utcnow()
-        else:
-            user = User(
-                discord_id=discord_id,
-                username=username,
-                discriminator=discriminator,
-                avatar_url=avatar_url,
-            )
-            db.add(user)
-
-        db.commit()
-        return user
-
-    @staticmethod
-    def log_command_usage(
-        db,
-        command_name: str,
-        user_id: int,
-        guild_id: Optional[int],
-        channel_id: str,
-        execution_time_ms: Optional[float] = None,
-        success: bool = True,
-        error_message: Optional[str] = None,
-    ):
-        """Log command usage in the database."""
-        usage = CommandUsage(
-            command_name=command_name,
-            user_id=user_id,
-            guild_id=guild_id,
-            channel_id=channel_id,
-            execution_time_ms=execution_time_ms,
-            success=success,
-            error_message=error_message,
-        )
-        db.add(usage)
-        db.commit()
-        return usage
-
-    @staticmethod
     def get_cache_entry(db, cache_key: str):
         """Get cache entry by key."""
-        from datetime import datetime
-
         entry = db.query(CacheEntry).filter(CacheEntry.cache_key == cache_key).first()
         if entry and entry.expires_at < datetime.utcnow():
             # Entry has expired, delete it
@@ -263,8 +153,6 @@ class DatabaseManager:
     @staticmethod
     def set_cache_entry(db, cache_key: str, value: str, ttl_seconds: int = 3600):
         """Set cache entry with TTL."""
-        from datetime import datetime, timedelta
-
         expires_at = datetime.utcnow() + timedelta(seconds=ttl_seconds)
 
         # Check if entry already exists
@@ -281,26 +169,30 @@ class DatabaseManager:
         db.commit()
 
     @staticmethod
-    def get_setting(db, key: str, default: Optional[str] = None) -> Optional[str]:
-        """Get bot setting by key."""
-        setting = db.query(BotSetting).filter(BotSetting.key == key).first()
-        if setting:
-            return setting.value
-        return default
+    async def async_get_cache_entry(cache_key: str) -> Optional[str]:
+        """Asynchronously get cache entry by key, handling its own session execution."""
+
+        def _get():
+            with _SessionLocal() as db:
+                entry = DatabaseManager.get_cache_entry(db, cache_key)
+                if entry:
+                    # Access the .value inside the session so it isn't detached
+                    return entry.value
+                return None
+
+        # Run the synchronous DB operations in a thread
+        return await asyncio.to_thread(_get)
 
     @staticmethod
-    def set_setting(db, key: str, value: str, description: Optional[str] = None):
-        """Set bot setting."""
-        setting = db.query(BotSetting).filter(BotSetting.key == key).first()
-        if setting:
-            setting.value = value
-            setting.description = description
-            setting.updated_at = datetime.utcnow()
-        else:
-            setting = BotSetting(key=key, value=value, description=description)
-            db.add(setting)
+    async def async_set_cache_entry(cache_key: str, value: str, ttl_seconds: int = 600):
+        """Asynchronously set cache entry with TTL, handling its own session execution."""
 
-        db.commit()
+        def _set():
+            with _SessionLocal() as db:
+                DatabaseManager.set_cache_entry(db, cache_key, value, ttl_seconds)
+
+        # Run the synchronous DB operations in a thread
+        await asyncio.to_thread(_set)
 
     @staticmethod
     def has_been_reminded_about_visa(db, user_discord_id: str) -> bool:
@@ -311,7 +203,6 @@ class DatabaseManager:
     @staticmethod
     def mark_user_as_reminded_about_visa(db, user_discord_id: str):
         """Mark a user as reminded about mentioning nationality in visa channel."""
-        from datetime import datetime
         reminder = VisaReminder(user_discord_id=user_discord_id, reminded_at=datetime.utcnow())
         db.add(reminder)
         db.commit()

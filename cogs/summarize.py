@@ -111,10 +111,10 @@ class SummarizeCog(commands.Cog):
 
             # This is where we tell the AI how to behave - keep it short and a bit cheeky
             prompt = (
-                f"Provide a concise summary of the following chat transcript with **no more than 600 characters**. "
-                f"Capture the **main topics**, agreements, or funny remarks without listing every detail. ",
-                f"Write as paragraph. Keep the tone slightly sarcastic and humorous, but not too much. Avoid being too formal.",
-                f"Return only the summary and nothing else. The summary must be **useful**. The content to summarize: \n\n",
+                "Provide a concise summary of the following chat transcript with **no more than 600 characters**. "
+                "Capture the **main topics**, agreements, or funny remarks without listing every detail. ",
+                "Write as paragraph. Keep the tone slightly sarcastic and humorous, but not too much. Avoid being too formal.",
+                "Return only the summary and nothing else. The summary must be **useful**. The content to summarize: \n\n",
                 f"{transcript}"
             )
 

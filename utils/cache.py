@@ -87,7 +87,7 @@ class CacheManager:
             else:
                 # Store in memory cache
                 self.memory_cache[key] = {
-                    'value': value,
+                    'value':      value,
                     'expires_at': time.time() + ttl,
                 }
                 return True
@@ -166,7 +166,7 @@ class CacheManager:
                     new_value = amount
 
                 self.memory_cache[key] = {
-                    'value': new_value,
+                    'value':      new_value,
                     'expires_at': time.time() + ttl,
                 }
                 return new_value

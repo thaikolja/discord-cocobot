@@ -11,17 +11,20 @@ from cogs.summarize import SummarizeCog, setup
 # Mark all tests in this module as async
 pytestmark = pytest.mark.asyncio
 
+
 @pytest.fixture
 def bot():
     """Mock the Discord bot."""
     bot = AsyncMock(spec=commands.Bot)
     return bot
 
+
 @pytest.fixture
 def cog(bot):
     """Create an instance of the SummarizeCog, with UseAI patched so it doesn't initialize actual LLM clients."""
     with patch('cogs.summarize.UseAI'):
         return SummarizeCog(bot)
+
 
 @pytest.fixture
 def interaction():
@@ -59,12 +62,14 @@ def interaction():
 
     return interaction
 
+
 async def test_setup(bot):
     """Test the setup function to ensure the cog is added correctly."""
     await setup(bot)
     bot.add_cog.assert_called_once()
     args, _ = bot.add_cog.call_args
     assert isinstance(args[0], SummarizeCog)
+
 
 async def test_summarize_command_success(cog, interaction):
     """Test standard execution of summarize_command out of the box."""
@@ -89,11 +94,14 @@ async def test_summarize_command_success(cog, interaction):
 
     interaction.followup.send.assert_called_once_with("This is a summary of the messages.")
 
+
 async def test_summarize_command_no_messages(cog, interaction):
     """Test behavior when history yields no messages."""
+
     async def empty_generator(*args, **kwargs):
         # explicitly empty
-        for i in []: yield i
+        for i in []:
+            yield i
 
     interaction.channel.history.side_effect = empty_generator
 
@@ -101,6 +109,7 @@ async def test_summarize_command_no_messages(cog, interaction):
 
     interaction.response.defer.assert_called_once()
     interaction.followup.send.assert_called_once_with("Nothing to summarize here. Is the channel as deserted as August's Kabakon?")
+
 
 async def test_summarize_command_llm_failure(cog, interaction):
     """Test behavior when the AI returns None or fails to summarize."""
@@ -113,6 +122,7 @@ async def test_summarize_command_llm_failure(cog, interaction):
     interaction.followup.send.assert_called_once()
     args = interaction.followup.send.call_args[0][0]
     assert "failed to generate a summary" in args
+
 
 async def test_summarize_command_history_forbidden(cog, interaction):
     """Test behavior when reading message history throws Forbidden error."""

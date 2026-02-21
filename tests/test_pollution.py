@@ -57,8 +57,10 @@ def interaction():
 @pytest.mark.asyncio
 # Use patch to mock the aiohttp ClientSession
 @patch('cogs.pollution.aiohttp.ClientSession')
+@patch('cogs.pollution.DatabaseManager.async_get_cache_entry', return_value=None)
+@patch('cogs.pollution.DatabaseManager.async_set_cache_entry')
 # Define the test function with mocked dependencies
-async def test_valid_city_response(mock_session_class, cog, interaction):
+async def test_valid_city_response(mock_set_cache, mock_get_cache, mock_session_class, cog, interaction):
     # Create mock session and response objects
     mock_session = MagicMock()
     mock_response = MagicMock()

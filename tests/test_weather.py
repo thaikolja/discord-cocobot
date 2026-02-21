@@ -28,7 +28,9 @@ class TestWeatherCog(unittest.IsolatedAsyncioTestCase):
         return_value=uuid.UUID('12345678-1234-5678-1234-567812345678'),
     )
     @patch('cogs.weather.WeatherView')  # Mock the WeatherView class
-    async def test_weather_command_success(self, MockWeatherView, mock_uuid):
+    @patch('cogs.weather.DatabaseManager.async_get_cache_entry', return_value=None)
+    @patch('cogs.weather.DatabaseManager.async_set_cache_entry')
+    async def test_weather_command_success(self, mock_set_cache, mock_get_cache, MockWeatherView, mock_uuid):
         interaction = AsyncMock(spec=discord.Interaction)
         interaction.response = AsyncMock(spec=discord.InteractionResponse)
         interaction.followup = AsyncMock(spec=discord.Webhook)
@@ -123,7 +125,9 @@ class TestWeatherView(unittest.IsolatedAsyncioTestCase):
         self.weather_api_key_patch.stop()
         self.sanitize_url_patch.stop()
 
-    async def test_on_toggle_units_metric_to_imperial(self):
+    @patch('cogs.weather.DatabaseManager.async_get_cache_entry', return_value=None)
+    @patch('cogs.weather.DatabaseManager.async_set_cache_entry')
+    async def test_on_toggle_units_metric_to_imperial(self, mock_set_cache, mock_get_cache):
         interaction = AsyncMock(spec=discord.Interaction)
         interaction.response = AsyncMock(spec=discord.InteractionResponse)
         interaction.message = AsyncMock(spec=discord.Message)

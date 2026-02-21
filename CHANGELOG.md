@@ -1,5 +1,41 @@
 # Changelog
 
+## v3.4.0
+
+### New Features
+
+- **API Response Caching**: Implemented database-backed caching for all external API requests to reduce latency and the number of outbound API calls.
+  - Commands cached: `/weather`, `/time`, `/exchangerate`, `/pollution`
+  - Cache entries expire automatically after **10 minutes (TTL)**
+  - Cache keys are query-specific, so different arguments always result in fresh lookups (e.g. `weather:Bangkok:metric` vs `weather:ChiangMai:metric`)
+  - The weather unit toggle button is also cache-aware
+
+- **Privileged User Cache Bypass**: Added `CACHE_BYPASS_PRIVILEGED` flag in `config/config.py`
+  - When set to `True` (default), guild owners, administrators, and users with `Manage Server` permission always receive a live API response, bypassing the cache
+  - Set to `False` to apply the cache equally to all users
+
+- **Database Verification Test**: Added `tests/test_database.py` to verify that `init_db()` correctly creates the database file and all required tables on startup.
+
+### Improvements
+
+- **Eager Database Initialization**: The bot now immediately writes `cocobot.db` to disk on startup via a `SELECT 1` ping after `create_all()`. This prevents `no such table` errors if the database file was deleted while the bot was offline.
+- **Asynchronous Cache Access**: Added `DatabaseManager.async_get_cache_entry()` and `DatabaseManager.async_set_cache_entry()` to safely run SQLAlchemy ORM operations inside Discord's async event loop using `asyncio.to_thread`.
+
+### Database Cleanup
+
+- **Removed unused models**: The following models and their associated `DatabaseManager` methods were never used by any cog and have been removed to keep the schema minimal:
+  - `User` (table: `users`)
+  - `Guild` (table: `guilds`)
+  - `CommandUsage` (table: `command_usage`)
+  - `BotSetting` (table: `bot_settings`)
+- The database now only creates the 3 tables that are actively in use: `cache_entries`, `rate_limits`, `visa_reminders`
+
+### Bug Fixes
+
+- Fixed test failures in `test_exchangerate.py`, `test_time.py`, `test_weather.py`, and `test_pollution.py` caused by the new cache layer intercepting mocked API responses; all test functions now properly patch `DatabaseManager.async_get_cache_entry` and `async_set_cache_entry`
+
+---
+
 ## v3.3.1
 
 ### Bug Fixes

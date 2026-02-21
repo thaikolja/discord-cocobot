@@ -15,6 +15,7 @@
 #  Package:   cocobot Discord Bot
 
 # Import the datetime class from the datetime module for handling date and time
+import json
 from datetime import datetime
 
 # Import the aiohttp library for asynchronous HTTP requests
@@ -32,8 +33,10 @@ from discord.ext import commands
 # Import the naturaltime function from the humanize module for human-readable time
 from humanize import naturaltime
 
-# Import constants ERROR_MESSAGE and CURRENCYAPI_API_KEY from the config module
-from config.config import CURRENCYAPI_API_KEY, ERROR_MESSAGE
+# Import the necessary configuration constants from the config module
+from config.config import CURRENCYAPI_API_KEY, ERROR_MESSAGE, CACHE_BYPASS_PRIVILEGED
+# Import the database manager for caching
+from utils.database import DatabaseManager
 
 
 # Define the ExchangerateCog class as a subclass of commands.Cog
@@ -97,37 +100,59 @@ class ExchangerateCog(commands.Cog):
         # Construct the API URL with the sanitized currency codes and API key
         api_url = f'https://api.currencyapi.com/v3/latest?apikey={CURRENCYAPI_API_KEY}&currencies={to_currency}&base_currency={from_currency}'
 
+        cache_key = f"exchange:{from_currency}:{to_currency}"
+
+        # Bypass the cache for privileged users (admins, owners, moderators) if configured
+        user_is_privileged = (
+            CACHE_BYPASS_PRIVILEGED
+            and interaction.guild is not None
+            and (
+                interaction.user.id == interaction.guild.owner_id
+                or interaction.user.guild_permissions.administrator
+                or interaction.user.guild_permissions.manage_guild
+            )
+        )
+
         try:
-            # Create an aiohttp session and make the API request
-            async with aiohttp.ClientSession() as session:
-                async with session.get(api_url) as response:
-                    # Check if the response status is not OK (i.e., not in the 200-399 range)
-                    if response.status != 200:
-                        # Construct an error message if the request was unsuccessful
-                        output = f"{ERROR_MESSAGE} Couldn't convert **{from_currency}** into **{to_currency}**. Are you sure they even exist? Coconut money doesn't count."
-                    else:
-                        # Parse the JSON data from the response
-                        data = await response.json()
-
-                        # Check if the target currency exists in the response data
-                        if to_currency not in data.get('data', {}):
-                            output = f"{ERROR_MESSAGE} Invalid target currency **{to_currency}**. Please check the currency code and try again."
+            cached_data = None if user_is_privileged else await DatabaseManager.async_get_cache_entry(cache_key)
+            if cached_data:
+                data = json.loads(cached_data)
+            else:
+                # Create an aiohttp session and make the API request
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(api_url) as response:
+                        # Check if the response status is not OK (i.e., not in the 200-399 range)
+                        if response.status != 200:
+                            # Construct an error message if the request was unsuccessful
+                            output = f"{ERROR_MESSAGE} Couldn't convert **{from_currency}** into **{to_currency}**. Are you sure they even exist? Coconut money doesn't count."
+                            await interaction.response.send_message(output)
+                            return
                         else:
-                            # Convert the last updated time to a human-readable format
-                            updated_humanized = naturaltime(
-                                datetime.strptime(
-                                    data['meta']['last_updated_at'],
-                                    '%Y-%m-%dT%H:%M:%SZ',
-                                )
-                            )
+                            # Parse the JSON data from the response
+                            data = await response.json()
 
-                            # Calculate the converted value and round it to 2 decimal places
-                            value = round(
-                                data['data'][to_currency]['value'] * amount, 2
-                            )
+                # Cache the successful json response for 10 minutes (600 seconds)
+                await DatabaseManager.async_set_cache_entry(cache_key, json.dumps(data), 600)
 
-                            # Construct the output message with the exchange rate details
-                            output = f"💰 `{amount}` **{from_currency}** is currently `{value}` **{to_currency}** (Updated: {updated_humanized})"
+            # Check if the target currency exists in the response data
+            if to_currency not in data.get('data', {}):
+                output = f"{ERROR_MESSAGE} Invalid target currency **{to_currency}**. Please check the currency code and try again."
+            else:
+                # Convert the last updated time to a human-readable format
+                updated_humanized = naturaltime(
+                    datetime.strptime(
+                        data['meta']['last_updated_at'],
+                        '%Y-%m-%dT%H:%M:%SZ',
+                    )
+                )
+
+                # Calculate the converted value and round it to 2 decimal places
+                value = round(
+                    data['data'][to_currency]['value'] * amount, 2
+                )
+
+                # Construct the output message with the exchange rate details
+                output = f"💰 `{amount}` **{from_currency}** is currently `{value}` **{to_currency}** (Updated: {updated_humanized})"
 
             # Send the output message to the user
             await interaction.response.send_message(output)
