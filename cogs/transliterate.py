@@ -54,7 +54,7 @@ class Transliterate(commands.Cog):
     # Define a command for transliterating Thai text
     @app_commands.command(
         name="transliterate",
-        description='Transliterates Thai words and sentences into the English alphabet.',
+        description='Transliterates Thai words and sentences into the English alphabet.'
     )
     @app_commands.describe(text='The Thai text to be butchered into Latin script.')
     async def transliterate_command(self, interaction: discord.Interaction, text: str):

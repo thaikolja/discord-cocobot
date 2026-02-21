@@ -29,6 +29,9 @@ import discord
 # Import the commands extension from discord.py for bot command handling
 from discord.ext import commands
 
+# Import app_commands for application command error handling
+from discord import app_commands
+
 # Import configuration constants from the config file
 from config.config import COCOBOT_VERSION, DISCORD_SERVER_ID
 
@@ -62,6 +65,8 @@ INITIAL_EXTENSIONS = [
     'cogs.learn',
     # Administrative commands cog
     'cogs.admin',
+    # Chat summarize command cog
+    'cogs.summarize',
 ]
 
 
@@ -166,7 +171,7 @@ class Cocobot(commands.Bot):
         await self.tree.sync(guild=guild)
 
         # Log that the command tree synchronization is complete
-        bot_logger.info('Command tree synced.')
+        bot_logger.info('Commands loaded...')
 
     # Event that triggers when the bot is ready and online
     async def on_ready(self):
@@ -271,13 +276,20 @@ class Cocobot(commands.Bot):
         # Check if message is exactly '!cocobot'
         is_cocobot_command = normalized_message_content_stripped.lower() == '!cocobot'
 
-        # Check if Cocobot is mentioned in the message
-        is_cocobot_mention = any(
-            mention.id == self.user.id for mention in message.mentions
-        )
+        # Check if Cocobot is mentioned alone (no other text)
+        # The message should only contain the mention and nothing else (except whitespace)
+        is_cocobot_mention_alone = False
+        if any(mention.id == self.user.id for mention in message.mentions):
+            # Remove all mentions from the message to check if there's any other text
+            text_without_mentions = normalized_message_content_stripped
+            for mention in message.mentions:
+                text_without_mentions = text_without_mentions.replace(f'<@{mention.id}>', '').replace(f'<@!{mention.id}>', '')
+            # Check if only whitespace remains after removing mentions
+            if text_without_mentions.strip() == '':
+                is_cocobot_mention_alone = True
 
-        # Set flag if command or mention detected
-        if is_cocobot_command or is_cocobot_mention:
+        # Set flag if command or mention alone detected, and author is not a bot
+        if not message.author.bot and (is_cocobot_command or is_cocobot_mention_alone):
             send_cocobot_info_embed = True
 
         # Send Cocobot info embed if flag is set
@@ -288,11 +300,11 @@ class Cocobot(commands.Bot):
             embed = discord.Embed(
                 timestamp=datetime.now(),
                 title="🥥 Cocobot at your service!",
-                url="https://gitlab.com/thailand-discord/bots/cocobot",
                 description=f"Hi, I'm **@cocobot** `v{CURRENT_VERSION}`, the *actual* "
                             f"useful brother of our dearest August Engelhardt. Type "
-                            f"`/coco` to see what I can do for you. I "
-                            "promise on the holy coconut, I'm here to help.",
+                            f"`/cocobot` to see what I can do for you. I "
+                            f"promise on the holy coconut, I'm here to help. "
+                            f"Cocovores are invited to [contribute](https://gitlab.com/thailand-discord/bots/cocobot) to my code.",
                 color=discord.Color.green(),
             )
             # Add bot avatar as thumbnail if available
@@ -416,27 +428,38 @@ class Cocobot(commands.Bot):
 
     # Global error handler for application commands (slash commands)
     @staticmethod
-    async def on_app_command_error(interaction, error):
+    async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
         """
-        Global error handler for application command errors.
+        Handles and logs errors encountered during application command execution.
 
-        Args:
-                interaction: Discord interaction object
-                error: The exception that occurred
+        This method attempts to handle and respond to errors raised while processing
+        application commands. If the response to the interaction has already been sent,
+        a follow-up message will be sent instead. If no response has been sent yet,
+        an error message will be sent as the initial response. Any issues with sending
+        the error message due to Discord API limitations are logged for debugging.
+
+        Parameters:
+            interaction (discord.Interaction): The interaction object representing the command's context.
+            error (app_commands.AppCommandError): The exception raised during command execution.
+
+        Raises:
+            discord.HTTPException: If there is an HTTP issue when interacting with the Discord API.
+            discord.NotFound: If the interaction or channel is no longer available.
+            discord.InteractionResponded: If an attempt is made to respond to an already-responded interaction.
         """
         try:
             if interaction.response.is_done():
                 # If response is already done, follow up instead
                 await interaction.followup.send(
                     "🥥 Oops, something's cracked, and it's **not** the coconut! The "
-                    "developers have been notified.",
+                    "developers have been notified. Just kidding, nobody cares.",
                     ephemeral=True,
                 )
             else:
                 # If no response yet, send response
                 await interaction.response.send_message(
                     "🥥 Oops, something's cracked, and it's **not** the coconut! The "
-                    "developers have been notified.",
+                    "developers have been notified. Just kidding, nobody cares.",
                     ephemeral=True,
                 )
         except (discord.HTTPException, discord.InteractionResponded, discord.NotFound) as followup_error:
