@@ -57,7 +57,9 @@ def interaction():
 @pytest.mark.asyncio
 # Patch the aiohttp.ClientSession to mock API calls
 @patch('cogs.exchangerate.aiohttp.ClientSession')
-async def test_valid_conversion(mock_session_class, cog, interaction):
+@patch('cogs.exchangerate.DatabaseManager.async_get_cache_entry', return_value=None)
+@patch('cogs.exchangerate.DatabaseManager.async_set_cache_entry')
+async def test_valid_conversion(mock_set_cache, mock_get_cache, mock_session_class, cog, interaction):
     # Create mock session and response objects
     mock_session = MagicMock()
     mock_response = MagicMock()
@@ -128,7 +130,9 @@ async def test_invalid_currency_length(cog, interaction):
 @pytest.mark.asyncio
 # Patch the aiohttp.ClientSession to mock API calls
 @patch('cogs.exchangerate.aiohttp.ClientSession')
-async def test_nonexistent_target_currency(mock_session_class, cog, interaction):
+@patch('cogs.exchangerate.DatabaseManager.async_get_cache_entry', return_value=None)
+@patch('cogs.exchangerate.DatabaseManager.async_set_cache_entry')
+async def test_nonexistent_target_currency(mock_set_cache, mock_get_cache, mock_session_class, cog, interaction):
     # Create mock session and response objects
     mock_session = MagicMock()
     mock_response = MagicMock()
@@ -178,7 +182,9 @@ async def test_nonexistent_target_currency(mock_session_class, cog, interaction)
 @pytest.mark.asyncio
 # Patch the aiohttp.ClientSession to mock API calls
 @patch('cogs.exchangerate.aiohttp.ClientSession')
-async def test_api_failure(mock_session_class, cog, interaction):
+@patch('cogs.exchangerate.DatabaseManager.async_get_cache_entry', return_value=None)
+@patch('cogs.exchangerate.DatabaseManager.async_set_cache_entry')
+async def test_api_failure(mock_set_cache, mock_get_cache, mock_session_class, cog, interaction):
     # Create mock session and response objects
     mock_session = MagicMock()
     mock_response = MagicMock()

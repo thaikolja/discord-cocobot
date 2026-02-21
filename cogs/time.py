@@ -21,6 +21,7 @@ import asyncio
 import logging
 
 # Import the datetime module for handling dates and times
+import json
 from datetime import datetime
 
 # Import the aiohttp library for asynchronous HTTP requests
@@ -36,7 +37,8 @@ from discord import app_commands
 from discord.ext import commands
 
 # Import configuration constants from the config module
-from config.config import ERROR_MESSAGE, LOCALTIME_API_KEY
+from config.config import ERROR_MESSAGE, LOCALTIME_API_KEY, CACHE_BYPASS_PRIVILEGED
+from utils.database import DatabaseManager
 
 # Configure basic logging settings to track bot activities
 logging.basicConfig(level=logging.INFO)
@@ -77,14 +79,34 @@ class TimeCog(commands.Cog):
         # Pass parameters in a dictionary for safe, automatic URL-encoding
         params = {'apiKey': LOCALTIME_API_KEY, 'location': location}
 
-        try:
-            # Use the async session to make a non-blocking GET request
-            async with self.session.get(api_url, params=params, timeout=10) as response:
-                # Raise an exception if the HTTP response status is an error (4xx or 5xx)
-                response.raise_for_status()
+        cache_key = f"time:{location.lower()}"
 
-                # Parse the JSON response asynchronously
-                data = await response.json()
+        # Bypass the cache for privileged users (admins, owners, moderators) if configured
+        user_is_privileged = (
+            CACHE_BYPASS_PRIVILEGED
+            and interaction.guild is not None
+            and (
+                interaction.user.id == interaction.guild.owner_id
+                or interaction.user.guild_permissions.administrator
+                or interaction.user.guild_permissions.manage_guild
+            )
+        )
+
+        try:
+            cached_data = None if user_is_privileged else await DatabaseManager.async_get_cache_entry(cache_key)
+            if cached_data:
+                data = json.loads(cached_data)
+            else:
+                # Use the async session to make a non-blocking GET request
+                async with self.session.get(api_url, params=params, timeout=10) as response:
+                    # Raise an exception if the HTTP response status is an error (4xx or 5xx)
+                    response.raise_for_status()
+
+                    # Parse the JSON response asynchronously
+                    data = await response.json()
+
+                # Store the result in cache for 10 minutes (600 seconds)
+                await DatabaseManager.async_set_cache_entry(cache_key, json.dumps(data), 600)
 
             # Extract country from the response data
             country = data['geo']['country']

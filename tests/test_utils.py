@@ -15,7 +15,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from utils.database import Base, Guild, User
+from utils.database import Base
 
 
 class MockDiscordObjects:
@@ -158,27 +158,6 @@ def test_db():
     # Cleanup would happen here if needed
 
 
-@pytest.fixture
-def sample_user_data():
-    """Sample user data for testing."""
-    return {
-        "discord_id": "123456789012345678",
-        "username": "testuser",
-        "discriminator": "1234",
-        "is_premium": False,
-    }
-
-
-@pytest.fixture
-def sample_guild_data():
-    """Sample guild data for testing."""
-    return {
-        "discord_id": "987654321098765432",
-        "name": "Test Guild",
-        "owner_id": "111222333444555666",
-    }
-
-
 def create_mock_api_response(status: int = 200, json_data: Optional[Dict] = None):
     """Create a mock API response object."""
     if json_data is None:
@@ -215,40 +194,6 @@ class TestHelpers:
             assert (
                 actual_value == expected_value
             ), f"Expected {attr_name}={expected_value}, got {actual_value}"
-
-    @staticmethod
-    def create_sample_user(db_session, **overrides):
-        """Create a sample user in the test database."""
-        user_data = {
-            "discord_id": "123456789012345678",
-            "username": "testuser",
-            "discriminator": "1234",
-        }
-        user_data.update(overrides)
-
-        user = User(**user_data)
-        db_session.add(user)
-        db_session.commit()
-        db_session.refresh(user)
-
-        return user
-
-    @staticmethod
-    def create_sample_guild(db_session, **overrides):
-        """Create a sample guild in the test database."""
-        guild_data = {
-            "discord_id": "987654321098765432",
-            "name": "Test Guild",
-            "owner_id": "111222333444555666",
-        }
-        guild_data.update(overrides)
-
-        guild = Guild(**guild_data)
-        db_session.add(guild)
-        db_session.commit()
-        db_session.refresh(guild)
-
-        return guild
 
 
 # Global test utilities instance

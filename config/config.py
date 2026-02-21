@@ -59,3 +59,8 @@ ACQIN_API_KEY: str = get_global_config().api.acqin_api_key
 
 # Standard error message to display to users when something goes wrong
 ERROR_MESSAGE: str = "🥥 Oops, something's cracked, and it's **not** the coconut!"
+
+# When True, server owners, administrators, and moderators (manage_guild permission)
+# will always receive a fresh API response, bypassing the 10-minute cache.
+# Set to False to cache responses for all users equally.
+CACHE_BYPASS_PRIVILEGED: bool = True

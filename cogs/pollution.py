@@ -14,6 +14,7 @@
 #  Package:   cocobot Discord Bot
 
 # Import the datetime class from the datetime module for handling dates and times
+import json
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -32,11 +33,14 @@ from discord.ext import commands
 # Import the naturaltime function from the humanize module to format time in a human-readable way
 from humanize import naturaltime
 
-# Import configuration constants and API key from the config module
-from config.config import ACQIN_API_KEY, ERROR_MESSAGE
+# Import configuration constants needed for making API requests
+from config.config import ACQIN_API_KEY, ERROR_MESSAGE, CACHE_BYPASS_PRIVILEGED
 
-# Import the sanitize_url function from utils.helpers to sanitize URLs
+# Import helper utilities
 from utils.helpers import sanitize_url
+
+# Import database manager for caching
+from utils.database import DatabaseManager
 
 
 # Define a new Discord cog for handling pollution data
@@ -80,80 +84,105 @@ class PollutionCog(commands.Cog):
             f'https://api.waqi.info/feed/{city}/?token={ACQIN_API_KEY}'
         )
 
-        # Make an async GET request to the pollution API
-        async with aiohttp.ClientSession() as session:
-            async with session.get(api_url) as response:
-                # Check if the response was successful
-                if response.status != 200:
-                    # Send an error message if the request failed
+        cache_key = f"pollution:{city.lower()}"
+
+        # Bypass the cache for privileged users (admins, owners, moderators) if configured
+        user_is_privileged = (
+            CACHE_BYPASS_PRIVILEGED
+            and interaction.guild is not None
+            and (
+                interaction.user.id == interaction.guild.owner_id
+                or interaction.user.guild_permissions.administrator
+                or interaction.user.guild_permissions.manage_guild
+            )
+        )
+
+        try:
+            cached_data = None if user_is_privileged else await DatabaseManager.async_get_cache_entry(cache_key)
+            if cached_data:
+                data = json.loads(cached_data)
+            else:
+                # Make an async GET request to the pollution API
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(api_url) as response:
+                        # Check if the response was successful
+                        if response.status != 200:
+                            # Send an error message if the request failed
+                            await interaction.response.send_message(
+                                f"{ERROR_MESSAGE} Looks like there's been some connection error. Give it another shot."
+                            )
+                            return
+
+                        # Parse the JSON response from the API
+                        data = await response.json()
+
+                # Check if the API returned a successful status
+                if data['status'] != 'ok':
+                    # Send an error message if the city name is incorrect
                     await interaction.response.send_message(
-                        f"{ERROR_MESSAGE} Looks like there's been some connection error. Give it another shot."
+                        f"{ERROR_MESSAGE} Check your spelling of \"{city}\" and give it another shot."
                     )
                     return
+                # Store the successful data in cache for 10 minutes (600 seconds)
+                await DatabaseManager.async_set_cache_entry(cache_key, json.dumps(data), 600)
 
-                # Parse the JSON response from the API
-                data = await response.json()
+            # Extract the main data from the response
+            data = data['data']
 
-        # Check if the API returned a successful status
-        if data['status'] != 'ok':
-            # Send an error message if the city name is incorrect
-            await interaction.response.send_message(
-                f"{ERROR_MESSAGE} Check your spelling of \"{city}\" and give it another shot."
-            )
-            return
+            # Get the AQI value from the data
+            aqi = data['aqi']
 
-        # Extract the main data from the response
-        data = data['data']
+            # Get the city name from the data
+            city = data['city']['name']
 
-        # Get the AQI value from the data
-        aqi = data['aqi']
+            # Calculate how long ago the data was updated
+            parsed_time = datetime.fromisoformat(data['time']['iso'])
+            bangkok_now = datetime.now(ZoneInfo('Asia/Bangkok'))
+            time_diff = bangkok_now - parsed_time
 
-        # Get the city name from the data
-        city = data['city']['name']
+            # Force "ago" by using absolute value if time difference is negative
+            updated_ago = naturaltime(abs(time_diff.total_seconds()))
 
-        # Calculate how long ago the data was updated
-        parsed_time = datetime.fromisoformat(data['time']['iso'])
-        bangkok_now = datetime.now(ZoneInfo('Asia/Bangkok'))
-        time_diff = bangkok_now - parsed_time
+            # Construct the base output message with AQI value
+            pre_output = f"The PM2.5 level in **{city}** is at `{aqi}` **AQI**."
 
-        # Force "ago" by using absolute value if time difference is negative
-        updated_ago = naturaltime(abs(time_diff.total_seconds()))
+            # Determine the appropriate emoji and message based on AQI level
+            if aqi <= 50:
+                emoji, message = (
+                    "🟢",
+                    "The air is so clean, it's like a vacuum sealed coconut fresh off the tree. August Engelhardt would be proud (and probably try to worship it, too).",
+                )
+            elif aqi <= 100:
+                emoji, message = (
+                    "🟡",
+                    "Decent air. Like a coconut: refreshing, but not life-changing.",
+                )
+            elif aqi <= 150:
+                emoji, message = (
+                    "🟠",
+                    "Not great, not terrible. Stay in, unless you fancy a diet of delusions. Wear a mask.",
+                )
+            elif aqi <= 200:
+                emoji, message = (
+                    "🔴",
+                    "Unhealthy. Breathing's like Engelhardt's coconut-only dreams. Wear a mask - and, no, it's not \"infringing on your freedom.\"",
+                )
+            else:
+                emoji, message = (
+                    "⚫️",
+                    "Apocalypse air! Even Engelhardt's coconuts couldn't save this. Mask up, or you'll be seeing coconuts soon.",
+                )
 
-        # Construct the base output message with AQI value
-        pre_output = f"The PM2.5 level in **{city}** is at `{aqi}` **AQI**."
+            # Combine all elements into the final output message
+            output = f"{emoji} {pre_output} {message} (Last checked: {updated_ago})"
 
-        # Determine the appropriate emoji and message based on AQI level
-        if aqi <= 50:
-            emoji, message = (
-                "🟢",
-                "The air is so clean, it's like a vacuum sealed coconut fresh off the tree. August Engelhardt would be proud (and probably try to worship it, too).",
-            )
-        elif aqi <= 100:
-            emoji, message = (
-                "🟡",
-                "Decent air. Like a coconut: refreshing, but not life-changing.",
-            )
-        elif aqi <= 150:
-            emoji, message = (
-                "🟠",
-                "Not great, not terrible. Stay in, unless you fancy a diet of delusions. Wear a mask.",
-            )
-        elif aqi <= 200:
-            emoji, message = (
-                "🔴",
-                "Unhealthy. Breathing's like Engelhardt's coconut-only dreams. Wear a mask - and, no, it's not \"infringing on your freedom.\"",
-            )
-        else:
-            emoji, message = (
-                "⚫️",
-                "Apocalypse air! Even Engelhardt's coconuts couldn't save this. Mask up, or you'll be seeing coconuts soon.",
-            )
+            # Send the final message as a response to the interaction
+            await interaction.response.send_message(output)
 
-        # Combine all elements into the final output message
-        output = f"{emoji} {pre_output} {message} (Last checked: {updated_ago})"
-
-        # Send the final message as a response to the interaction
-        await interaction.response.send_message(output)
+        except Exception as e:
+            # Handle any unexpected errors
+            output = f"{ERROR_MESSAGE} An error occurred while fetching pollution data: {str(e)}"
+            await interaction.response.send_message(output)
 
 
 # Define the setup function to register the cog with the bot
