@@ -19,8 +19,9 @@ def bot():
 
 @pytest.fixture
 def cog(bot):
-    """Create an instance of the SummarizeCog."""
-    return SummarizeCog(bot)
+    """Create an instance of the SummarizeCog, with UseAI patched so it doesn't initialize actual LLM clients."""
+    with patch('cogs.summarize.UseAI'):
+        return SummarizeCog(bot)
 
 @pytest.fixture
 def interaction():
@@ -65,8 +66,7 @@ async def test_setup(bot):
     args, _ = bot.add_cog.call_args
     assert isinstance(args[0], SummarizeCog)
 
-@patch('cogs.summarize.UseAI')
-async def test_summarize_command_success(MockUseAI, cog, interaction):
+async def test_summarize_command_success(cog, interaction):
     """Test standard execution of summarize_command out of the box."""
     mock_ai_instance = MagicMock()
     # prompt is synchronous inside to_thread but to_thread makes it run in the background.
@@ -75,7 +75,7 @@ async def test_summarize_command_success(MockUseAI, cog, interaction):
     cog.ai = mock_ai_instance
 
     # Call with default limit
-    await cog.summarize_command(interaction, limit=2)
+    await cog.summarize_command.callback(cog, interaction, limit=2)
 
     interaction.response.defer.assert_called_once()
 
@@ -89,8 +89,7 @@ async def test_summarize_command_success(MockUseAI, cog, interaction):
 
     interaction.followup.send.assert_called_once_with("This is a summary of the messages.")
 
-@patch('cogs.summarize.UseAI')
-async def test_summarize_command_no_messages(MockUseAI, cog, interaction):
+async def test_summarize_command_no_messages(cog, interaction):
     """Test behavior when history yields no messages."""
     async def empty_generator(*args, **kwargs):
         # explicitly empty
@@ -98,30 +97,28 @@ async def test_summarize_command_no_messages(MockUseAI, cog, interaction):
 
     interaction.channel.history.side_effect = empty_generator
 
-    await cog.summarize_command(interaction, limit=10)
+    await cog.summarize_command.callback(cog, interaction, limit=10)
 
     interaction.response.defer.assert_called_once()
-    interaction.followup.send.assert_called_once_with("There are no messages to summarize.")
+    interaction.followup.send.assert_called_once_with("Nothing to summarize here. Is the channel as deserted as August's Kabakon?")
 
-@patch('cogs.summarize.UseAI')
-async def test_summarize_command_llm_failure(MockUseAI, cog, interaction):
+async def test_summarize_command_llm_failure(cog, interaction):
     """Test behavior when the AI returns None or fails to summarize."""
     mock_ai_instance = MagicMock()
     mock_ai_instance.prompt.return_value = None
     cog.ai = mock_ai_instance
 
-    await cog.summarize_command(interaction, limit=5)
+    await cog.summarize_command.callback(cog, interaction, limit=5)
 
     interaction.followup.send.assert_called_once()
     args = interaction.followup.send.call_args[0][0]
     assert "failed to generate a summary" in args
 
-@patch('cogs.summarize.UseAI')
-async def test_summarize_command_history_forbidden(MockUseAI, cog, interaction):
+async def test_summarize_command_history_forbidden(cog, interaction):
     """Test behavior when reading message history throws Forbidden error."""
     interaction.channel.history.side_effect = discord.errors.Forbidden(MagicMock(), 'Forbidden')
 
-    await cog.summarize_command(interaction, limit=5)
+    await cog.summarize_command.callback(cog, interaction, limit=5)
 
     interaction.followup.send.assert_called_once()
     args = interaction.followup.send.call_args[0][0]
