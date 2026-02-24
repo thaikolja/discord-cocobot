@@ -1,9 +1,12 @@
-#  Copyright (C) 2025 by Kolja Nolte
+#  Copyright (C) 2026 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thailand-discord/bots/cocobot
 #
-#  This work is licensed under the MIT License. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-#  and to permit persons to whom the Software is furnished to do so, subject to the condition that the above copyright notice and this permission notice shall be included in all
+#  This work is licensed under the MIT License. You are free to use, copy, modify,
+#  merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the
+#  condition that the above copyright notice and this permission notice shall be
+#  included in all
 #  copies or substantial portions of the Software.
 #
 #  For more information, visit: https://opensource.org/licenses/MIT
@@ -11,7 +14,7 @@
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
 #  License:   MIT
-#  Date:      2014-2025
+#  Date:      2014-2026
 #  Package:   cocobot Discord Bot
 
 """
@@ -54,8 +57,18 @@ GROQ_API_KEY: str = get_global_config().api.groq_api_key
 # General Google API key
 GOOGLE_API_KEY: str = get_global_config().api.google_api_key
 
+GOOGLE_GEMINI_MODEL: str = get_global_config().api.google_gemini_model
+
 # AcqIn service API key
 ACQIN_API_KEY: str = get_global_config().api.acqin_api_key
+
+# DeepSeek service API key and model
+DEEPSEEK_API_KEY: str = get_global_config().api.deepseek_api_key
+DEEPSEEK_MODEL: str = get_global_config().api.deepseek_model
+
+# Poe service API keys (list) and model
+POE_API_KEYS: list[str] = get_global_config().api.poe_api_keys
+POE_MODEL: str = get_global_config().api.poe_model
 
 # Standard error message to display to users when something goes wrong
 ERROR_MESSAGE: str = "🥥 Oops, something's cracked, and it's **not** the coconut!"

@@ -1,4 +1,4 @@
-#  Copyright (C) 2025 by Kolja Nolte
+#  Copyright (C) 2026 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thailand-discord/bots/cocobot
 #
@@ -14,8 +14,21 @@
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
 #  License:   MIT
-#  Date:      2014-2025
+#  Date:      2014-2026
 #  Package:   cocobot Discord Bot
+
+"""
+Logs the bot's readiness and sets up activity status and guild connections upon startup.
+
+This method is an event listener triggered when the bot has successfully connected to Discord.
+It performs the following main actions:
+1. Logs a readiness message, including the bot's username and ID.
+2. Sets the bot's activity status to display a custom message.
+3. Logs the name and ID of each guild the bot is connected to.
+
+Raises:
+    No explicit errors are raised by this method.
+"""
 
 # Import the regular expression module for pattern matching in text
 import re
@@ -26,23 +39,23 @@ from datetime import datetime, timedelta
 # Import the discord.py library for interacting with the Discord API
 import discord
 
+# Import app_commands for application command error handling
+from discord import app_commands
+
 # Import the commands extension from discord.py for bot command handling
 from discord.ext import commands
 
-# Import app_commands for application command error handling
-from discord import app_commands
+# Import SQLAlchemy error for database exception handling
+from sqlalchemy.exc import SQLAlchemyError
 
 # Import configuration constants from the config file
 from config.config import COCOBOT_VERSION, DISCORD_SERVER_ID
 
+# Import database functions
+from utils.database import DatabaseManager, get_db_session, init_db
+
 # Import setup function for logging configuration
 from utils.logger import bot_logger, command_logger, error_logger, setup_logging
-
-# Import database functions
-from utils.database import init_db, get_db_session, DatabaseManager
-
-# Import SQLAlchemy error for database exception handling
-from sqlalchemy.exc import SQLAlchemyError
 
 # Configure advanced logging settings
 setup_logging(log_level="INFO")
@@ -65,6 +78,8 @@ INITIAL_EXTENSIONS = [
     'cogs.learn',
     # Administrative commands cog
     'cogs.admin',
+    # AI Jail commands cog
+    'cogs.jail',
     # Chat summarize command cog
     'cogs.summarize',
 ]
@@ -296,6 +311,7 @@ class Cocobot(commands.Bot):
         if send_cocobot_info_embed:
             # Import version again to get the mocked value during tests
             from config.config import COCOBOT_VERSION as CURRENT_VERSION
+
             # Create embed for Cocobot info
             embed = discord.Embed(
                 timestamp=datetime.now(),

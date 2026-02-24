@@ -1,9 +1,12 @@
-#  Copyright (C) 2025 by Kolja Nolte
+#  Copyright (C) 2026 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thailand-discord/bots/cocobot
 #
-#  This work is licensed under the MIT License. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-#  and to permit persons to whom the Software is furnished to do so, subject to the condition that the above copyright notice and this permission notice shall be included in all
+#  This work is licensed under the MIT License. You are free to use, copy, modify,
+#  merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the
+#  condition that the above copyright notice and this permission notice shall be
+#  included in all
 #  copies or substantial portions of the Software.
 #
 #  For more information, visit: https://opensource.org/licenses/MIT
@@ -11,8 +14,9 @@
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
 #  License:   MIT
-#  Date:      2014-2025
+#  Date:      2014-2026
 #  Package:   cocobot Discord Bot
+
 
 # Import the datetime class from the datetime module for handling date and time
 import json
@@ -34,7 +38,8 @@ from discord.ext import commands
 from humanize import naturaltime
 
 # Import the necessary configuration constants from the config module
-from config.config import CURRENCYAPI_API_KEY, ERROR_MESSAGE, CACHE_BYPASS_PRIVILEGED
+from config.config import CACHE_BYPASS_PRIVILEGED, CURRENCYAPI_API_KEY, ERROR_MESSAGE
+
 # Import the database manager for caching
 from utils.database import DatabaseManager
 
