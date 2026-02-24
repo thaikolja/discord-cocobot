@@ -1,3 +1,22 @@
+#  Copyright (C) 2026 by Kolja Nolte
+#  kolja.nolte@gmail.com
+#  https://gitlab.com/thailand-discord/bots/cocobot
+#
+#  This work is licensed under the MIT License. You are free to use, copy, modify,
+#  merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the
+#  condition that the above copyright notice and this permission notice shall be
+#  included in all
+#  copies or substantial portions of the Software.
+#
+#  For more information, visit: https://opensource.org/licenses/MIT
+#
+#  Author:    Kolja Nolte
+#  Email:     kolja.nolte@gmail.com
+#  License:   MIT
+#  Date:      2014-2026
+#  Package:   cocobot Discord Bot
+
 """
 Security utilities for the cocobot application.
 
@@ -15,7 +34,16 @@ from .exceptions import SecurityError, ValidationError
 
 
 class InputValidator:
-    """Utility class for input validation."""
+    """
+    Utility class for input validation.
+
+    This class provides various methods to validate common input types such as email
+    addresses, URLs, Discord IDs, currency codes, string lengths, and choice-based values.
+    Each method ensures that the input conforms to the specified format, length, or list
+    of allowed choices. If any validation fails, a ValidationError is raised. These
+    methods are useful in applications where input integrity and format need to be
+    strictly maintained.
+    """
 
     # Regex patterns for common validations
     EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
@@ -152,7 +180,7 @@ class InputValidator:
         cls,
         value: str,
         min_length: int = 0,
-        max_length: int = None,
+        max_length: Optional[int] = None,
         field_name: str = "value",
     ) -> str:
         """
@@ -237,7 +265,7 @@ class InputSanitizer:
     ]
     ALLOWED_ATTRIBUTES = {
         'code': ['class'],
-        'pre': ['class'],
+        'pre':  ['class'],
     }
 
     @classmethod

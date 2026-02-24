@@ -1,3 +1,22 @@
+#  Copyright (C) 2026 by Kolja Nolte
+#  kolja.nolte@gmail.com
+#  https://gitlab.com/thailand-discord/bots/cocobot
+#
+#  This work is licensed under the MIT License. You are free to use, copy, modify,
+#  merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the
+#  condition that the above copyright notice and this permission notice shall be
+#  included in all
+#  copies or substantial portions of the Software.
+#
+#  For more information, visit: https://opensource.org/licenses/MIT
+#
+#  Author:    Kolja Nolte
+#  Email:     kolja.nolte@gmail.com
+#  License:   MIT
+#  Date:      2014-2026
+#  Package:   cocobot Discord Bot
+
 """
 Database models and integration for the cocobot application.
 
@@ -65,6 +84,20 @@ class VisaReminder(Base):
     user_discord_id = Column(String(32), unique=True, nullable=False, index=True)
     reminded_at = Column(DateTime, server_default=func.now())
     created_at = Column(DateTime, server_default=func.now())
+
+
+class JailedUser(Base):
+    """Tracks jailed users with role snapshots for restoration on unjail."""
+
+    __tablename__ = 'jailed_users'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String, unique=True, nullable=False, index=True)
+    username = Column(String, nullable=False)
+    jailed_at = Column(DateTime, server_default=func.now())
+    jailed_by = Column(String, nullable=False)
+    reason = Column(String, nullable=True)
+    roles_snapshot = Column(Text, nullable=False)
 
 
 # Database session management

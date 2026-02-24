@@ -1,8 +1,24 @@
-"""
-Advanced configuration management for the cocobot application.
+#  Copyright (C) 2026 by Kolja Nolte
+#  kolja.nolte@gmail.com
+#  https://gitlab.com/thailand-discord/bots/cocobot
+#
+#  This work is licensed under the MIT License. You are free to use, copy, modify,
+#  merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the
+#  condition that the above copyright notice and this permission notice shall be
+#  included in all
+#  copies or substantial portions of the Software.
+#
+#  For more information, visit: https://opensource.org/licenses/MIT
+#
+#  Author:    Kolja Nolte
+#  Email:     kolja.nolte@gmail.com
+#  License:   MIT
+#  Date:      2014-2026
+#  Package:   cocobot Discord Bot
 
-This module provides a robust configuration system with validation,
-type hints, and fallback mechanisms.
+"""
+Application configuration management for CocoBot.
 """
 
 import os
@@ -89,29 +105,37 @@ class DiscordConfig:
 @dataclass
 class APIConfig:
     """
-    Encapsulates configuration settings for various API integrations.
+    Represents the configuration required for various APIs used in the application.
 
-    This class is designed to hold API keys required for interacting with different
-    service providers, including Weather API, Currency API, Google API, and others.
-    It includes validation logic to ensure essential keys are provided unless the
-    application is running in a testing environment.
+    This class holds API keys needed for different services such as weather, currency conversion, geolocation,
+    and integration with external platforms like Google, Groq, or Acqin. It ensures that required API keys are
+    properly set unless the application is in a testing environment. Keys are validated after initialization
+    to ensure the application has the necessary configurations.
 
     Attributes:
-        weatherapi_key (Optional[str]): API key for accessing the Weather API.
-        currencyapi_key (Optional[str]): API key for accessing the Currency API.
-        localtime_key (Optional[str]): API key for obtaining local time data.
-        google_api_key (Optional[str]): Google API key for accessing Google services.
-        geoapify_api_key (Optional[str]): API key for Geoapify services.
-        groq_api_key (Optional[str]): API key for Groq-related operations.
+        weatherapi_key: The API key for the weather service, if applicable.
+        currencyapi_key: The API key for the currency conversion service, if applicable.
+        localtime_key: The API key for time zone or local time services, if applicable.
+        google_api_key: The API key for Google services, if applicable.
+        google_gemini_model: The model configuration name for Google Gemini services.
+        geoapify_api_key: The API key for Geoapify services, if applicable.
+        groq_api_key: The API key for Groq services, if applicable.
+        acqin_api_key: The API key for Acqin services, if applicable.
     """
-
     weatherapi_key: Optional[str] = None
     currencyapi_key: Optional[str] = None
     localtime_key: Optional[str] = None
     google_api_key: Optional[str] = None
+    google_gemini_model: str = None
     geoapify_api_key: Optional[str] = None
-    groq_api_key: Optional[str] = None,
+    groq_api_key: Optional[str] = None
     acqin_api_key: Optional[str] = None
+
+    deepseek_api_key: Optional[str] = None
+    deepseek_model: str = None
+
+    poe_api_keys: list[str] = None
+    poe_model: str = None
 
     def __post_init__(self):
         """
@@ -226,7 +250,7 @@ class SecurityConfig:
 class AppConfig:
     """Main application configuration."""
 
-    version: str = "3.4.0"
+    version: str = "3.5.0"
     name: str = "cocobot"
     description: str = "A feature-rich Discord bot for the Thailand Discord server"
     environment: str = os.getenv('ENVIRONMENT', 'development')
@@ -256,9 +280,14 @@ class AppConfig:
                 currencyapi_key=os.getenv('CURRENCYAPI_API_KEY'),
                 localtime_key=os.getenv('LOCALTIME_API_KEY'),
                 google_api_key=os.getenv('GOOGLE_API_KEY'),
+                google_gemini_model=os.getenv('GOOGLE_GEMINI_MODEL', 'gemini-2.5-flash-lite'),
                 geoapify_api_key=os.getenv('GEOAPFIY_API_KEY'),
                 groq_api_key=os.getenv('GROQ_API_KEY'),
                 acqin_api_key=os.getenv('ACQIN_API_KEY'),
+                deepseek_api_key=os.getenv('DEEPSEEK_API_KEY'),
+                deepseek_model=os.getenv('DEEPSEEK_MODEL', 'deepseek-chat'),
+                poe_api_keys=[k.strip() for k in os.getenv('POE_API_KEYS', '').split(',')] if os.getenv('POE_API_KEYS') else [],
+                poe_model=os.getenv('POE_MODEL', 'Claude-3.5-Sonnet'),
             )
 
         if self.database is None:

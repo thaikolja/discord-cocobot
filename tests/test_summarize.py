@@ -2,10 +2,13 @@
 #  kolja.nolte@gmail.com
 #  ... (License header as per other files) ...
 
-from unittest.mock import AsyncMock, patch, MagicMock
-import pytest
+from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import discord
+import pytest
 from discord.ext import commands
+
 from cogs.summarize import SummarizeCog, setup
 
 # Mark all tests in this module as async
@@ -34,8 +37,12 @@ def interaction():
     # Mock followup and response
     interaction.response = AsyncMock()
     interaction.response.defer = AsyncMock()
+    interaction.response.is_done = MagicMock(return_value=False)
     interaction.followup = AsyncMock()
     interaction.followup.send = AsyncMock()
+
+    # Mock created_at for age calculation (use a recent time)
+    interaction.created_at = datetime.now(timezone.utc)
 
     # Mock the channel
     # MagicMock since we need to mock an async generator for channel.history

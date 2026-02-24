@@ -1,3 +1,22 @@
+#  Copyright (C) 2026 by Kolja Nolte
+#  kolja.nolte@gmail.com
+#  https://gitlab.com/thailand-discord/bots/cocobot
+#
+#  This work is licensed under the MIT License. You are free to use, copy, modify,
+#  merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the
+#  condition that the above copyright notice and this permission notice shall be
+#  included in all
+#  copies or substantial portions of the Software.
+#
+#  For more information, visit: https://opensource.org/licenses/MIT
+#
+#  Author:    Kolja Nolte
+#  Email:     kolja.nolte@gmail.com
+#  License:   MIT
+#  Date:      2014-2026
+#  Package:   cocobot Discord Bot
+
 """
 Logging utilities for the cocobot application.
 
@@ -6,16 +25,18 @@ for consistent logging across the entire application.
 """
 
 import logging
+import os
 import sys
+
 from datetime import datetime
 from pathlib import Path
 
 
 def setup_logging(
-    log_level: str = "INFO",
+    log_level: str = os.getenv("LOG_LEVEL", "WARNING"),
     log_file: str = None,
     max_bytes: int = 10485760,
-    backup_count: int = 5,
+    backup_count: int = os.getenv("LOG_BACKUP_COUNT", 5),
 ):
     """
     Set up centralized logging with both file and console handlers.

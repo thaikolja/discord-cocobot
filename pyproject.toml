@@ -36,6 +36,7 @@ per-file-ignores = [
 ]
 exclude = [
     ".git",
+    ".idea",
     "__pycache__",
     "build",
     "dist",

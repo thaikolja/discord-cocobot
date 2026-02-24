@@ -1,9 +1,12 @@
-#  Copyright (C) 2025 by Kolja Nolte
+#  Copyright (C) 2026 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thailand-discord/bots/cocobot
 #
-#  This work is licensed under the MIT License. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-#  and to permit persons to whom the Software is furnished to do so, subject to the condition that the above copyright notice and this permission notice shall be included in all
+#  This work is licensed under the MIT License. You are free to use, copy, modify,
+#  merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the
+#  condition that the above copyright notice and this permission notice shall be
+#  included in all
 #  copies or substantial portions of the Software.
 #
 #  For more information, visit: https://opensource.org/licenses/MIT
@@ -11,22 +14,27 @@
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
 #  License:   MIT
-#  Date:      2014-2025
+#  Date:      2014-2026
 #  Package:   cocobot Discord Bot
+
 
 # Import the urllib.parse module for URL parsing and handling
 import urllib.parse
 
-# Import the google.genai module for interacting with Google's Generative AI
-from google import genai
-
 # Import the openai module for interacting with OpenAI's API
 import openai
+
+# Import the google.genai module for interacting with Google's Generative AI
+from google import genai
 from openai.types.chat import ChatCompletionUserMessageParam
 
 # Import the necessary API keys from the config module
 from config.config import GOOGLE_API_KEY  # API key for Google services
+from config.config import GOOGLE_GEMINI_MODEL  # Model name for Google's Gemini
 from config.config import GROQ_API_KEY  # API key for Groq services
+from config.config import DEEPSEEK_API_KEY, DEEPSEEK_MODEL
+from config.config import POE_API_KEYS, POE_MODEL
+import itertools
 
 
 # Define a class named UseAI to handle interactions with various AI providers
@@ -39,14 +47,14 @@ class UseAI:
     """
 
     # Define a list of available AI providers
-    AVAILABLE_PROVIDERS = ['groq', 'google']
+    AVAILABLE_PROVIDERS = ['groq', 'google', 'deepseek', 'poe']
 
     # Define the configuration for Google's generative AI model
     GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
-        'temperature':        0.1,  # Controls randomness in generation
-        'top_p':              0.2,  # Controls diversity of responses
+        'temperature':        0.9,  # Controls randomness in generation
+        'top_p':              0.7,  # Controls diversity of responses
         'top_k':              40,  # Limits the number of tokens considered
-        'max_output_tokens':  500,  # Maximum length of the generated response
+        'max_output_tokens':  2024,
         'response_mime_type': 'text/plain',  # Format of the response
     }
 
@@ -79,12 +87,29 @@ class UseAI:
                 api_key=GROQ_API_KEY, base_url="https://api.groq.com/openai/v1"
             )
             # Set the model name for Groq
-            self.model_name = 'moonshotai/kimi-k2-instruct-0905'  # "llama-3.3-70b-versatile"
+            self.model_name = 'moonshotai/kimi-k2-instruct'  # "llama-3.3-70b-versatile"
         elif provider == 'google':
             # Initialize the Google Generative AI client with the specified API key
             self.client = genai.Client(api_key=GOOGLE_API_KEY)
             # Set the model name for Google
-            self.model_name = 'gemini-2.5-flash-lite'
+            self.model_name = GOOGLE_GEMINI_MODEL
+        elif provider == 'deepseek':
+            # Set up the OpenAI client for DeepSeek
+            self.client = openai.OpenAI(
+                api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com"
+            )
+            # Set the model name for DeepSeek
+            self.model_name = DEEPSEEK_MODEL
+        elif provider == 'poe':
+            # Set up a list of OpenAI clients for Poe, cycling through the provided keys
+            if not POE_API_KEYS:
+                raise ValueError("No Poe API keys found in configuration.")
+
+            self.poe_clients = itertools.cycle([
+                openai.OpenAI(api_key=key, base_url="https://api.poe.com/v1")
+                for key in POE_API_KEYS
+            ])
+            self.model_name = POE_MODEL
 
     # Method to send a prompt to the AI provider and get the response
     def prompt(self, prompt: str, strict: bool = True) -> str | None:
@@ -110,24 +135,28 @@ class UseAI:
             prompt = f"{prompt}. Only return the result, nothing else."
 
         # Handle the prompt based on the selected provider
-        if self.provider in ('groq'):
-            return self._handle_openai(prompt)
+        if self.provider in ['groq', 'deepseek']:
+            return self._handle_openai(prompt, self.client)
+        elif self.provider == 'poe':
+            # Get the next client in the cycle for Poe
+            next_client = next(self.poe_clients)
+            return self._handle_openai(prompt, next_client)
         elif self.provider == 'google':
             return self._handle_google(prompt)
 
         return None
 
-    def _handle_openai(self, prompt: str) -> str:
+    def _handle_openai(self, prompt: str, client: openai.OpenAI) -> str:
         """
-        Handles communication with the OpenAI API to generate a chat completion response
+        Handles communication with an OpenAI-compatible API to generate a chat completion response
         based on the provided prompt.
 
         Args:
-            prompt (str): The input string to be passed to the OpenAI API for generating
-            a response.
+            prompt (str): The input string to be passed to the API for generating a response.
+            client (openai.OpenAI): The OpenAI client instance to use (for rotation).
 
         Returns:
-            str: The content of the first message choice returned by the OpenAI API.
+            str: The content of the first message choice returned by the API.
         """
         # Assign the prompt to the content variable
         content = prompt
@@ -136,7 +165,7 @@ class UseAI:
             "role":    "user",
             "content": content
         }
-        chat = self.client.chat.completions.create(
+        chat = client.chat.completions.create(
             messages=[message],
             model=self.model_name,
         )
