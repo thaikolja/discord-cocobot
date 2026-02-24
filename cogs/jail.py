@@ -1,11 +1,3 @@
-"""
-AI Jail commands for CocoBot.
-
-This module provides slash commands for jailing and unjailing Discord members.
-Jailed users have their roles stripped and replaced with a "Jailed" role, while
-August Engelhardt harasses them in #ai-jail until they leave or are unjailed.
-"""
-
 #  Copyright (C) 2026 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thailand-discord/bots/cocobot
@@ -24,6 +16,14 @@ August Engelhardt harasses them in #ai-jail until they leave or are unjailed.
 #  License:   MIT
 #  Date:      2014-2026
 #  Package:   cocobot Discord Bot
+
+"""
+AI Jail commands for CocoBot.
+
+This module provides slash commands for jailing and unjailing Discord members.
+Jailed users have their roles stripped and replaced with a "Jailed" role, while
+August Engelhardt harasses them in #ai-jail until they leave or are unjailed.
+"""
 
 import json
 import logging
@@ -212,7 +212,7 @@ class JailCog(commands.Cog):
 
             if not record:
                 await interaction.response.send_message(
-                    f"🥥 No can do. **{user.mention}** is already jailed.", ephemeral=True
+                    f"🥥 No can do. **{user.mention}** is not currently jailed.", ephemeral=True
                 )
                 return
 
