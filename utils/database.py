@@ -67,6 +67,20 @@ class VisaReminder(Base):
     created_at = Column(DateTime, server_default=func.now())
 
 
+class JailedUser(Base):
+    """Tracks jailed users with role snapshots for restoration on unjail."""
+
+    __tablename__ = 'jailed_users'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String, unique=True, nullable=False, index=True)
+    username = Column(String, nullable=False)
+    jailed_at = Column(DateTime, server_default=func.now())
+    jailed_by = Column(String, nullable=False)
+    reason = Column(String, nullable=True)
+    roles_snapshot = Column(Text, nullable=False)
+
+
 # Database session management
 _engine = None
 _SessionLocal = None
