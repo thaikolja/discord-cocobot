@@ -54,6 +54,8 @@ GROQ_API_KEY: str = get_global_config().api.groq_api_key
 # General Google API key
 GOOGLE_API_KEY: str = get_global_config().api.google_api_key
 
+GOOGLE_GEMINI_MODEL: str = get_global_config().api.google_gemini_model
+
 # AcqIn service API key
 ACQIN_API_KEY: str = get_global_config().api.acqin_api_key
 
