@@ -31,6 +31,7 @@ from discord.ext import commands
 from cogs.jail import JailCog
 from utils.database import JailedUser, get_db_session, init_db
 
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
