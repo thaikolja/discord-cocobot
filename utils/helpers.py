@@ -1,9 +1,12 @@
-#  Copyright (C) 2025 by Kolja Nolte
+#  Copyright (C) 2026 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thailand-discord/bots/cocobot
 #
-#  This work is licensed under the MIT License. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-#  and to permit persons to whom the Software is furnished to do so, subject to the condition that the above copyright notice and this permission notice shall be included in all
+#  This work is licensed under the MIT License. You are free to use, copy, modify,
+#  merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the
+#  condition that the above copyright notice and this permission notice shall be
+#  included in all
 #  copies or substantial portions of the Software.
 #
 #  For more information, visit: https://opensource.org/licenses/MIT
@@ -11,7 +14,7 @@
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
 #  License:   MIT
-#  Date:      2014-2025
+#  Date:      2014-2026
 #  Package:   cocobot Discord Bot
 
 # Import the urllib.parse module for URL parsing and handling
@@ -27,6 +30,7 @@ from openai.types.chat import ChatCompletionUserMessageParam
 # Import the necessary API keys from the config module
 from config.config import GOOGLE_API_KEY  # API key for Google services
 from config.config import GROQ_API_KEY  # API key for Groq services
+from config.config import GOOGLE_GEMINI_MODEL  # Model name for Google's Gemini
 
 
 # Define a class named UseAI to handle interactions with various AI providers
@@ -43,10 +47,10 @@ class UseAI:
 
     # Define the configuration for Google's generative AI model
     GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
-        'temperature':        0.1,  # Controls randomness in generation
-        'top_p':              0.2,  # Controls diversity of responses
+        'temperature':        0.9,  # Controls randomness in generation
+        'top_p':              0.7,  # Controls diversity of responses
         'top_k':              40,  # Limits the number of tokens considered
-        'max_output_tokens':  500,  # Maximum length of the generated response
+        'max_output_tokens':  2024,
         'response_mime_type': 'text/plain',  # Format of the response
     }
 
@@ -79,12 +83,12 @@ class UseAI:
                 api_key=GROQ_API_KEY, base_url="https://api.groq.com/openai/v1"
             )
             # Set the model name for Groq
-            self.model_name = 'moonshotai/kimi-k2-instruct-0905'  # "llama-3.3-70b-versatile"
+            self.model_name = 'moonshotai/kimi-k2-instruct'  # "llama-3.3-70b-versatile"
         elif provider == 'google':
             # Initialize the Google Generative AI client with the specified API key
             self.client = genai.Client(api_key=GOOGLE_API_KEY)
             # Set the model name for Google
-            self.model_name = 'gemini-2.5-flash-lite'
+            self.model_name = GOOGLE_GEMINI_MODEL
 
     # Method to send a prompt to the AI provider and get the response
     def prompt(self, prompt: str, strict: bool = True) -> str | None:
@@ -110,7 +114,7 @@ class UseAI:
             prompt = f"{prompt}. Only return the result, nothing else."
 
         # Handle the prompt based on the selected provider
-        if self.provider in ('groq'):
+        if self.provider in 'groq':
             return self._handle_openai(prompt)
         elif self.provider == 'google':
             return self._handle_google(prompt)

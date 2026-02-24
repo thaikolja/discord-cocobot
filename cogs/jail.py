@@ -1,4 +1,12 @@
-#  Copyright (C) 2025 by Kolja Nolte
+"""
+AI Jail commands for CocoBot.
+
+This module provides slash commands for jailing and unjailing Discord members.
+Jailed users have their roles stripped and replaced with a "Jailed" role, while
+August Engelhardt harasses them in #ai-jail until they leave or are unjailed.
+"""
+
+#  Copyright (C) 2026 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thailand-discord/bots/cocobot
 #
@@ -14,16 +22,8 @@
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
 #  License:   MIT
-#  Date:      2014-2025
+#  Date:      2014-2026
 #  Package:   cocobot Discord Bot
-
-"""
-AI Jail commands for CocoBot.
-
-This module provides slash commands for jailing and unjailing Discord members.
-Jailed users have their roles stripped and replaced with a "Jailed" role, while
-August Engelhardt harasses them in #ai-jail until they leave or are unjailed.
-"""
 
 import json
 import logging
@@ -70,7 +70,7 @@ class JailCog(commands.Cog):
         """
         url = f'{self.august_base_url}{endpoint}'
         headers = {
-            'Content-Type': 'application/json',
+            'Content-Type':     'application/json',
             'X-Internal-Token': self.august_secret,
         }
 
@@ -80,20 +80,20 @@ class JailCog(commands.Cog):
                     if resp.status < 300:
                         return True
                     logger.warning(
-                        f'August API {endpoint} returned status {resp.status}'
+                        f'⚠️ August API {endpoint} returned status {resp.status}'
                     )
                     return False
         except aiohttp.ClientError as e:
-            logger.error(f'Failed to reach August API at {url}: {e}')
+            logger.error(f'❌ Failed to reach August API at {url}: {e}')
             return False
 
     @app_commands.command(
         name='jail',
-        description='Jail a member — strips roles, assigns Jailed role, and unleashes August.',
+        description='Moves a user into `#ai-jail` and unleashes a relentless wisdom August Engelhardt himself.',
     )
     @app_commands.describe(
-        user='The member to jail',
-        reason='Optional reason for jailing',
+        user='The member to sent to jail',
+        reason='Reason for jailing (optional)',
     )
     @app_commands.checks.has_permissions(administrator=True)
     async def jail_command(
@@ -111,10 +111,12 @@ class JailCog(commands.Cog):
             existing = db.query(JailedUser).filter(
                 JailedUser.user_id == str(user.id)
             ).first()
+
             if existing:
                 await interaction.response.send_message(
-                    f'⚠️ {user.mention} is already in jail.', ephemeral=True
+                    f'🥥 A genuine *fruitless* attempt - **{user.mention}** is already in jail. Poor {user.mention}...', ephemeral=True
                 )
+
                 return
 
         # Snapshot current roles (excluding @everyone)
@@ -129,7 +131,7 @@ class JailCog(commands.Cog):
             )
         except discord.Forbidden:
             await interaction.response.send_message(
-                '❌ I do not have permission to remove roles from this user.',
+                f"❌ Looks like you're trying to release {user.menntion} from their suffering. Too bad you don't have permissions to do that.",
                 ephemeral=True,
             )
             return
@@ -165,21 +167,24 @@ class JailCog(commands.Cog):
             db.commit()
 
         # Notify August to start the harassment loop
-        await self._call_august('/start-jail', {
-            'user_id': str(user.id),
-            'username': user.display_name,
-        })
+        await self._call_august(
+            '/start-jail', {
+                'user_id':  str(user.id),
+                'username': user.display_name,
+            }
+        )
 
         # Respond to the admin
         await interaction.response.send_message(
-            f'🔒 {user.mention} has been jailed.', ephemeral=True
+            f'🔒 **{user.mention}** has been jailed. Let August do the rest...', ephemeral=True
         )
 
         # Attempt to DM the jailed user
         try:
             await user.send(
-                '🔒 You have been jailed. You will remain in #ai-jail until an '
-                'administrator decides to release you — or until you leave the server.'
+                "Well, this is awkward... You've been sent to AI Jail by the administrators."
+                "August Engelhardt will now take good care of you, whether you want to or not."
+                "If you want to be free again, you can beg the admins to unjail you. Good luck!"
             )
         except (discord.Forbidden, discord.HTTPException):
             # User has DMs disabled or something went wrong — not critical
@@ -187,7 +192,7 @@ class JailCog(commands.Cog):
 
     @app_commands.command(
         name='unjail',
-        description='Unjail a member — restores their roles and stops August.',
+        description='Restores their roles and frees them from August\'s torment.',
     )
     @app_commands.describe(user='The member to unjail')
     @app_commands.checks.has_permissions(administrator=True)
@@ -207,7 +212,7 @@ class JailCog(commands.Cog):
 
             if not record:
                 await interaction.response.send_message(
-                    f'⚠️ {user.mention} is not currently jailed.', ephemeral=True
+                    f"🥥 No can do. **{user.mention}** is already jailed.", ephemeral=True
                 )
                 return
 
@@ -225,9 +230,9 @@ class JailCog(commands.Cog):
             try:
                 await user.remove_roles(jail_role, reason='AI Jail: Unjailed')
             except discord.Forbidden:
-                logger.warning(f'Could not remove Jailed role from {user}')
+                logger.warning(f'Could not remove `Jailed` role from {user}')
 
-        # Restore snapshotted roles
+        # Restore snapshot roles
         roles_to_restore = []
         for role_id_str in roles_snapshot:
             role = interaction.guild.get_role(int(role_id_str))
@@ -241,7 +246,7 @@ class JailCog(commands.Cog):
                 logger.warning(f'Could not restore some roles for {user}')
 
         await interaction.response.send_message(
-            f'🔓 {user.mention} has been unjailed and their roles have been restored.',
+            f'🔓 **{user.mention}** has been unjailed. Fly, bird, fly!',
             ephemeral=True,
         )
 
