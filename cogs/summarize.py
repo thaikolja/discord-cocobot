@@ -52,7 +52,7 @@ class SummarizeCog(commands.Cog):
         # Keep a handle to the bot so we can interact with Discord
         self.bot = bot
         # Set up the AI helper (using the Google provider here)
-        self.ai = UseAI('google')
+        self.ai = UseAI('deepseek')
 
     # Register the slash command with Discord
     @app_commands.command(
