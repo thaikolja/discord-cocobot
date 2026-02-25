@@ -26,7 +26,7 @@ recent chat messages in a Discord channel.
 import asyncio
 import logging
 
-# Discord.py bits we use for commands and interactions
+# Discord.py  bits we use for commands and interactions
 import discord
 from discord import app_commands
 from discord.ext import commands

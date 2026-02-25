@@ -269,6 +269,25 @@ class JailCog(commands.Cog):
         # Tell August to stop the harassment loop
         await self._call_august('/stop-jail', {'user_id': str(member.id)})
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Resume jail loops for all currently jailed users on startup."""
+        init_db()
+        logger.info('Checking for existing jailed users to resume harassment loops...')
+
+        with next(get_db_session()) as db:
+            records = db.query(JailedUser).all()
+
+            for record in records:
+                # Tell August to restart the loop for this user
+                success = await self._call_august('/start-jail', {
+                    'user_id': record.user_id,
+                    'username': record.username,
+                })
+                if success:
+                    logger.info(f'Resumed jail loop for {record.username} ({record.user_id})')
+                else:
+                    logger.warning(f'Failed to resume jail loop for {record.username}')
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(JailCog(bot))

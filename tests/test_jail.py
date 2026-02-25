@@ -286,3 +286,34 @@ async def test_on_member_remove_not_jailed(jail_cog):
         await jail_cog.on_member_remove(member)
 
     mock_august.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_on_ready_resumes_jail_loops(jail_cog):
+    """On startup, all jailed users should have their `/start-jail` loop resumed."""
+    # Pre-insert two jail records
+    with next(get_db_session()) as db:
+        db.add(JailedUser(
+            user_id='111',
+            username='UserOne',
+            jailed_by='999',
+            roles_snapshot='[]',
+        ))
+        db.add(JailedUser(
+            user_id='222',
+            username='UserTwo',
+            jailed_by='999',
+            roles_snapshot='[]',
+        ))
+        db.commit()
+
+    with patch('cogs.jail.init_db'), \
+         patch.object(jail_cog, '_call_august', new_callable=AsyncMock, return_value=True) as mock_august:
+        await jail_cog.on_ready()
+
+        # Both users should be resumed via August API
+        assert mock_august.call_count == 2
+
+        # Check that the two expected calls were made (arguments order might vary, so verify them)
+        mock_august.assert_any_call('/start-jail', {'user_id': '111', 'username': 'UserOne'})
+        mock_august.assert_any_call('/start-jail', {'user_id': '222', 'username': 'UserTwo'})
