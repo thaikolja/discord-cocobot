@@ -26,7 +26,7 @@ recent chat messages in a Discord channel.
 import asyncio
 import logging
 
-# Discord.py bits we use for commands and interactions
+# Discord.py  bits we use for commands and interactions
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -51,8 +51,12 @@ class SummarizeCog(commands.Cog):
         """
         # Keep a handle to the bot so we can interact with Discord
         self.bot = bot
-        # Set up the AI helper (using the Google provider here)
-        self.ai = UseAI('google')
+        # Set up the AI helper using the configured model for summarization
+        import os
+        summary_provider = os.getenv("SUMMARY_PROVIDER", "groq")
+        summary_model = os.getenv("SUMMARY_MODEL", "llama-3.3-70b-versatile")
+        self.ai = UseAI(summary_provider, summary_model)
+        logger.info(f"Summarize cog using provider: {summary_provider}, model: {summary_model}")
 
     # Register the slash command with Discord
     @app_commands.command(

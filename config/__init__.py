@@ -16,4 +16,3 @@
 #  License:   MIT
 #  Date:      2014-2026
 #  Package:   cocobot Discord Bot
-

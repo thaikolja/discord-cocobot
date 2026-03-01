@@ -143,9 +143,28 @@ Your bot should now be online with the `/coco` command available.
 
 **cocobot** is highly configurable through the `config/config.py` file and environment variables. Key configuration options include:
 
-- API keys for various services
-- Default locations and currencies
-- Error messages and bot behavior
+### Required Environment Variables
+- `DISCORD_BOT_TOKEN`: Discord bot token from Developer Portal
+- `DISCORD_BOT_ID`: Bot application ID
+- `DISCORD_SERVER_ID`: Default server ID
+- At least one LLM provider API key:
+  - `GOOGLE_API_KEY`: Google Gemini API key
+  - `DEEPSEEK_API_KEY`: DeepSeek API key
+  - `GROQ_API_KEY`: Groq API key
+
+### LLM Provider Configuration
+
+**Summarization** (`/summarize` command):
+- `SUMMARY_PROVIDER`: LLM provider (google, groq, deepseek)
+- `SUMMARY_MODEL`: Model name (e.g., `gemini-2.5-flash`, `llama-3.3-70b-versatile`, `deepseek-chat`)
+
+### Optional Configuration
+- **Database**: `DATABASE_URL`, `DB_POOL_SIZE`, `DB_ECHO`, `INIT_DB_ON_STARTUP`
+- **Cache**: `CACHE_ENABLED`, `REDIS_URL`, `CACHE_TTL`
+- **Logging**: `LOG_LEVEL`, `LOG_FILE`, `LOG_MAX_BYTES`, `LOG_BACKUP_COUNT`
+- **Security**: `MAX_CONTENT_LENGTH`, `ALLOWED_MENTIONS`, `ENABLE_CORS`
+- **Environment**: `ENVIRONMENT` (development/production), `DEBUG`
+- **Jail System**: `JAIL_ROLE_ID`, `AUGUST_INTERNAL_PORT`, `AUGUST_INTERNAL_SECRET`
 
 ### API Response Caching
 

@@ -253,7 +253,7 @@ class AppConfig:
     version: str = "3.5.0"
     name: str = "cocobot"
     description: str = "A feature-rich Discord bot for the Thailand Discord server"
-    environment: str = os.getenv('ENVIRONMENT', 'development')
+    environment: str = os.getenv('ENVIRONMENT', 'production')
     debug: bool = os.getenv('DEBUG', 'false').lower() == 'true'
 
     # Component configurations
@@ -364,7 +364,7 @@ def validate_config(config: AppConfig) -> bool:
         )
 
     # Validate environment
-    valid_environments = ['development', 'staging', 'production']
+    valid_environments = ['development', 'production']
     if config.environment not in valid_environments:
         raise ConfigurationError(
             f"Invalid environment '{config.environment}'. Must be one of {valid_environments}",
