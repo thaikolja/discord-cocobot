@@ -51,8 +51,11 @@ class SummarizeCog(commands.Cog):
         """
         # Keep a handle to the bot so we can interact with Discord
         self.bot = bot
-        # Set up the AI helper (using the Google provider here)
-        self.ai = UseAI('deepseek')
+        # Set up the AI helper using the configured model for summarization
+        import os
+        summarize_model = os.getenv("MODEL_SUMMARIZE", "deepseek")
+        self.ai = UseAI(summarize_model)
+        logger.info(f"Summarize cog using model: {summarize_model}")
 
     # Register the slash command with Discord
     @app_commands.command(

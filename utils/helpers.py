@@ -45,13 +45,13 @@ class UseAI:
     """
 
     # Define a list of available AI providers
-    AVAILABLE_PROVIDERS = ['groq', 'google', 'deepseek']
+    AVAILABLE_PROVIDERS = ['kimi','groq', 'gemini', 'google', 'deepseek']
 
     # Define the configuration for Google's generative AI model
     GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
-        'temperature':        0.9,  # Controls randomness in generation
-        'top_p':              0.7,  # Controls diversity of responses
-        'top_k':              40,  # Limits the number of tokens considered
+        'temperature':        1,  # Controls randomness in generation
+        'top_p':              0.95,  # Controls diversity of responses
+        'top_k':              64,  # Limits the number of tokens considered
         'max_output_tokens':  2024,
         'response_mime_type': 'text/plain',  # Format of the response
     }
@@ -79,14 +79,14 @@ class UseAI:
         self.provider = provider
 
         # Initialize the appropriate client based on the provider
-        if provider == 'groq':
+        if provider == 'groq' or provider == 'kimi':
             # Set up the OpenAI client for Groq with the specified API key and base URL
             self.client = openai.OpenAI(
                 api_key=GROQ_API_KEY, base_url="https://api.groq.com/openai/v1"
             )
             # Set the model name for Groq
             self.model_name = 'moonshotai/kimi-k2-instruct'  # "llama-3.3-70b-versatile"
-        elif provider == 'google':
+        elif provider == 'gemini' or provider == 'google':
             # Initialize the Google Generative AI client with the specified API key
             self.client = genai.Client(api_key=GOOGLE_API_KEY)
             # Set the model name for Google
@@ -125,10 +125,6 @@ class UseAI:
         # Handle the prompt based on the selected provider
         if self.provider in ['groq', 'deepseek']:
             return self._handle_openai(prompt, self.client)
-        elif self.provider == 'poe':
-            # Get the next client in the cycle for Poe
-            next_client = next(self.poe_clients)
-            return self._handle_openai(prompt, next_client)
         elif self.provider == 'google':
             return self._handle_google(prompt)
 
