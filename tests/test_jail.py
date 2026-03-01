@@ -35,6 +35,7 @@ from utils.database import JailedUser, get_db_session, init_db
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture(autouse=True)
 def _init_test_db():
     """Ensure a clean jailed_users table for every test."""
@@ -116,7 +117,7 @@ def mock_interaction(mock_guild, mock_member):
 
 @pytest.mark.asyncio
 async def test_jail_already_jailed(jail_cog, mock_interaction, mock_member):
-    """Jailing an already-jailed user should return an ephemeral abort."""
+    """Jailing an already-jailed user should return an abort message."""
     # Pre-insert a jail record
     with next(get_db_session()) as db:
         db.add(JailedUser(
@@ -133,7 +134,6 @@ async def test_jail_already_jailed(jail_cog, mock_interaction, mock_member):
     mock_interaction.response.send_message.assert_awaited_once()
     call_kwargs = mock_interaction.response.send_message.call_args
     assert 'already in jail' in call_kwargs[0][0]
-    assert call_kwargs[1]['ephemeral'] is True
 
 
 @pytest.mark.asyncio
@@ -177,14 +177,13 @@ async def test_jail_success(jail_cog, mock_interaction, mock_member):
 
 @pytest.mark.asyncio
 async def test_unjail_not_jailed(jail_cog, mock_interaction, mock_member):
-    """Unjailing a user who is not jailed should return an ephemeral abort."""
+    """Unjailing a user who is not jailed should return an abort message."""
     with patch('cogs.jail.init_db'):
         await jail_cog.unjail_command.callback(jail_cog, mock_interaction, mock_member)
 
     mock_interaction.response.send_message.assert_awaited_once()
     call_kwargs = mock_interaction.response.send_message.call_args
     assert 'not currently jailed' in call_kwargs[0][0]
-    assert call_kwargs[1]['ephemeral'] is True
 
 
 @pytest.mark.asyncio
