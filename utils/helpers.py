@@ -33,8 +33,6 @@ from config.config import GOOGLE_API_KEY  # API key for Google services
 from config.config import GOOGLE_GEMINI_MODEL  # Model name for Google's Gemini
 from config.config import GROQ_API_KEY  # API key for Groq services
 from config.config import DEEPSEEK_API_KEY, DEEPSEEK_MODEL
-from config.config import POE_API_KEYS, POE_MODEL
-import itertools
 
 
 # Define a class named UseAI to handle interactions with various AI providers
@@ -47,7 +45,7 @@ class UseAI:
     """
 
     # Define a list of available AI providers
-    AVAILABLE_PROVIDERS = ['groq', 'google', 'deepseek', 'poe']
+    AVAILABLE_PROVIDERS = ['groq', 'google', 'deepseek']
 
     # Define the configuration for Google's generative AI model
     GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
@@ -100,16 +98,6 @@ class UseAI:
             )
             # Set the model name for DeepSeek
             self.model_name = DEEPSEEK_MODEL
-        elif provider == 'poe':
-            # Set up a list of OpenAI clients for Poe, cycling through the provided keys
-            if not POE_API_KEYS:
-                raise ValueError("No Poe API keys found in configuration.")
-
-            self.poe_clients = itertools.cycle([
-                openai.OpenAI(api_key=key, base_url="https://api.poe.com/v1")
-                for key in POE_API_KEYS
-            ])
-            self.model_name = POE_MODEL
 
     # Method to send a prompt to the AI provider and get the response
     def prompt(self, prompt: str, strict: bool = True) -> str | None:

@@ -114,7 +114,7 @@ class JailCog(commands.Cog):
 
             if existing:
                 await interaction.response.send_message(
-                    f'🥥 A genuine *fruitless* attempt - **{user.mention}** is already in jail. Poor {user.mention}...', ephemeral=True
+                    f'🔒 A genuine *fruitless* attempt - **{user.mention}** is already in jail. Poor {user.mention}...'
                 )
 
                 return
@@ -131,8 +131,7 @@ class JailCog(commands.Cog):
             )
         except discord.Forbidden:
             await interaction.response.send_message(
-                f"❌ Looks like you're trying to release {user.menntion} from their suffering. Too bad you don't have permissions to do that.",
-                ephemeral=True,
+                f"🔒 Looks like you're trying to release {user.mention} from their suffering. Too bad you don't have permissions to do that."
             )
             return
 
@@ -176,7 +175,7 @@ class JailCog(commands.Cog):
 
         # Respond to the admin
         await interaction.response.send_message(
-            f'🔒 **{user.mention}** has been jailed. Let August do the rest...', ephemeral=True
+            f'🔒 **{user.mention}** has been jailed. Let August do the rest...'
         )
 
         # Attempt to DM the jailed user
@@ -212,7 +211,7 @@ class JailCog(commands.Cog):
 
             if not record:
                 await interaction.response.send_message(
-                    f"🥥 No can do. **{user.mention}** is not currently jailed.", ephemeral=True
+                    f"🔒 No can do. **{user.mention}** is not currently jailed. Maybe you shou-- never mind."
                 )
                 return
 
@@ -246,8 +245,7 @@ class JailCog(commands.Cog):
                 logger.warning(f'Could not restore some roles for {user}')
 
         await interaction.response.send_message(
-            f'🔓 **{user.mention}** has been unjailed. Fly, bird, fly!',
-            ephemeral=True,
+            f'🔓 **{user.mention}** has been unjailed. Fly, bird, fly!'
         )
 
     @commands.Cog.listener()
@@ -280,14 +278,17 @@ class JailCog(commands.Cog):
 
             for record in records:
                 # Tell August to restart the loop for this user
-                success = await self._call_august('/start-jail', {
-                    'user_id': record.user_id,
-                    'username': record.username,
-                })
+                success = await self._call_august(
+                    '/start-jail', {
+                        'user_id':  record.user_id,
+                        'username': record.username,
+                    }
+                )
                 if success:
                     logger.info(f'Resumed jail loop for {record.username} ({record.user_id})')
                 else:
                     logger.warning(f'Failed to resume jail loop for {record.username}')
+
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(JailCog(bot))
