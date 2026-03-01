@@ -33,8 +33,6 @@ from config.config import GOOGLE_API_KEY  # API key for Google services
 from config.config import GOOGLE_GEMINI_MODEL  # Model name for Google's Gemini
 from config.config import GROQ_API_KEY  # API key for Groq services
 from config.config import DEEPSEEK_API_KEY, DEEPSEEK_MODEL
-from config.config import POE_API_KEYS, POE_MODEL
-import itertools
 
 
 # Define a class named UseAI to handle interactions with various AI providers
@@ -47,38 +45,37 @@ class UseAI:
     """
 
     # Define a list of available AI providers
-    AVAILABLE_PROVIDERS = ['groq', 'google', 'deepseek', 'poe']
+    AVAILABLE_PROVIDERS = ['groq', 'google', 'deepseek']
 
-    # Define the configuration for Google's generative AI model
-    GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
-        'temperature':        0.9,  # Controls randomness in generation
-        'top_p':              0.7,  # Controls diversity of responses
-        'top_k':              40,  # Limits the number of tokens considered
-        'max_output_tokens':  2024,
-        'response_mime_type': 'text/plain',  # Format of the response
-    }
-
-    # Constructor method to initialize the UseAI instance with the specified provider
-    def __init__(self, provider: str):
+    def __init__(self, provider: str, model_name: str = None):
         """
-        Initializes an instance with a specified provider and sets up the appropriate client
-        and model configuration based on the selected provider.
+        Initialize the UseAI class with the specified provider and optional model name.
 
         Args:
-            provider (str): The provider to use. Must be one of the available providers
-                listed in the class attribute `AVAILABLE_PROVIDERS`.
-
-        Raises:
-            ValueError: If the provided provider is not in the list of available providers.
+            provider (str): The AI provider to use. Must be one of the available providers.
+            model_name (str, optional): The model name to use. If not provided, defaults will be used.
         """
-        # Check if the provided provider is in the list of available providers
+        # Validate the provider
         if provider not in self.AVAILABLE_PROVIDERS:
             raise ValueError(
-                f'Invalid provider. Available providers: {self.AVAILABLE_PROVIDERS}'
+                f"Provider '{provider}' not supported. "
+                f"Available providers: {', '.join(self.AVAILABLE_PROVIDERS)}"
             )
 
-        # Assign the provider to the instance variable
+        # Store the provider
         self.provider = provider
+
+        # Store model name if provided
+        if model_name:
+            self.model_name = model_name
+        else:
+            # Set default model names based on provider
+            if provider == 'google':
+                self.model_name = GOOGLE_GEMINI_MODEL
+            elif provider == 'deepseek':
+                self.model_name = DEEPSEEK_MODEL
+            elif provider == 'groq':
+                self.model_name = 'llama-3.3-70b-versatile'
 
         # Initialize the appropriate client based on the provider
         if provider == 'groq':
@@ -86,30 +83,21 @@ class UseAI:
             self.client = openai.OpenAI(
                 api_key=GROQ_API_KEY, base_url="https://api.groq.com/openai/v1"
             )
-            # Set the model name for Groq
-            self.model_name = 'moonshotai/kimi-k2-instruct'  # "llama-3.3-70b-versatile"
         elif provider == 'google':
             # Initialize the Google Generative AI client with the specified API key
             self.client = genai.Client(api_key=GOOGLE_API_KEY)
-            # Set the model name for Google
-            self.model_name = GOOGLE_GEMINI_MODEL
+            # Set up Google generation configuration
+            self.GOOGLE_GENERATION_CONFIG = {
+                'temperature': 0.7,
+                'top_p': 0.9,
+                'top_k': 40,
+                'max_output_tokens': 8192,
+            }
         elif provider == 'deepseek':
             # Set up the OpenAI client for DeepSeek
             self.client = openai.OpenAI(
                 api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com"
             )
-            # Set the model name for DeepSeek
-            self.model_name = DEEPSEEK_MODEL
-        elif provider == 'poe':
-            # Set up a list of OpenAI clients for Poe, cycling through the provided keys
-            if not POE_API_KEYS:
-                raise ValueError("No Poe API keys found in configuration.")
-
-            self.poe_clients = itertools.cycle([
-                openai.OpenAI(api_key=key, base_url="https://api.poe.com/v1")
-                for key in POE_API_KEYS
-            ])
-            self.model_name = POE_MODEL
 
     # Method to send a prompt to the AI provider and get the response
     def prompt(self, prompt: str, strict: bool = True) -> str | None:
@@ -137,10 +125,6 @@ class UseAI:
         # Handle the prompt based on the selected provider
         if self.provider in ['groq', 'deepseek']:
             return self._handle_openai(prompt, self.client)
-        elif self.provider == 'poe':
-            # Get the next client in the cycle for Poe
-            next_client = next(self.poe_clients)
-            return self._handle_openai(prompt, next_client)
         elif self.provider == 'google':
             return self._handle_google(prompt)
 
