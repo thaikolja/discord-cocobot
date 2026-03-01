@@ -45,59 +45,60 @@ class UseAI:
     """
 
     # Define a list of available AI providers
-    AVAILABLE_PROVIDERS = ['kimi','groq', 'gemini', 'google', 'deepseek']
+    AVAILABLE_PROVIDERS = ['groq', 'google', 'deepseek']
 
     # Define the configuration for Google's generative AI model
-    GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
-        'temperature':        1,  # Controls randomness in generation
-        'top_p':              0.95,  # Controls diversity of responses
-        'top_k':              64,  # Limits the number of tokens considered
-        'max_output_tokens':  2024,
-        'response_mime_type': 'text/plain',  # Format of the response
-    }
+    GENAI_CONFIG = genai.GenerationConfig(
+        temperature=0.7,
+        top_p=0.9,
+        top_k=40,
+        max_output_tokens=8192,
+    )
 
-    # Constructor method to initialize the UseAI instance with the specified provider
-    def __init__(self, provider: str):
+    def __init__(self, provider: str, model_name: str = None):
         """
-        Initializes an instance with a specified provider and sets up the appropriate client
-        and model configuration based on the selected provider.
+        Initialize the UseAI class with the specified provider and optional model name.
 
         Args:
-            provider (str): The provider to use. Must be one of the available providers
-                listed in the class attribute `AVAILABLE_PROVIDERS`.
-
-        Raises:
-            ValueError: If the provided provider is not in the list of available providers.
+            provider (str): The AI provider to use. Must be one of the available providers.
+            model_name (str, optional): The model name to use. If not provided, defaults will be used.
         """
-        # Check if the provided provider is in the list of available providers
+        # Validate the provider
         if provider not in self.AVAILABLE_PROVIDERS:
             raise ValueError(
-                f'Invalid provider. Available providers: {self.AVAILABLE_PROVIDERS}'
+                f"Provider '{provider}' not supported. "
+                f"Available providers: {', '.join(self.AVAILABLE_PROVIDERS)}"
             )
 
-        # Assign the provider to the instance variable
+        # Store the provider
         self.provider = provider
 
+        # Store model name if provided
+        if model_name:
+            self.model_name = model_name
+        else:
+            # Set default model names based on provider
+            if provider == 'google':
+                self.model_name = GOOGLE_GEMINI_MODEL
+            elif provider == 'deepseek':
+                self.model_name = DEEPSEEK_MODEL
+            elif provider == 'groq':
+                self.model_name = 'moonshotai/kimi-k2-instruct'
+
         # Initialize the appropriate client based on the provider
-        if provider == 'groq' or provider == 'kimi':
+        if provider == 'groq':
             # Set up the OpenAI client for Groq with the specified API key and base URL
             self.client = openai.OpenAI(
                 api_key=GROQ_API_KEY, base_url="https://api.groq.com/openai/v1"
             )
-            # Set the model name for Groq
-            self.model_name = 'moonshotai/kimi-k2-instruct'  # "llama-3.3-70b-versatile"
-        elif provider == 'gemini' or provider == 'google':
+        elif provider == 'google':
             # Initialize the Google Generative AI client with the specified API key
             self.client = genai.Client(api_key=GOOGLE_API_KEY)
-            # Set the model name for Google
-            self.model_name = GOOGLE_GEMINI_MODEL
         elif provider == 'deepseek':
             # Set up the OpenAI client for DeepSeek
             self.client = openai.OpenAI(
                 api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com"
             )
-            # Set the model name for DeepSeek
-            self.model_name = DEEPSEEK_MODEL
 
     # Method to send a prompt to the AI provider and get the response
     def prompt(self, prompt: str, strict: bool = True) -> str | None:
