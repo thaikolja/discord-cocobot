@@ -47,14 +47,6 @@ class UseAI:
     # Define a list of available AI providers
     AVAILABLE_PROVIDERS = ['groq', 'google', 'deepseek']
 
-    # Define the configuration for Google's generative AI model
-    GENAI_CONFIG = genai.GenerationConfig(
-        temperature=0.7,
-        top_p=0.9,
-        top_k=40,
-        max_output_tokens=8192,
-    )
-
     def __init__(self, provider: str, model_name: str = None):
         """
         Initialize the UseAI class with the specified provider and optional model name.
@@ -83,7 +75,7 @@ class UseAI:
             elif provider == 'deepseek':
                 self.model_name = DEEPSEEK_MODEL
             elif provider == 'groq':
-                self.model_name = 'moonshotai/kimi-k2-instruct'
+                self.model_name = 'llama-3.3-70b-versatile'
 
         # Initialize the appropriate client based on the provider
         if provider == 'groq':
@@ -94,6 +86,13 @@ class UseAI:
         elif provider == 'google':
             # Initialize the Google Generative AI client with the specified API key
             self.client = genai.Client(api_key=GOOGLE_API_KEY)
+            # Set up Google generation configuration
+            self.GOOGLE_GENERATION_CONFIG = {
+                'temperature': 0.7,
+                'top_p': 0.9,
+                'top_k': 40,
+                'max_output_tokens': 8192,
+            }
         elif provider == 'deepseek':
             # Set up the OpenAI client for DeepSeek
             self.client = openai.OpenAI(

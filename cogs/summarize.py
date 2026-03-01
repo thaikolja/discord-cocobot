@@ -53,9 +53,10 @@ class SummarizeCog(commands.Cog):
         self.bot = bot
         # Set up the AI helper using the configured model for summarization
         import os
-        summarize_model = os.getenv("MODEL_SUMMARIZE", "deepseek")
-        self.ai = UseAI(summarize_model)
-        logger.info(f"Summarize cog using model: {summarize_model}")
+        summary_provider = os.getenv("SUMMARY_PROVIDER", "groq")
+        summary_model = os.getenv("SUMMARY_MODEL", "llama-3.3-70b-versatile")
+        self.ai = UseAI(summary_provider, summary_model)
+        logger.info(f"Summarize cog using provider: {summary_provider}, model: {summary_model}")
 
     # Register the slash command with Discord
     @app_commands.command(
