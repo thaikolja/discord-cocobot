@@ -1,5 +1,51 @@
 # Changelog
 
+## v3.5.0
+
+### Breaking Changes
+
+- **Environment Variable Restructure**: Replaced `MODEL_SUMMARIZE` with separate `SUMMARY_PROVIDER` and `SUMMARY_MODEL` variables for better flexibility
+- **Environment Configuration**: Default `ENVIRONMENT` changed from `development` to `production` (security best practice)
+- **Valid Environments**: Removed `staging` from valid environments (now only `development` and `production`)
+
+### Added
+
+- **Comprehensive Configuration Variables**: Added missing configuration variables to `.env` and `.env.example`:
+  - Database: `DATABASE_URL`, `DB_POOL_SIZE`, `DB_ECHO`, `INIT_DB_ON_STARTUP`
+  - Cache: `CACHE_ENABLED`, `REDIS_URL`, `CACHE_TTL`
+  - Logging: `LOG_MAX_BYTES`
+  - Security: `MAX_CONTENT_LENGTH`, `ALLOWED_MENTIONS`, `ENABLE_CORS`
+  - Environment: `ENVIRONMENT`, `DEBUG`
+- **Provider and Model Separation**: Summarization now uses separate provider (`SUMMARY_PROVIDER`) and model (`SUMMARY_MODEL`) configuration
+- **Environment Validation**: Added validation to ensure `ENVIRONMENT` is one of the allowed values
+
+### Changed
+
+- **Configuration Organization**: Reorganized `.env` and `.env.example` with clear section headers and logical grouping
+- **Default Model**: Groq provider default model changed from `moonshotai/kimi-k2-instruct` to `llama-3.3-70b-versatile`
+- **Summarize Cog**: Updated to use `SUMMARY_PROVIDER` and `SUMMARY_MODEL` environment variables
+- **UseAI Helper**: Removed hardcoded model name for Groq provider; now uses configurable model via environment variable
+
+### Removed
+
+- **Obsolete Variables**: Removed unused environment variables:
+  - `POE_API_KEYS` and `POE_MODEL` (not actively used)
+  - `GEOAPFIY_API_KEY` (not referenced in codebase)
+- **Invalid Configuration**: Removed `staging` from valid environment list
+
+### Fixed
+
+- **Google Genai Config**: Fixed `AttributeError: module 'google.genai' has no attribute 'GenerationConfig'` by removing class attribute and using dictionary-based configuration
+- **Import Error**: Fixed Google Generative AI SDK compatibility issue in `utils/helpers.py`
+
+### Documentation
+
+- Improved `.env` and `.env.example` with:
+  - Clear section headers with visual separators
+  - Source URLs for all API keys and services
+  - Better inline comments
+  - Consistent formatting between both files
+
 ## v3.4.0
 
 ### New Features
