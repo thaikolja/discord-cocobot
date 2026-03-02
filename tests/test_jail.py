@@ -184,7 +184,7 @@ async def test_unjail_not_jailed(jail_cog, mock_interaction, mock_member):
 
     mock_interaction.response.send_message.assert_awaited_once()
     call_kwargs = mock_interaction.response.send_message.call_args
-    assert 'not currently jailed' in call_kwargs[0][0]
+    assert 'already jailed' in call_kwargs[0][0]
     assert call_kwargs[1]['ephemeral'] is True
 
 

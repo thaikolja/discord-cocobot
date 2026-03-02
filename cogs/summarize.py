@@ -55,7 +55,7 @@ class SummarizeCog(commands.Cog):
         import os
         summary_provider = os.getenv("SUMMARY_PROVIDER", "groq")
         summary_model = os.getenv("SUMMARY_MODEL", "llama-3.3-70b-versatile")
-        self.ai = UseAI(summary_provider, summary_model)
+        self.ai = UseAI(summary_provider)
         logger.info(f"Summarize cog using provider: {summary_provider}, model: {summary_model}")
 
     # Register the slash command with Discord
