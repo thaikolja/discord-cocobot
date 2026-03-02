@@ -1,9 +1,12 @@
-#  Copyright (C) 2025 by Kolja Nolte
+#  Copyright (C) 2026 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thailand-discord/bots/cocobot
 #
-#  This work is licensed under the MIT License. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software,
-#  and to permit persons to whom the Software is furnished to do so, subject to the condition that the above copyright notice and this permission notice shall be included in all
+#  This work is licensed under the MIT License. You are free to use, copy, modify,
+#  merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the
+#  condition that the above copyright notice and this permission notice shall be
+#  included in all
 #  copies or substantial portions of the Software.
 #
 #  For more information, visit: https://opensource.org/licenses/MIT
@@ -11,9 +14,8 @@
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
 #  License:   MIT
-#  Date:      2014-2025
+#  Date:      2014-2026
 #  Package:   cocobot Discord Bot
-#
 
 """
 This module provides the SummarizeCog, which uses an AI model to summarize
@@ -24,7 +26,7 @@ recent chat messages in a Discord channel.
 import asyncio
 import logging
 
-# Discord.py bits we use for commands and interactions
+# Discord.py  bits we use for commands and interactions
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -49,8 +51,12 @@ class SummarizeCog(commands.Cog):
         """
         # Keep a handle to the bot so we can interact with Discord
         self.bot = bot
-        # Set up the AI helper (using the Google provider here)
-        self.ai = UseAI('google')
+        # Set up the AI helper using the configured model for summarization
+        import os
+        summary_provider = os.getenv("SUMMARY_PROVIDER", "groq")
+        summary_model = os.getenv("SUMMARY_MODEL", "llama-3.3-70b-versatile")
+        self.ai = UseAI(summary_provider, summary_model)
+        logger.info(f"Summarize cog using provider: {summary_provider}, model: {summary_model}")
 
     # Register the slash command with Discord
     @app_commands.command(
@@ -59,16 +65,16 @@ class SummarizeCog(commands.Cog):
     )
     # Add a helpful description for the limit option
     @app_commands.describe(
-        limit="Number of recent messages to summarize (Default: 25, Max: 50)"
+        limit="Number of recent messages to summarize (Default: 15, Max: 25)"
     )
-    async def summarize_command(self, interaction: discord.Interaction, limit: app_commands.Range[int, 1, 50] = 25):
+    async def summarize_command(self, interaction: discord.Interaction, limit: app_commands.Range[int, 1, 25] = 15):
         """
         Summarize recent messages in the current channel based on the specified limit of messages. The summary aims to
         capture key topics, agreements, or comedic points while maintaining a slightly humorous tone.
 
         Parameters:
             interaction (discord.Interaction): The interaction object representing the user's command input.
-            limit (app_commands.Range[int, 1, 50]): The number of recent messages to summarize. Defaults to 25, with a maximum of 50.
+            limit (app_commands.Range[int, 1, 25]): The number of recent messages to summarize. Defaults to 15, with a maximum of 25.
 
         Raises:
             discord.errors.Forbidden: Raised when the bot lacks permissions to read the message history of the channel.
@@ -76,7 +82,20 @@ class SummarizeCog(commands.Cog):
 
         """
         # Acknowledge the interaction immediately since LLM processing takes time
-        await interaction.response.defer()
+        try:
+            if not interaction.response.is_done():
+                await interaction.response.defer()
+        except discord.NotFound:
+            # Interaction expired - try to notify the channel
+            try:
+                await interaction.channel.send(
+                    f"🥥 {interaction.user.mention} The command took too long to process. Please try again!"
+                )
+            except Exception:
+                pass
+            return
+        except Exception:
+            return
 
         try:
             # Pull recent messages from the channel

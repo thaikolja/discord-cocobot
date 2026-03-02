@@ -1,8 +1,24 @@
-"""
-Advanced configuration management for the cocobot application.
+#  Copyright (C) 2026 by Kolja Nolte
+#  kolja.nolte@gmail.com
+#  https://gitlab.com/thailand-discord/bots/cocobot
+#
+#  This work is licensed under the MIT License. You are free to use, copy, modify,
+#  merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the
+#  condition that the above copyright notice and this permission notice shall be
+#  included in all
+#  copies or substantial portions of the Software.
+#
+#  For more information, visit: https://opensource.org/licenses/MIT
+#
+#  Author:    Kolja Nolte
+#  Email:     kolja.nolte@gmail.com
+#  License:   MIT
+#  Date:      2014-2026
+#  Package:   cocobot Discord Bot
 
-This module provides a robust configuration system with validation,
-type hints, and fallback mechanisms.
+"""
+Application configuration management for CocoBot.
 """
 
 import os
@@ -112,8 +128,14 @@ class APIConfig:
     google_api_key: Optional[str] = None
     google_gemini_model: str = None
     geoapify_api_key: Optional[str] = None
-    groq_api_key: Optional[str] = None,
+    groq_api_key: Optional[str] = None
     acqin_api_key: Optional[str] = None
+
+    deepseek_api_key: Optional[str] = None
+    deepseek_model: str = None
+
+    poe_api_keys: list[str] = None
+    poe_model: str = None
 
     def __post_init__(self):
         """
@@ -228,10 +250,10 @@ class SecurityConfig:
 class AppConfig:
     """Main application configuration."""
 
-    version: str = "3.4.0"
+    version: str = "3.5.0"
     name: str = "cocobot"
     description: str = "A feature-rich Discord bot for the Thailand Discord server"
-    environment: str = os.getenv('ENVIRONMENT', 'development')
+    environment: str = os.getenv('ENVIRONMENT', 'production')
     debug: bool = os.getenv('DEBUG', 'false').lower() == 'true'
 
     # Component configurations
@@ -262,6 +284,10 @@ class AppConfig:
                 geoapify_api_key=os.getenv('GEOAPFIY_API_KEY'),
                 groq_api_key=os.getenv('GROQ_API_KEY'),
                 acqin_api_key=os.getenv('ACQIN_API_KEY'),
+                deepseek_api_key=os.getenv('DEEPSEEK_API_KEY'),
+                deepseek_model=os.getenv('DEEPSEEK_MODEL', 'deepseek-chat'),
+                poe_api_keys=[k.strip() for k in os.getenv('POE_API_KEYS', '').split(',')] if os.getenv('POE_API_KEYS') else [],
+                poe_model=os.getenv('POE_MODEL', 'Claude-3.5-Sonnet'),
             )
 
         if self.database is None:
@@ -338,7 +364,7 @@ def validate_config(config: AppConfig) -> bool:
         )
 
     # Validate environment
-    valid_environments = ['development', 'staging', 'production']
+    valid_environments = ['development', 'production']
     if config.environment not in valid_environments:
         raise ConfigurationError(
             f"Invalid environment '{config.environment}'. Must be one of {valid_environments}",

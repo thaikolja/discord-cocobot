@@ -1,17 +1,28 @@
-#  Copyright (C) 2025 by Kolja Nolte
+#  Copyright (C) 2026 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thailand-discord/bots/cocobot
 #
-#  This work is licensed under the MIT License. You are free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
-#  Software is furnished to do so, subject to the condition that the above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+#  This work is licensed under the MIT License. You are free to use, copy, modify,
+#  merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the
+#  condition that the above copyright notice and this permission notice shall be
+#  included in all
+#  copies or substantial portions of the Software.
 #
 #  For more information, visit: https://opensource.org/licenses/MIT
 #
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
 #  License:   MIT
-#  Date:      2014-2025
+#  Date:      2014-2026
 #  Package:   cocobot Discord Bot
+
+"""
+Registers the PollutionCog with the given bot instance.
+
+Parameters:
+bot (commands.Bot): The bot instance to which the cog will be added.
+"""
 
 # Import the datetime class from the datetime module for handling dates and times
 import json
@@ -34,13 +45,13 @@ from discord.ext import commands
 from humanize import naturaltime
 
 # Import configuration constants needed for making API requests
-from config.config import ACQIN_API_KEY, ERROR_MESSAGE, CACHE_BYPASS_PRIVILEGED
-
-# Import helper utilities
-from utils.helpers import sanitize_url
+from config.config import ACQIN_API_KEY, CACHE_BYPASS_PRIVILEGED, ERROR_MESSAGE
 
 # Import database manager for caching
 from utils.database import DatabaseManager
+
+# Import helper utilities
+from utils.helpers import sanitize_url
 
 
 # Define a new Discord cog for handling pollution data
