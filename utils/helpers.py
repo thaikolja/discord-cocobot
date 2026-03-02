@@ -17,20 +17,18 @@
 #  Date:      2014-2026
 #  Package:   cocobot Discord Bot
 
-
 # Import the urllib.parse module for URL parsing and handling
 import urllib.parse
 
-# Import the openai module for interacting with OpenAI's API
-import openai
-
 # Import the google.genai module for interacting with Google's Generative AI
 from google import genai
+
+# Import the openai module for interacting with OpenAI's API
+import openai
 from openai.types.chat import ChatCompletionUserMessageParam
 
 # Import the necessary API keys from the config module
 from config.config import GOOGLE_API_KEY  # API key for Google services
-from config.config import GOOGLE_GEMINI_MODEL  # Model name for Google's Gemini
 from config.config import GROQ_API_KEY  # API key for Groq services
 from config.config import DEEPSEEK_API_KEY, DEEPSEEK_MODEL
 
@@ -130,17 +128,17 @@ class UseAI:
 
         return None
 
-    def _handle_openai(self, prompt: str, client: openai.OpenAI) -> str:
+    def _handle_openai(self, prompt: str) -> str:
         """
-        Handles communication with an OpenAI-compatible API to generate a chat completion response
+        Handles communication with the OpenAI API to generate a chat completion response
         based on the provided prompt.
 
         Args:
-            prompt (str): The input string to be passed to the API for generating a response.
-            client (openai.OpenAI): The OpenAI client instance to use (for rotation).
+            prompt (str): The input string to be passed to the OpenAI API for generating
+            a response.
 
         Returns:
-            str: The content of the first message choice returned by the API.
+            str: The content of the first message choice returned by the OpenAI API.
         """
         # Assign the prompt to the content variable
         content = prompt
@@ -149,7 +147,7 @@ class UseAI:
             "role":    "user",
             "content": content
         }
-        chat = client.chat.completions.create(
+        chat = self.client.chat.completions.create(
             messages=[message],
             model=self.model_name,
         )
