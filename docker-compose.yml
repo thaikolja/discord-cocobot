@@ -9,6 +9,7 @@ services:
       - ENVIRONMENT=production
       - DATABASE_URL=postgresql://cocobot:password@db:5432/cocobot
       - REDIS_URL=redis://redis:6379/0
+      - AUGUST_INTERNAL_HOST=host.docker.internal
     depends_on:
       - db
       - redis

@@ -53,9 +53,10 @@ class JailCog(commands.Cog):
 
         # Load configuration from environment
         self.jail_role_id = int(os.getenv('JAIL_ROLE_ID', '0'))
+        self.august_host = os.getenv('AUGUST_INTERNAL_HOST', '127.0.0.1')
         self.august_port = os.getenv('AUGUST_INTERNAL_PORT', '17432')
         self.august_secret = os.getenv('AUGUST_INTERNAL_SECRET', '')
-        self.august_base_url = f'http://127.0.0.1:{self.august_port}'
+        self.august_base_url = f'http://{self.august_host}:{self.august_port}'
 
     async def _call_august(self, endpoint: str, payload: dict) -> bool:
         """
