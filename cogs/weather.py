@@ -44,7 +44,7 @@ from config.config import CACHE_BYPASS_PRIVILEGED, ERROR_MESSAGE, WEATHERAPI_API
 
 # Import the database manager for caching
 from utils.database import DatabaseManager
-from utils.helpers import sanitize_url
+from utils.helpers import resolve_channel_location, sanitize_url
 
 # Configure the logger for this module
 logger = logging.getLogger(__name__)
@@ -388,7 +388,7 @@ class WeatherCog(commands.Cog):
         name="weather", description="Get the current weather for a location"
     )
     @app_commands.describe(
-        location="The location you want the weather for (Default: Bangkok)",
+        location="The location you want the weather for (defaults to the channel's city, or Bangkok)",
         units="Unit system: Metric (°C) or Imperial (°F).",
     )
     @app_commands.choices(
@@ -400,7 +400,7 @@ class WeatherCog(commands.Cog):
     async def weather_command(
         self,
         interaction: discord.Interaction,
-        location: str = "Bangkok",
+        location: str | None = None,
         units: app_commands.Choice[str] = None,
     ):
         """
@@ -431,6 +431,9 @@ class WeatherCog(commands.Cog):
         # Defer response to allow time for API call
         # noinspection PyUnresolvedReferences
         await interaction.response.defer(ephemeral=False)
+
+        if location is None:
+            location = resolve_channel_location(interaction)
 
         # Use metric units by default if not specified
         units_val = units.value if units else "metric"

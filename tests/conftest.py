@@ -84,6 +84,29 @@ def mock_bot():
     return bot
 
 
+def build_mock_aiohttp_session(mock_session_class, json_payload, status=200):
+    """Configure a patched aiohttp.ClientSession mock to return json_payload on .get().
+
+    Usage: call inside a test that has @patch('<cog>.aiohttp.ClientSession') as
+    the outermost aiohttp patch; pass the patch mock and the dict the API should
+    return.
+    """
+    mock_session = MagicMock()
+    mock_response = MagicMock()
+
+    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
+    mock_session.__aexit__ = AsyncMock(return_value=None)
+
+    mock_response.status = status
+    mock_response.json = AsyncMock(return_value=json_payload)
+    mock_response.__aenter__ = AsyncMock(return_value=mock_response)
+    mock_response.__aexit__ = AsyncMock(return_value=None)
+
+    mock_session.get = MagicMock(return_value=mock_response)
+    mock_session_class.return_value = mock_session
+    return mock_session
+
+
 @pytest.fixture(autouse=True)
 def cleanup_visa_reminders():
     """

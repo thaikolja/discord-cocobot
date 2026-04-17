@@ -19,6 +19,9 @@
 
 # Import the urllib.parse module for URL parsing and handling
 import urllib.parse
+from typing import Final
+
+import discord
 
 # Import the google.genai module for interacting with Google's Generative AI
 from google import genai
@@ -174,6 +177,27 @@ class UseAI:
         )
         # Return the stripped text of the response
         return response.text.strip()
+
+
+CHANNEL_LOCATION_DEFAULTS: Final[dict[str, str]] = {
+    'bangkok': 'Bangkok',
+    'chiang-mai': 'Chiang Mai',
+    'chon-buri': 'Chon Buri',
+    'khon-kaen': 'Khon Kaen',
+    'krabi': 'Krabi',
+    'phuket': 'Phuket',
+}
+
+
+def resolve_channel_location(
+    interaction: discord.Interaction, fallback: str = 'Bangkok'
+) -> str:
+    """Resolve a default city/location from the channel the interaction came from.
+
+    Falls back to Bangkok for DMs, #other, and any unmapped channel.
+    """
+    channel_name = getattr(interaction.channel, 'name', None)
+    return CHANNEL_LOCATION_DEFAULTS.get(channel_name, fallback)
 
 
 # Function to sanitize a URL by encoding special characters

@@ -87,6 +87,52 @@ class TestWeatherCog(unittest.IsolatedAsyncioTestCase):
             self.assertIsInstance(sent_embed, discord.Embed)
             self.assertEqual(sent_embed.title, "Weather in TestCity, TestCountry")
 
+    @patch(
+        'cogs.weather.uuid.uuid4',
+        return_value=uuid.UUID('12345678-1234-5678-1234-567812345678'),
+    )
+    @patch('cogs.weather.WeatherView')
+    @patch('cogs.weather.DatabaseManager.async_get_cache_entry', return_value=None)
+    @patch('cogs.weather.DatabaseManager.async_set_cache_entry')
+    async def test_location_defaults_from_channel_name(
+        self, mock_set_cache, mock_get_cache, MockWeatherView, mock_uuid
+    ):
+        interaction = AsyncMock(spec=discord.Interaction)
+        interaction.response = AsyncMock(spec=discord.InteractionResponse)
+        interaction.followup = AsyncMock(spec=discord.Webhook)
+        interaction.channel = MagicMock()
+        interaction.channel.name = 'chiang-mai'
+
+        mock_resp = AsyncMock(spec=aiohttp.ClientResponse)
+        mock_resp.status = 200
+        mock_resp.raise_for_status = MagicMock()
+
+        async def json_func():
+            return {
+                "location": {"name": "Chiang Mai", "country": "Thailand"},
+                "current": {
+                    "temp_c": 30,
+                    "feelslike_c": 32,
+                    "humidity": 70,
+                    "condition": {"text": "Hazy", "icon": "//cdn/weather.png"},
+                },
+            }
+
+        mock_resp.json = json_func
+
+        with patch.object(self.weather_cog.session, 'get') as mock_get:
+            cm = MagicMock()
+            cm.__aenter__ = AsyncMock(return_value=mock_resp)
+            cm.__aexit__ = AsyncMock(return_value=None)
+            mock_get.return_value = cm
+
+            await self.weather_cog.weather_command.callback(
+                self.weather_cog, interaction, location=None, units=None
+            )
+
+            called_url = mock_get.call_args.args[0]
+            self.assertIn("q=Chiang%20Mai", called_url)
+
 
 class TestWeatherView(unittest.IsolatedAsyncioTestCase):
 

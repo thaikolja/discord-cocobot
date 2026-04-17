@@ -31,6 +31,7 @@ from discord.ext import commands
 
 # Import PollutionCog class from pollution cog file
 from cogs.pollution import PollutionCog
+from tests.conftest import build_mock_aiohttp_session
 
 
 # Define an asynchronous fixture to set up the cog for testing
@@ -53,6 +54,17 @@ def interaction():
     return intr
 
 
+def _pollution_payload(city_name='Bangkok', aqi=42):
+    return {
+        'status': 'ok',
+        'data': {
+            'aqi': aqi,
+            'city': {'name': city_name},
+            'time': {'iso': '2024-01-01T12:00:00Z'},
+        },
+    }
+
+
 # Mark the test as asynchronous using pytest_asyncio
 @pytest.mark.asyncio
 # Use patch to mock the aiohttp ClientSession
@@ -61,38 +73,8 @@ def interaction():
 @patch('cogs.pollution.DatabaseManager.async_set_cache_entry')
 # Define the test function with mocked dependencies
 async def test_valid_city_response(mock_set_cache, mock_get_cache, mock_session_class, cog, interaction):
-    # Create mock session and response objects
-    mock_session = MagicMock()
-    mock_response = MagicMock()
+    build_mock_aiohttp_session(mock_session_class, _pollution_payload())
 
-    # Set up the async context managers
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=None)
-
-    # Set up the response
-    mock_response.status = 200
-    mock_response.json = AsyncMock(
-        return_value={
-            'status': 'ok',
-            'data': {
-                'aqi': 42,
-                'city': {'name': 'Bangkok'},
-                'time': {'iso': '2024-01-01T12:00:00Z'},
-            },
-        }
-    )
-
-    # Set up the response as an async context manager
-    mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-    mock_response.__aexit__ = AsyncMock(return_value=None)
-
-    # Set up session.get to return the response object
-    mock_session.get = MagicMock(return_value=mock_response)
-
-    # Set the mock session class to return our mock session
-    mock_session_class.return_value = mock_session
-
-    # Call the command's callback directly with test parameters
     await cog.pollution_command.callback(cog, interaction, city="Bangkok")
 
     # Assert that send_message was called exactly once
@@ -103,3 +85,30 @@ async def test_valid_city_response(mock_set_cache, mock_get_cache, mock_session_
     assert "🟢" in args[0]
     # Assert that the response contains the coconut reference
     assert "vacuum sealed coconut" in args[0]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    'channel_name,passed_city,expected_cache_key',
+    [
+        ('chiang-mai', None, 'pollution:chiang mai'),
+        ('other', None, 'pollution:bangkok'),
+        ('chiang-mai', 'Phuket', 'pollution:phuket'),
+    ],
+    ids=['channel-default', 'unmapped-channel-fallback', 'explicit-override'],
+)
+@patch('cogs.pollution.aiohttp.ClientSession')
+@patch('cogs.pollution.DatabaseManager.async_get_cache_entry', return_value=None)
+@patch('cogs.pollution.DatabaseManager.async_set_cache_entry')
+async def test_city_resolution(
+    mock_set_cache, mock_get_cache, mock_session_class,
+    cog, interaction, channel_name, passed_city, expected_cache_key,
+):
+    build_mock_aiohttp_session(mock_session_class, _pollution_payload())
+
+    interaction.channel = MagicMock()
+    interaction.channel.name = channel_name
+
+    await cog.pollution_command.callback(cog, interaction, city=passed_city)
+
+    assert mock_set_cache.call_args.args[0] == expected_cache_key
