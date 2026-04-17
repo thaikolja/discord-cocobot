@@ -51,7 +51,7 @@ from config.config import ACQIN_API_KEY, CACHE_BYPASS_PRIVILEGED, ERROR_MESSAGE
 from utils.database import DatabaseManager
 
 # Import helper utilities
-from utils.helpers import sanitize_url
+from utils.helpers import resolve_channel_location, sanitize_url
 
 
 # Define a new Discord cog for handling pollution data
@@ -78,18 +78,21 @@ class PollutionCog(commands.Cog):
         description='Shows up-to-date pollution data and AQI in the specified city',
     )
     @app_commands.describe(
-        city='The city to check the pollution data for (Default: Bangkok)'
+        city='The city to check the pollution data for (defaults to the channel\'s city, or Bangkok)'
     )
     async def pollution_command(
-        self, interaction: discord.Interaction, city: str = 'Bangkok'
+        self, interaction: discord.Interaction, city: str | None = None
     ):
         """
         A slash command to show up-to-date pollution data and AQI in the entered city.
 
         Parameters:
         interaction (discord.Interaction): The interaction object representing the command invocation.
-        city (str): The city to check the pollution data for (default is Bangkok).
+        city (str | None): The city to check. If omitted, inferred from the channel name.
         """
+        if city is None:
+            city = resolve_channel_location(interaction)
+
         # Sanitize the city name for use in the URL and construct the API request URL
         api_url = sanitize_url(
             f'https://api.waqi.info/feed/{city}/?token={ACQIN_API_KEY}'
