@@ -28,6 +28,7 @@ import pytest_asyncio
 
 # Import the ExchangerateCog class from the cogs module
 from cogs.exchangerate import ExchangerateCog
+from tests.conftest import build_mock_aiohttp_session
 
 
 # Define a fixture for creating an instance of the ExchangerateCog
@@ -60,34 +61,13 @@ def interaction():
 @patch('cogs.exchangerate.DatabaseManager.async_get_cache_entry', return_value=None)
 @patch('cogs.exchangerate.DatabaseManager.async_set_cache_entry')
 async def test_valid_conversion(mock_set_cache, mock_get_cache, mock_session_class, cog, interaction):
-    # Create mock session and response objects
-    mock_session = MagicMock()
-    mock_response = MagicMock()
-
-    # Set up the async context managers
-    mock_session.__aenter__ = AsyncMock(return_value=mock_session)
-    mock_session.__aexit__ = AsyncMock(return_value=None)
-
-    # Set up the response
-    mock_response.status = 200
-    mock_response.json = AsyncMock(
-        return_value={
+    build_mock_aiohttp_session(
+        mock_session_class,
+        {
             'meta': {'last_updated_at': '2024-01-01T12:00:00Z'},
             'data': {'THB': {'value': 35.0}},
-        }
+        },
     )
-
-    # Set up the response as an async context manager (for "async with session.get() as response:")
-    mock_response.__aenter__ = AsyncMock(return_value=mock_response)
-    mock_response.__aexit__ = AsyncMock(return_value=None)
-
-    # Set up session.get to return the response object (not a coroutine)
-    # When you do "async with session.get(url) as response:", Python calls session.get(url) which should return
-    # an object that can be used in an async context manager
-    mock_session.get = MagicMock(return_value=mock_response)
-
-    # Set the mock session class to return our mock session
-    mock_session_class.return_value = mock_session
 
     # Access the command's callback dynamically
     command = cog.bot.tree.get_command("exchangerate")
