@@ -204,13 +204,30 @@ class UseAI:
         return response.text.strip()
 
 
+
+# ---------------------------------------------------------------------------
+# CHANNEL ID → LOCATION MAP  (takes priority over the name-based map below)
+# ---------------------------------------------------------------------------
+# Format:  <channel_id_as_int>: '<City Name>',
+# Example: 1234567890123456789: 'Bangkok',
+# ---------------------------------------------------------------------------
+CHANNEL_ID_LOCATION_MAP: Final[dict[int, str]] = {
+    1148765003005042719: 'Bangkok',
+    1148765027873083392: 'Chiang Mai',
+    1148765313891041392: 'Chon Buri',
+    1148765077797863464: 'Khon Kaen',
+    1241487264735821844: 'Krabi',
+    1148765044688039986: 'Pattaya',
+}
+
+# Name-based fallback map (used when a channel ID is not listed above)
 CHANNEL_LOCATION_DEFAULTS: Final[dict[str, str]] = {
-    'bangkok': 'Bangkok',
-    'chiang-mai': 'Chiang Mai',
-    'chon-buri': 'Chon Buri',
-    'khon-kaen': 'Khon Kaen',
-    'krabi': 'Krabi',
-    'phuket': 'Phuket',
+    'bangkok':          'Bangkok',
+    'chiang-mai':       'Chiang Mai',
+    'chon-buri':        'Chon Buri',
+    'khon-kaen':        'Khon Kaen',
+    'krabi':            'Krabi',
+    'pattaya':          'Pattaya',
 }
 
 
@@ -219,10 +236,26 @@ def resolve_channel_location(
 ) -> str:
     """Resolve a default city/location from the channel the interaction came from.
 
-    Falls back to Bangkok for DMs, #other, and any unmapped channel.
+    Resolution order:
+    1. ``CHANNEL_ID_LOCATION_MAP`` — exact channel ID match (highest priority).
+    2. ``CHANNEL_LOCATION_DEFAULTS`` — channel *name* match (fallback).
+    3. ``fallback`` — hardcoded default (lowest priority, default: Bangkok).
     """
-    channel_name = getattr(interaction.channel, 'name', None)
-    return CHANNEL_LOCATION_DEFAULTS.get(channel_name, fallback)
+    channel = interaction.channel
+    channel_id: int | None = getattr(channel, 'id', None)
+
+    # 1. ID-based lookup (priority)
+    if channel_id is not None and channel_id in CHANNEL_ID_LOCATION_MAP:
+        return CHANNEL_ID_LOCATION_MAP[channel_id]
+
+    # 2. Name-based lookup (fallback)
+    channel_name: str | None = getattr(channel, 'name', None)
+    if channel_name is not None and channel_name in CHANNEL_LOCATION_DEFAULTS:
+        return CHANNEL_LOCATION_DEFAULTS[channel_name]
+
+    # 3. Final hardcoded default
+    return fallback
+
 
 
 # Function to sanitize a URL by encoding special characters

@@ -251,7 +251,7 @@ class SecurityConfig:
 class AppConfig:
     """Main application configuration."""
 
-    version: str = "3.5.0"
+    version: str = "3.5.1"
     name: str = "cocobot"
     description: str = "A feature-rich Discord bot for the Thailand Discord server"
     environment: str = os.getenv('ENVIRONMENT', 'production')
