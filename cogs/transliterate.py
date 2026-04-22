@@ -54,7 +54,7 @@ class Transliterate(commands.Cog):
         Sets up the bot instance and AI provider.
         """
         self.bot = bot  # Assign the bot instance to a class variable
-        self.ai_provider = 'google'  # Set the default AI provider
+        self.ai_provider = 'gemini'  # Set the default AI provider
 
     # Define a command for transliterating Thai text
     @app_commands.command(
