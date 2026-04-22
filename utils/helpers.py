@@ -26,14 +26,16 @@ import discord
 # Import the google.genai module for interacting with Google's Generative AI
 from google import genai
 
-# Import the openai module for interacting with OpenAI's API
-import openai
-from openai.types.chat import ChatCompletionUserMessageParam
+# Import the groq module for interacting with Groq's API
+from groq import Groq
 
 # Import the necessary API keys from the config module
-from config.config import GOOGLE_API_KEY  # API key for Google services
+from config.config import GEMINI_API_KEY  # API key for Google Gemini services
+from config.config import GEMINI_MODEL  # API key for Google Gemini services
 from config.config import GROQ_API_KEY  # API key for Groq services
-from config.config import GOOGLE_GEMINI_MODEL  # Model name for Google's Gemini
+from config.config import GROQ_MODEL  # API key for Groq services
+from config.config import DEEPSEEK_API_KEY  # API key for DeepSeek services
+from config.config import DEEPSEEK_MODEL  # Model name for DeepSeek
 
 
 # Define a class named UseAI to handle interactions with various AI providers
@@ -46,7 +48,7 @@ class UseAI:
     """
 
     # Define a list of available AI providers
-    AVAILABLE_PROVIDERS = ['groq', 'google']
+    AVAILABLE_PROVIDERS = ['groq', 'gemini', 'deepseek']
 
     # Define the configuration for Google's generative AI model
     GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
@@ -81,17 +83,25 @@ class UseAI:
 
         # Initialize the appropriate client based on the provider
         if provider == 'groq':
-            # Set up the OpenAI client for Groq with the specified API key and base URL
-            self.client = openai.OpenAI(
-                api_key=GROQ_API_KEY, base_url="https://api.groq.com/openai/v1"
-            )
+            # Set up the native Groq client with the specified API key
+            self.client = Groq(api_key=GROQ_API_KEY)
             # Set the model name for Groq
-            self.model_name = 'moonshotai/kimi-k2-instruct'  # "llama-3.3-70b-versatile"
-        elif provider == 'google':
-            # Initialize the Google Generative AI client with the specified API key
-            self.client = genai.Client(api_key=GOOGLE_API_KEY)
+            self.model_name = GROQ_MODEL
+        elif provider == 'gemini':
+            # Initialize the Google Generative AI client with the Gemini API key
+            self.client = genai.Client(api_key=GEMINI_API_KEY)
             # Set the model name for Google
-            self.model_name = GOOGLE_GEMINI_MODEL
+            self.model_name = GEMINI_MODEL
+        elif provider == 'deepseek':
+            # DeepSeek uses an OpenAI-compatible API — use the groq SDK pattern via requests
+            # We use the groq-compatible interface via the openai-compatible endpoint
+            from openai import OpenAI as _OpenAI  # only imported when deepseek is used
+            self.client = _OpenAI(
+                api_key=DEEPSEEK_API_KEY,
+                base_url='https://api.deepseek.com/v1',
+            )
+            # Set the model name for DeepSeek
+            self.model_name = DEEPSEEK_MODEL
 
     # Method to send a prompt to the AI provider and get the response
     def prompt(self, prompt: str, strict: bool = True) -> str | None:
@@ -117,34 +127,49 @@ class UseAI:
             prompt = f"{prompt}. Only return the result, nothing else."
 
         # Handle the prompt based on the selected provider
-        if self.provider in 'groq':
-            return self._handle_openai(prompt)
+        if self.provider == 'groq':
+            return self._handle_groq(prompt)
         elif self.provider == 'google':
             return self._handle_google(prompt)
+        elif self.provider == 'deepseek':
+            return self._handle_deepseek(prompt)
 
         return None
 
-    def _handle_openai(self, prompt: str) -> str:
+    def _handle_groq(self, prompt: str) -> str:
         """
-        Handles communication with the OpenAI API to generate a chat completion response
+        Handles communication with the Groq API to generate a chat completion response
         based on the provided prompt.
 
         Args:
-            prompt (str): The input string to be passed to the OpenAI API for generating
+            prompt (str): The input string to be passed to the Groq API for generating
             a response.
 
         Returns:
-            str: The content of the first message choice returned by the OpenAI API.
+            str: The content of the first message choice returned by the Groq API.
         """
-        # Assign the prompt to the content variable
-        content = prompt
         # Create a chat completion request with the specified messages and model
-        message: ChatCompletionUserMessageParam = {
-            "role":    "user",
-            "content": content
-        }
         chat = self.client.chat.completions.create(
-            messages=[message],
+            messages=[{"role": "user", "content": prompt}],
+            model=self.model_name,
+        )
+        # Return the content of the first choice's message
+        return chat.choices[0].message.content
+
+    def _handle_deepseek(self, prompt: str) -> str:
+        """
+        Handles communication with the DeepSeek API (OpenAI-compatible) to generate
+        a chat completion response based on the provided prompt.
+
+        Args:
+            prompt (str): The input string to be passed to the DeepSeek API.
+
+        Returns:
+            str: The content of the first message choice returned by the DeepSeek API.
+        """
+        # Create a chat completion request using the OpenAI-compatible interface
+        chat = self.client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
             model=self.model_name,
         )
         # Return the content of the first choice's message

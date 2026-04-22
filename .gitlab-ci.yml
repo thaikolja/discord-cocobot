@@ -7,7 +7,6 @@ variables:
   SSH_HOST: $SSH_HOST
   SSH_USER: $SSH_USER
   REMOTE_SCRIPT_PATH: $REMOTE_SCRIPT_PATH
-  OPENAI_API_KEY: $OPENAI_API_KEY
 
 cache:
   paths:
@@ -28,7 +27,7 @@ test:
     - export WEATHERAPI_API_KEY=test_key
     - export CURRENCYAPI_API_KEY=test_key
     - export LOCALTIME_API_KEY=test_key
-    - export GOOGLE_API_KEY=test_key
+    - export GEMINI_API_KEY=test_key
     - export ACQIN_API_KEY=test_key
     - export GROQ_API_KEY=test_key
     - export ENVIRONMENT=testing

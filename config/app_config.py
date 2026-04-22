@@ -108,7 +108,7 @@ class APIConfig:
     Represents the configuration required for various APIs used in the application.
 
     This class holds API keys needed for different services such as weather, currency conversion, geolocation,
-    and integration with external platforms like Google, Groq, or Acqin. It ensures that required API keys are
+    and integration with external platforms like Google Gemini, Groq, DeepSeek, or Acqin. It ensures that required API keys are
     properly set unless the application is in a testing environment. Keys are validated after initialization
     to ensure the application has the necessary configurations.
 
@@ -116,26 +116,27 @@ class APIConfig:
         weatherapi_key: The API key for the weather service, if applicable.
         currencyapi_key: The API key for the currency conversion service, if applicable.
         localtime_key: The API key for time zone or local time services, if applicable.
-        google_api_key: The API key for Google services, if applicable.
-        google_gemini_model: The model configuration name for Google Gemini services.
+        gemini_api_key: The API key for Gemini services, if applicable.
+        gemini_model: The model name for Gemini services.
         geoapify_api_key: The API key for Geoapify services, if applicable.
         groq_api_key: The API key for Groq services, if applicable.
+        groq_model: The model name for Groq services.
         acqin_api_key: The API key for Acqin services, if applicable.
+        deepseek_api_key: The API key for DeepSeek services, if applicable.
+        deepseek_model: The model name for DeepSeek services.
     """
     weatherapi_key: Optional[str] = None
     currencyapi_key: Optional[str] = None
     localtime_key: Optional[str] = None
-    google_api_key: Optional[str] = None
-    google_gemini_model: str = None
+    gemini_api_key: Optional[str] = None
+    gemini_model: str = None
     geoapify_api_key: Optional[str] = None
     groq_api_key: Optional[str] = None
+    groq_model: str = None
     acqin_api_key: Optional[str] = None
 
     deepseek_api_key: Optional[str] = None
     deepseek_model: str = None
-
-    poe_api_keys: list[str] = None
-    poe_model: str = None
 
     def __post_init__(self):
         """
@@ -279,15 +280,14 @@ class AppConfig:
                 weatherapi_key=os.getenv('WEATHERAPI_API_KEY'),
                 currencyapi_key=os.getenv('CURRENCYAPI_API_KEY'),
                 localtime_key=os.getenv('LOCALTIME_API_KEY'),
-                google_api_key=os.getenv('GOOGLE_API_KEY'),
-                google_gemini_model=os.getenv('GOOGLE_GEMINI_MODEL', 'gemini-2.5-flash-lite'),
+                gemini_api_key=os.getenv('GEMINI_API_KEY'),
+                gemini_model=os.getenv('GEMINI_MODEL', 'gemini-2.5-flash'),
                 geoapify_api_key=os.getenv('GEOAPFIY_API_KEY'),
                 groq_api_key=os.getenv('GROQ_API_KEY'),
+                groq_model=os.getenv('GROQ_MODEL', 'openai/gpt-oss-120b'),
                 acqin_api_key=os.getenv('ACQIN_API_KEY'),
                 deepseek_api_key=os.getenv('DEEPSEEK_API_KEY'),
                 deepseek_model=os.getenv('DEEPSEEK_MODEL', 'deepseek-chat'),
-                poe_api_keys=[k.strip() for k in os.getenv('POE_API_KEYS', '').split(',')] if os.getenv('POE_API_KEYS') else [],
-                poe_model=os.getenv('POE_MODEL', 'Claude-3.5-Sonnet'),
             )
 
         if self.database is None:
