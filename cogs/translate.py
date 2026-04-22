@@ -24,9 +24,6 @@ import logging  # Import logging module for error tracking
 # Import the discord module for interacting with the Discord API
 import discord  # For interacting with the Discord API
 
-# Import the openai module for interacting with OpenAI's API
-import openai  # For interacting with OpenAI's API
-
 # Import the app_commands module from discord for defining slash commands
 from discord import app_commands  # For defining slash commands
 
@@ -105,7 +102,7 @@ class TranslateCog(commands.Cog):
 
         try:
             # Initialize the AI helper with the preferred provider
-            ai = UseAI(provider='google')
+            ai = UseAI(provider='gemini')
             # Set AI response parameters
             ai.temperature = 0.3
             ai.top_p = 0.3
@@ -126,7 +123,7 @@ class TranslateCog(commands.Cog):
 
             # Send the translated text back to the user
             await interaction.followup.send(f"📚️ **Translation:** {output}")
-        except openai.APITimeoutError:
+        except TimeoutError:
             # Handle API timeout errors
             await interaction.followup.send("⏰ Request timed out after 10 seconds")
         except Exception as e:

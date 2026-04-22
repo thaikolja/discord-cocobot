@@ -1,5 +1,16 @@
 # Changelog
 
+## v3.5.1
+
+### Changed
+
+- **Version bump**: Bumped version from 3.5.0 to 3.5.1
+- **AI providers**: Removed Poe, SambaNova, and OpenAI as standalone providers; only Groq, Gemini, and DeepSeek remain
+- **Naming consistency**: Renamed all `google`/`google_gemini` references to `gemini` (env vars: `GOOGLE_API_KEY` → `GEMINI_API_KEY`, `GOOGLE_GEMINI_MODEL` → `GEMINI_MODEL`; added `GROQ_MODEL`)
+- **Channel location resolution**: `/weather` and `/pollution` now resolve default cities by Discord channel ID first (priority), falling back to channel name, then Bangkok
+
+---
+
 ## v3.5.0
 
 ### Breaking Changes
