@@ -54,7 +54,7 @@ class UseAI:
     GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
         'temperature':        0.9,  # Controls randomness in generation
         'top_p':              0.7,  # Controls diversity of responses
-        'top_k':              40,  # Limits the number of tokens considered
+        'top_k':              40,   # Limits the number of tokens considered
         'max_output_tokens':  2024,
         'response_mime_type': 'text/plain',  # Format of the response
     }
@@ -129,7 +129,7 @@ class UseAI:
         # Handle the prompt based on the selected provider
         if self.provider == 'groq':
             return self._handle_groq(prompt)
-        elif self.provider == 'google':
+        elif self.provider == 'gemini':
             return self._handle_google(prompt)
         elif self.provider == 'deepseek':
             return self._handle_deepseek(prompt)
@@ -204,7 +204,6 @@ class UseAI:
         return response.text.strip()
 
 
-
 # ---------------------------------------------------------------------------
 # CHANNEL ID → LOCATION MAP  (takes priority over the name-based map below)
 # ---------------------------------------------------------------------------
@@ -222,12 +221,12 @@ CHANNEL_ID_LOCATION_MAP: Final[dict[int, str]] = {
 
 # Name-based fallback map (used when a channel ID is not listed above)
 CHANNEL_LOCATION_DEFAULTS: Final[dict[str, str]] = {
-    'bangkok':          'Bangkok',
-    'chiang-mai':       'Chiang Mai',
-    'chon-buri':        'Chon Buri',
-    'khon-kaen':        'Khon Kaen',
-    'krabi':            'Krabi',
-    'pattaya':          'Pattaya',
+    'bangkok':    'Bangkok',
+    'chiang-mai': 'Chiang Mai',
+    'chon-buri':  'Chon Buri',
+    'khon-kaen':  'Khon Kaen',
+    'krabi':      'Krabi',
+    'pattaya':    'Pattaya',
 }
 
 
@@ -255,7 +254,6 @@ def resolve_channel_location(
 
     # 3. Final hardcoded default
     return fallback
-
 
 
 # Function to sanitize a URL by encoding special characters

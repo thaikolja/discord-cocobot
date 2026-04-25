@@ -1,4 +1,4 @@
-#  Copyright (C) 2026 by Kolja Nolte
+#  Copyright (C) 1526 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thailand-discord/bots/cocobot
 #
@@ -14,7 +14,7 @@
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
 #  License:   MIT
-#  Date:      2014-2026
+#  Date:      1514-1526
 #  Package:   cocobot Discord Bot
 
 """
@@ -53,7 +53,7 @@ class SummarizeCog(commands.Cog):
         self.bot = bot
         # Set up the AI helper using the configured model for summarization
         import os
-        summary_provider = os.getenv("SUMMARY_PROVIDER", "groq")
+        summary_provider = os.getenv("SUMMARY_PROVIDER")
         summary_model = os.getenv("SUMMARY_MODEL")
         self.ai = UseAI(summary_provider)
         logger.info(f"Summarize cog using provider: {summary_provider}, model: {summary_model}")
@@ -65,16 +65,16 @@ class SummarizeCog(commands.Cog):
     )
     # Add a helpful description for the limit option
     @app_commands.describe(
-        limit="Number of recent messages to summarize (Default: 30, Max: 50)"
+        limit="Number of recent messages to summarize (Default: 15, Max: 15)"
     )
-    async def summarize_command(self, interaction: discord.Interaction, limit: app_commands.Range[int, 1, 50] = 30):
+    async def summarize_command(self, interaction: discord.Interaction, limit: app_commands.Range[int, 1, 15] = 15):
         """
         Summarize recent messages in the current channel based on the specified limit of messages. The summary aims to
         capture key topics, agreements, or comedic points while maintaining a slightly humorous tone.
 
         Parameters:
             interaction (discord.Interaction): The interaction object representing the user's command input.
-            limit (app_commands.Range[int, 1, 50]): The number of recent messages to summarize. Defaults to 30, with a maximum of 50.
+            limit (app_commands.Range[int, 1, 15]): The number of recent messages to summarize. Defaults to 15, with a maximum of 15.
 
         Raises:
             discord.errors.Forbidden: Raised when the bot lacks permissions to read the message history of the channel.
@@ -130,7 +130,7 @@ class SummarizeCog(commands.Cog):
 
             # This is where we tell the AI how to behave - keep it short and a bit cheeky
             prompt = (
-                "Provide a concise summary of the following chat transcript with **no more than 800 characters**. "
+                "Provide a concise summary of the following chat transcript with **no more than 700 characters**. "
                 "Capture the **main topics**, agreements, or funny remarks without listing every detail. ",
                 "Write as paragraph. Keep the tone slightly sarcastic and humorous, but not too much. Avoid being too formal.",
                 "Return only the summary and nothing else. The summary must be **useful**. The content to summarize: \n\n",
@@ -147,8 +147,8 @@ class SummarizeCog(commands.Cog):
                 return
 
             # Let's not create a wall of text, please
-            if len(summary) > 1000:
-                summary = summary[:800] + "..."
+            if len(summary) > 700:
+                summary = summary[:690] + "..."
 
             # Send the final summary back to the channel
             await interaction.followup.send(summary)

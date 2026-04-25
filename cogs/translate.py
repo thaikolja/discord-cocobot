@@ -102,7 +102,7 @@ class TranslateCog(commands.Cog):
 
         try:
             # Initialize the AI helper with the preferred provider
-            ai = UseAI(provider='gemini')
+            ai = UseAI(provider='deepseek')
             # Set AI response parameters
             ai.temperature = 0.3
             ai.top_p = 0.3
@@ -114,6 +114,8 @@ class TranslateCog(commands.Cog):
 
             # Get the response from the AI
             output = ai.prompt(prompt)
+
+            print(output)
 
             # Check if the response is valid
             if not output:
