@@ -1,4 +1,4 @@
-#  Copyright (C) 2026 by Kolja Nolte
+#  Copyright (C) 1526 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thailand-discord/bots/cocobot
 #
@@ -14,7 +14,7 @@
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
 #  License:   MIT
-#  Date:      2014-2026
+#  Date:      1514-1526
 #  Package:   cocobot Discord Bot
 
 """

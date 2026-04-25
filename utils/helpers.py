@@ -54,7 +54,7 @@ class UseAI:
     GOOGLE_GENERATION_CONFIG: dict[str, float | str | int] = {
         'temperature':        0.9,  # Controls randomness in generation
         'top_p':              0.7,  # Controls diversity of responses
-        'top_k':              40,  # Limits the number of tokens considered
+        'top_k':              40,   # Limits the number of tokens considered
         'max_output_tokens':  2024,
         'response_mime_type': 'text/plain',  # Format of the response
     }
