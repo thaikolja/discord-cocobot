@@ -67,16 +67,16 @@ class TranslateCog(commands.Cog):
     # Provide descriptions for command parameters
     @app_commands.describe(
         text='The text to translate',
-        from_language='The language code of the source language (Default: Thai)',
-        to_language='The language code of the target language (Default: English)',
+        from_language='The language code of the source language (auto-detected)',
+        to_language='The language code of the target language (auto-detected)',
     )
     # Main function to handle the translation command
     async def translate_command(
         self,
         interaction: discord.Interaction,
         text: str,
-        from_language: str = 'Thai',
-        to_language: str = 'English',
+        from_language: str | None = None,
+        to_language: str | None = None,
     ):
         """
         Handles the /translate command to translate text from one language to another.
@@ -84,9 +84,16 @@ class TranslateCog(commands.Cog):
         Parameters:
         interaction (discord.Interaction): The interaction object representing the command invocation
         text (str): The text to translate
-        from_language (str): The language code of the source language (Default: Thai)
-        to_language (str): The language code of the target language (Default: English)
+        from_language (str | None): Source language; auto-detected when omitted
+        to_language (str | None): Target language; auto-detected when omitted
         """
+
+        if from_language is None or to_language is None:
+            detected_thai = any('\u0e00' <= ch <= '\u0e7f' for ch in text)
+            if from_language is None:
+                from_language = 'Thai' if detected_thai else 'English'
+            if to_language is None:
+                to_language = 'English' if detected_thai else 'Thai'
 
         try:
             # Defer the response immediately to avoid timeout
