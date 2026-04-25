@@ -115,6 +115,8 @@ class TranslateCog(commands.Cog):
             # Get the response from the AI
             output = ai.prompt(prompt)
 
+            print(output)
+
             # Check if the response is valid
             if not output:
                 # Send error message if response is empty
