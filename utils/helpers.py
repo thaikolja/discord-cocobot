@@ -129,7 +129,7 @@ class UseAI:
         # Handle the prompt based on the selected provider
         if self.provider == 'groq':
             return self._handle_groq(prompt)
-        elif self.provider == 'google':
+        elif self.provider == 'gemini':
             return self._handle_google(prompt)
         elif self.provider == 'deepseek':
             return self._handle_deepseek(prompt)
