@@ -96,7 +96,7 @@
 
 ### Prerequisites
 - A server with root access (Debian/Ubuntu recommended)
-- Git, Python 3.8+, and pip installed
+- Git, Python 3.10+, and `pip` installed
 
 ### As Service
 
@@ -198,7 +198,8 @@ We recommend adding tests for any new features or bug fixes.
 
 ## 🧑‍💻 Authors and Contributors
 
-* **Kolja Nolte** (kolja.nolte@gmail.com)
+* **Kolja Nolte** (https://www.kolja-nolte.com)
+* Ally Piechowski (https://piechowski.io)
 
 ---
 

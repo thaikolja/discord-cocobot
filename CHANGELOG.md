@@ -1,8 +1,12 @@
 # Changelog
 
+From time to time, a new coconut falls from the tree, and we need to update the changelog. This file serves as a historical record of all changes made to the project, including new features, bug
+fixes, and improvements. Each entry is categorized by version number and includes a brief description of the chan-- man, you're all developers, otherwise you wouldn't be reading this; you
+know how this shit works.
+
 ## v3.5.2
 
-- **Merged:** Pull request `#!23` by [Alex](https://gitlab.com/grepsedawk) for improved language detection and normalization in the `/translate` command.
+- **Merged:** Pull request `#!23` by [Ally Piechowski](https://gitlab.com/grepsedawk) for improved language detection and normalization in the `/translate` command.
 
 ### Added
 
@@ -11,7 +15,7 @@
 
 ### Changed
 
-- **Version bump**: Bumped the version from `v3.5.1` to `v3.5.2`
+- **Version bump**: Bumped version from `v3.5.1` to `v3.5.2`
 - **Translation Command**: Updated parameter descriptions and added a check to prevent translating to the same language.
 - **Transliterate Command**: Refined the AI prompt for more accurate phonetic output and polished the user-facing messages.
 - **AI Helper**: Improved `UseAI` utility with better formatting and type hint suppressions.
