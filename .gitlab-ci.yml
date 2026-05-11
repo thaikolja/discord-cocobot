@@ -30,6 +30,8 @@ test:
     - export GEMINI_API_KEY=test_key
     - export ACQIN_API_KEY=test_key
     - export GROQ_API_KEY=test_key
+    - export DEEPSEEK_API_KEY=test_key
+    - export DEEPSEEK_MODEL=deepseek-test-model
     - export ENVIRONMENT=testing
     - pytest tests/ -v
 

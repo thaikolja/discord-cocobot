@@ -193,7 +193,7 @@ class JailCog(commands.Cog):
 
     @app_commands.command(
         name='unjail',
-        description='Restores their roles and frees them from August\'s torment.',
+        description='Restores their roles and frees them from August\'s torment',
     )
     @app_commands.describe(user='The member to unjail')
     @app_commands.checks.has_permissions(administrator=True)

@@ -59,7 +59,7 @@ class Transliterate(commands.Cog):
     # Define a command for transliterating Thai text
     @app_commands.command(
         name="transliterate",
-        description='Transliterates Thai words and sentences into the English alphabet.'
+        description='Transliterates Thai words and sentences into the English alphabet'
     )
     @app_commands.describe(text='The Thai text to be butchered into Latin script.')
     async def transliterate_command(self, interaction: discord.Interaction, text: str):
@@ -87,7 +87,7 @@ class Transliterate(commands.Cog):
         if not text or text.isspace():
             # Inform the user that the input cannot be just whitespace
             await interaction.followup.send(
-                "✍️ How about adding some text in Thai, you coconut head!"
+                "✍️ How about adding some text in Thai, you cocotwat!"
             )
             return
 
@@ -97,6 +97,8 @@ class Transliterate(commands.Cog):
 
             # Construct a detailed prompt for the AI
             prompt = (
+                "You are a helpful assistant that transliterates Thai text into Latin characters "
+                "using a phonetic system that non-Thai speakers can understand."
                 "Transliterate the following Thai text into Latin characters using a "
                 "phonetic system understandable to English speakers: "
                 f"'{text}'.\n"

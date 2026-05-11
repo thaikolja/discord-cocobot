@@ -32,7 +32,7 @@ from discord.ext import commands  # For creating bot commands
 
 # Import the ERROR_MESSAGE from the config module
 from config.config import (  # Import custom error message from configuration
-    ERROR_MESSAGE,
+    ERROR_MESSAGE
 )
 
 # Import the UseAI helper utility from the utils.helpers module
@@ -40,6 +40,32 @@ from utils.helpers import UseAI  # Import AI helper utility
 
 # Configure the logger for this module to track activities and errors
 logger = logging.getLogger(__name__)
+
+
+def _normalize_language(language: str | None) -> str | None:
+    """Normalize a user-provided language name for comparisons and prompts."""
+    if language is None:
+        return None
+
+    normalized = language.strip()
+    if not normalized:
+        return None
+
+    return normalized.title()
+
+
+def _detect_source_language(text: str) -> str:
+    """Guess the source language using a minimal heuristic.
+
+    If any character falls within the Thai Unicode block, treat the text as Thai.
+    Otherwise default to English.
+    """
+    return 'Thai' if any('\u0e00' <= character <= '\u0e7f' for character in text) else 'English'
+
+
+def _default_target_language(source_language: str) -> str:
+    """Infer the default target language from the resolved source language."""
+    return 'English' if source_language.casefold() != 'english' else 'Thai'
 
 
 # noinspection PyUnresolvedReferences
@@ -67,16 +93,16 @@ class TranslateCog(commands.Cog):
     # Provide descriptions for command parameters
     @app_commands.describe(
         text='The text to translate',
-        from_language='The language code of the source language (Default: Thai)',
-        to_language='The language code of the target language (Default: English)',
+        from_language='Source language name (Default: Thai/English)',
+        to_language='Target language name (Default: Opposite of `from_language`)'
     )
     # Main function to handle the translation command
     async def translate_command(
         self,
         interaction: discord.Interaction,
         text: str,
-        from_language: str = 'Thai',
-        to_language: str = 'English',
+        from_language: str | None = None,
+        to_language: str | None = None,
     ):
         """
         Handles the /translate command to translate text from one language to another.
@@ -84,9 +110,27 @@ class TranslateCog(commands.Cog):
         Parameters:
         interaction (discord.Interaction): The interaction object representing the command invocation
         text (str): The text to translate
-        from_language (str): The language code of the source language (Default: Thai)
-        to_language (str): The language code of the target language (Default: English)
+        from_language (str | None): Source language name; guessed from Thai text when omitted
+        to_language (str | None): Target language name; inferred from the resolved source when omitted
         """
+
+        from_language = _normalize_language(from_language)
+        to_language = _normalize_language(to_language)
+
+        if from_language is None or to_language is None:
+            detected_language = _detect_source_language(text)
+
+            if from_language is None:
+                from_language = detected_language
+            if to_language is None:
+                to_language = _default_target_language(from_language)
+
+        if from_language.casefold() == to_language.casefold():
+            await interaction.response.send_message(
+                '❌ Source and target languages must be different.',
+                ephemeral=True,
+            )
+            return
 
         try:
             # Defer the response immediately to avoid timeout
@@ -105,6 +149,7 @@ class TranslateCog(commands.Cog):
             ai = UseAI(provider='gemini')
             # Set AI response parameters
             ai.temperature = 0.3
+            # Well, top_p, I guess
             ai.top_p = 0.3
             # Construct the prompt for the AI to process
             prompt = (
@@ -114,8 +159,6 @@ class TranslateCog(commands.Cog):
 
             # Get the response from the AI
             output = ai.prompt(prompt)
-
-            print(output)
 
             # Check if the response is valid
             if not output:

@@ -1,5 +1,32 @@
 # Changelog
 
+From time to time, a new coconut falls from the tree, and we need to update the changelog. This file serves as a historical record of all changes made to the project, including new features, bug
+fixes, and improvements. Each entry is categorized by version number and includes a brief description of the chan-- man, you're all developers, otherwise you wouldn't be reading this; you
+know how this shit works.
+
+## v3.5.2
+
+- **Merged:** Pull request `#!23` by [Ally Piechowski](https://gitlab.com/grepsedawk) for improved language detection and normalization in the `/translate` command.
+
+### Added
+
+- **Language Detection**: Improved `/translate` with a heuristic for Thai/English source language detection.
+- **Language Normalization**: Added normalization for language names in `/translate` to handle mixed casing and whitespace.
+
+### Changed
+
+- **Version bump**: Bumped version from `v3.5.1` to `v3.5.2`
+- **Translation Command**: Updated parameter descriptions and added a check to prevent translating to the same language.
+- **Transliterate Command**: Refined the AI prompt for more accurate phonetic output and polished the user-facing messages.
+- **AI Helper**: Improved `UseAI` utility with better formatting and type hint suppressions.
+- **Dependency Audit**: Enhanced the `dependency_audit.py` script for better command execution and output handling.
+
+### Fixed
+
+- **Command Descriptions**: Removed trailing periods from `/unjail` and `/transliterate` descriptions for consistency.
+
+---
+
 ## v3.5.1
 
 ### Changed
@@ -22,11 +49,11 @@
 ### Added
 
 - **Comprehensive Configuration Variables**: Added missing configuration variables to `.env` and `.env.example`:
-  - Database: `DATABASE_URL`, `DB_POOL_SIZE`, `DB_ECHO`, `INIT_DB_ON_STARTUP`
-  - Cache: `CACHE_ENABLED`, `REDIS_URL`, `CACHE_TTL`
-  - Logging: `LOG_MAX_BYTES`
-  - Security: `MAX_CONTENT_LENGTH`, `ALLOWED_MENTIONS`, `ENABLE_CORS`
-  - Environment: `ENVIRONMENT`, `DEBUG`
+    - Database: `DATABASE_URL`, `DB_POOL_SIZE`, `DB_ECHO`, `INIT_DB_ON_STARTUP`
+    - Cache: `CACHE_ENABLED`, `REDIS_URL`, `CACHE_TTL`
+    - Logging: `LOG_MAX_BYTES`
+    - Security: `MAX_CONTENT_LENGTH`, `ALLOWED_MENTIONS`, `ENABLE_CORS`
+    - Environment: `ENVIRONMENT`, `DEBUG`
 - **Provider and Model Separation**: Summarization now uses separate provider (`SUMMARY_PROVIDER`) and model (`SUMMARY_MODEL`) configuration
 - **Environment Validation**: Added validation to ensure `ENVIRONMENT` is one of the allowed values
 
@@ -40,8 +67,8 @@
 ### Removed
 
 - **Obsolete Variables**: Removed unused environment variables:
-  - `POE_API_KEYS` and `POE_MODEL` (not actively used)
-  - `GEOAPFIY_API_KEY` (not referenced in codebase)
+    - `POE_API_KEYS` and `POE_MODEL` (not actively used)
+    - `GEOAPFIY_API_KEY` (not referenced in codebase)
 - **Invalid Configuration**: Removed `staging` from valid environment list
 
 ### Fixed
@@ -52,44 +79,47 @@
 ### Documentation
 
 - Improved `.env` and `.env.example` with:
-  - Clear section headers with visual separators
-  - Source URLs for all API keys and services
-  - Better inline comments
-  - Consistent formatting between both files
+    - Clear section headers with visual separators
+    - Source URLs for all API keys and services
+    - Better inline comments
+    - Consistent formatting between both files
 
 ## v3.4.0
 
 ### New Features
 
 - **API Response Caching**: Implemented database-backed caching for all external API requests to reduce latency and the number of outbound API calls.
-  - Commands cached: `/weather`, `/time`, `/exchangerate`, `/pollution`
-  - Cache entries expire automatically after **10 minutes (TTL)**
-  - Cache keys are query-specific, so different arguments always result in fresh lookups (e.g. `weather:Bangkok:metric` vs `weather:ChiangMai:metric`)
-  - The weather unit toggle button is also cache-aware
+    - Commands cached: `/weather`, `/time`, `/exchangerate`, `/pollution`
+    - Cache entries expire automatically after **10 minutes (TTL)**
+    - Cache keys are query-specific, so different arguments always result in fresh lookups (e.g. `weather:Bangkok:metric` vs `weather:ChiangMai:metric`)
+    - The weather unit toggle button is also cache-aware
 
 - **Privileged User Cache Bypass**: Added `CACHE_BYPASS_PRIVILEGED` flag in `config/config.py`
-  - When set to `True` (default), guild owners, administrators, and users with `Manage Server` permission always receive a live API response, bypassing the cache
-  - Set to `False` to apply the cache equally to all users
+    - When set to `True` (default), guild owners, administrators, and users with `Manage Server` permission always receive a live API response, bypassing the cache
+    - Set to `False` to apply the cache equally to all users
 
 - **Database Verification Test**: Added `tests/test_database.py` to verify that `init_db()` correctly creates the database file and all required tables on startup.
 
 ### Improvements
 
-- **Eager Database Initialization**: The bot now immediately writes `cocobot.db` to disk on startup via a `SELECT 1` ping after `create_all()`. This prevents `no such table` errors if the database file was deleted while the bot was offline.
-- **Asynchronous Cache Access**: Added `DatabaseManager.async_get_cache_entry()` and `DatabaseManager.async_set_cache_entry()` to safely run SQLAlchemy ORM operations inside Discord's async event loop using `asyncio.to_thread`.
+- **Eager Database Initialization**: The bot now immediately writes `cocobot.db` to disk on startup via a `SELECT 1` ping after `create_all()`. This prevents `no such table` errors if the database
+  file was deleted while the bot was offline.
+- **Asynchronous Cache Access**: Added `DatabaseManager.async_get_cache_entry()` and `DatabaseManager.async_set_cache_entry()` to safely run SQLAlchemy ORM operations inside Discord's async event loop
+  using `asyncio.to_thread`.
 
 ### Database Cleanup
 
 - **Removed unused models**: The following models and their associated `DatabaseManager` methods were never used by any cog and have been removed to keep the schema minimal:
-  - `User` (table: `users`)
-  - `Guild` (table: `guilds`)
-  - `CommandUsage` (table: `command_usage`)
-  - `BotSetting` (table: `bot_settings`)
+    - `User` (table: `users`)
+    - `Guild` (table: `guilds`)
+    - `CommandUsage` (table: `command_usage`)
+    - `BotSetting` (table: `bot_settings`)
 - The database now only creates the 3 tables that are actively in use: `cache_entries`, `rate_limits`, `visa_reminders`
 
 ### Bug Fixes
 
-- Fixed test failures in `test_exchangerate.py`, `test_time.py`, `test_weather.py`, and `test_pollution.py` caused by the new cache layer intercepting mocked API responses; all test functions now properly patch `DatabaseManager.async_get_cache_entry` and `async_set_cache_entry`
+- Fixed test failures in `test_exchangerate.py`, `test_time.py`, `test_weather.py`, and `test_pollution.py` caused by the new cache layer intercepting mocked API responses; all test functions now
+  properly patch `DatabaseManager.async_get_cache_entry` and `async_set_cache_entry`
 
 ---
 
@@ -99,8 +129,8 @@
 
 - Fixed incorrect timestamp display in the `/pollution` command
 
-  - Changed from UTC timezone to Bangkok timezone `(Asia/Bangkok)` for accurate local time calculations
-  - Fixed time difference calculation to always display "ago" correctly by using absolute value
+    - Changed from UTC timezone to Bangkok timezone `(Asia/Bangkok)` for accurate local time calculations
+    - Fixed time difference calculation to always display "ago" correctly by using absolute value
 -
 - Updated imports to use `zoneinfo.ZoneInfo` instead of `datetime.timezone` for proper timezone handling
 - Fixed an error in the unit test file for `/transliterate`
@@ -153,9 +183,9 @@
 ### Dependencies
 
 - **Updated**: Modernized dependencies to the latest compatible versions:
-  - discord.py 2.6.4,
-  - pytest 8.3.3,
-  - etc.
+    - discord.py 2.6.4,
+    - pytest 8.3.3,
+    - etc.
 
 ## v3.1.0
 
@@ -170,12 +200,12 @@
 #### Code Quality Fixes
 
 - **Fixed 3500+ Linting Errors**:
-  - Converted 2733 instances of tabs to spaces (W191)
-  - Removed 32 unused imports (F401)
-  - Fixed 7 f-string formatting issues (F541)
-  - Resolved undefined name error (F821)
-  - Removed unused variables (F841)
-  - Fixed module import ordering (E402)
+    - Converted 2733 instances of tabs to spaces (W191)
+    - Removed 32 unused imports (F401)
+    - Fixed 7 f-string formatting issues (F541)
+    - Resolved undefined name error (F821)
+    - Removed unused variables (F841)
+    - Fixed module import ordering (E402)
 - **Code Formatting**: Applied black formatting to 34 files for consistent style
 - **Import Organization**: Standardized import ordering with isort across all modules
 
@@ -295,7 +325,9 @@
 
 ## v2.0.0
 
-**@cocobot v2** is a completely rewritten version of the initial cocobot Discord bot for the Thailand Discord server. At this point, all features from the first, less maintainable version have been reprogrammed in a way that allows other contributors to add functions easily. Already existing functions have been drastically improved; the output quality is at the highest rate so far. Licensed under MIT.
+**@cocobot v2** is a completely rewritten version of the initial cocobot Discord bot for the Thailand Discord server. At this point, all features from the first, less maintainable version have been
+reprogrammed in a way that allows other contributors to add functions easily. Already existing functions have been drastically improved; the output quality is at the highest rate so far. Licensed
+under MIT.
 
 ## v1.2.4
 

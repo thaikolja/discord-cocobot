@@ -53,7 +53,7 @@ class SummarizeCog(commands.Cog):
         self.bot = bot
         # Set up the AI helper using the configured model for summarization
         import os
-        summary_provider = os.getenv("SUMMARY_PROVIDER", "groq")
+        summary_provider = os.getenv("SUMMARY_PROVIDER", "deepseek")
         summary_model = os.getenv("SUMMARY_MODEL")
         self.ai = UseAI(summary_provider)
         logger.info(f"Summarize cog using provider: {summary_provider}, model: {summary_model}")
@@ -61,7 +61,7 @@ class SummarizeCog(commands.Cog):
     # Register the slash command with Discord
     @app_commands.command(
         name="summarize",
-        description="Summarize recent messages in the current channel."
+        description="Summarize recent messages in the current channel"
     )
     # Add a helpful description for the limit option
     @app_commands.describe(
@@ -131,9 +131,9 @@ class SummarizeCog(commands.Cog):
             # This is where we tell the AI how to behave - keep it short and a bit cheeky
             prompt = (
                 "Provide a concise summary of the following chat transcript with **no more than 800 characters**. "
-                "Capture the **main topics**, agreements, or funny remarks without listing every detail. ",
-                "Write as paragraph. Keep the tone slightly sarcastic and humorous, but not too much. Avoid being too formal.",
-                "Return only the summary and nothing else. The summary must be **useful**. The content to summarize: \n\n",
+                "Capture the **main topics**, agreements, or funny remarks without listing every detail. "
+                "Write as paragraph. Keep the tone slightly sarcastic and humorous, but not too much. Avoid being too formal. "
+                "Return only the summary and nothing else. The summary must be **useful**. The content to summarize: \n\n"
                 f"{transcript}"
             )
 

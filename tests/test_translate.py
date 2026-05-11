@@ -80,25 +80,33 @@ async def test_successful_translation(mock_prompt, cog, interaction):
     )
 
 
-# Test case for translation using default parameters
 @pytest.mark.asyncio
 @patch('utils.helpers.UseAI.prompt')
-async def test_translation_with_default_params(mock_prompt, cog, interaction):
-    # Set up mock response from AI with expected translation
+async def test_auto_detect_english_to_thai(mock_prompt, cog, interaction):
     mock_prompt.return_value = "สวัสดี"
 
-    # Call the translate command with text only, using default languages
     await cog.translate_command.callback(cog, interaction, text="Hello")
 
-    # Verify interaction response was deferred once
     interaction.response.defer.assert_awaited_once()
-
-    # Verify followup message was sent with translated text
     interaction.followup.send.assert_awaited_once_with("📚️ **Translation:** สวัสดี")
-
-    # Verify AI prompt was called with default translation parameters
     mock_prompt.assert_called_once_with(
-        'Translate the text "Hello" from Thai to English. Keep the tone and meaning of the original text. Stay accurate.'
+        'Translate the text "Hello" from English to Thai. Keep the tone and meaning of the original text. Stay accurate.'
+    )
+
+
+@pytest.mark.asyncio
+@patch('utils.helpers.UseAI.prompt')
+async def test_auto_detect_thai_to_english(mock_prompt, cog, interaction):
+    mock_prompt.return_value = "Hello world"
+
+    await cog.translate_command.callback(cog, interaction, text="สวัสดีค่ะ โลก")
+
+    interaction.response.defer.assert_awaited_once()
+    interaction.followup.send.assert_awaited_once_with(
+        "📚️ **Translation:** Hello world"
+    )
+    mock_prompt.assert_called_once_with(
+        'Translate the text "สวัสดีค่ะ โลก" from Thai to English. Keep the tone and meaning of the original text. Stay accurate.'
     )
 
 

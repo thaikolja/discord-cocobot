@@ -64,12 +64,12 @@ def check_dependency_vulnerabilities() -> Dict:
         vulnerabilities = json.loads(stdout) if stdout.strip() else []
         return {
             "vulnerabilities_found": len(vulnerabilities) > 0,
-            "count": len(vulnerabilities),
-            "vulnerabilities": vulnerabilities,
+            "count":                 len(vulnerabilities),
+            "vulnerabilities":       vulnerabilities,
         }
     except json.JSONDecodeError:
         return {
-            "error": f"Could not parse safety output: {stdout}",
+            "error":      f"Could not parse safety output: {stdout}",
             "raw_output": stdout,
         }
 
@@ -94,8 +94,8 @@ def check_outdated_packages() -> Dict:
         outdated = json.loads(stdout) if stdout.strip() else []
         return {
             "outdated_found": len(outdated) > 0,
-            "count": len(outdated),
-            "packages": outdated,
+            "count":          len(outdated),
+            "packages":       outdated,
         }
     except json.JSONDecodeError:
         return {"error": f"Could not parse pip list output: {stdout}"}
@@ -134,12 +134,12 @@ def run_bandit_scan() -> Dict:
         results = json.loads(stdout) if stdout.strip() else {}
         return {
             "issues_found": results.get("results") and len(results["results"]) > 0,
-            "count": len(results.get("results", [])),
-            "results": results,
+            "count":        len(results.get("results", [])),
+            "results":      results,
         }
     except json.JSONDecodeError:
         return {
-            "error": f"Could not parse bandit output: {stdout}",
+            "error":      f"Could not parse bandit output: {stdout}",
             "raw_output": stdout,
         }
 
@@ -156,11 +156,11 @@ def generate_report() -> Dict:
 
     report = {
         "timestamp": __import__('datetime').datetime.utcnow().isoformat(),
-        "project": "cocobot",
-        "checks": {
+        "project":   "cocobot",
+        "checks":    {
             "dependency_vulnerabilities": check_dependency_vulnerabilities(),
-            "outdated_packages": check_outdated_packages(),
-            "code_security_scan": run_bandit_scan(),
+            "outdated_packages":          check_outdated_packages(),
+            "code_security_scan":         run_bandit_scan(),
         },
     }
 

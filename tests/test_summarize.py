@@ -72,7 +72,8 @@ def interaction():
 
 async def test_setup(bot):
     """Test the setup function to ensure the cog is added correctly."""
-    await setup(bot)
+    with patch('cogs.summarize.UseAI'):
+        await setup(bot)
     bot.add_cog.assert_called_once()
     args, _ = bot.add_cog.call_args
     assert isinstance(args[0], SummarizeCog)
