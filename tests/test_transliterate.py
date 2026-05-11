@@ -181,7 +181,7 @@ async def test_whitespace_input(mock_prompt, cog, interaction):
 
     # Verify the specific message for empty input was sent (matching ACTUAL output)
     # OLD: expected_message = "✍️ Provide some actual Thai text, maybe? Empty input isn't very helpful."
-    expected_message = '✍️ How about adding some text in Thai, you coconut head!'  # Adjusted based on ACTUAL output
+    expected_message = '✍️ How about adding some text in Thai, you cocotwat!'  # Adjusted based on ACTUAL output
     interaction.followup.send.assert_awaited_once_with(expected_message)
 
     # Verify the AI prompt was NOT called
@@ -205,7 +205,7 @@ async def test_none_input(mock_prompt, cog, interaction):
 
     # Verify the specific message for empty input was sent (matching ACTUAL output)
     # OLD: expected_message = "✍️ Provide some actual Thai text, maybe? Empty input isn't very helpful."
-    expected_message = '✍️ How about adding some text in Thai, you coconut head!'  # Adjusted based on ACTUAL output
+    expected_message = '✍️ How about adding some text in Thai, you cocotwat!'  # Adjusted based on ACTUAL output
     interaction.followup.send.assert_awaited_once_with(expected_message)
 
     # Verify the AI prompt was NOT called
