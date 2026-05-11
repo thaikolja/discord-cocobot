@@ -1,8 +1,8 @@
 # 🥥 cocobot
 
-![GitLab Release](https://img.shields.io/gitlab/v/release/thaikolja%2Fdiscord-cocobot?style=flat&label=version&color=%23d87630&link=https%3A%2F%2Fgitlab.com%2Fthaikolja%2Fdiscord-cocobot) [![pipeline status](https://gitlab.com/thailand-discord/bots/cocobot/badges/main/pipeline.svg)](https://gitlab.com/thailand-discord/bots/cocobot/-/commits/main) ![GitLab License](https://img.shields.io/gitlab/license/thailand-discord%2Fbots%2Fcocobot?style=flat) [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+![GitLab Release](https://img.shields.io/gitlab/v/release/thaikolja%2Fdiscord-cocobot?style=flat&label=version&color=%23d87630&link=https%3A%2F%2Fgitlab.com%2Fthaikolja%2Fdiscord-cocobot) [![pipeline status](https://gitlab.com/thailand-discord/bots/cocobot/badges/main/pipeline.svg)](https://gitlab.com/thailand-discord/bots/cocobot/-/commits/main) ![GitLab License](https://img.shields.io/gitlab/license/thailand-discord%2Fbots%2Fcocobot?style=flat) [![Python Version](https://img.shields.io/badge/Python-3.13%2B-blue.svg)](https://www.python.org/downloads/)
 
-**@cocobot** is your friendly, feature-rich **Discord bot** designed for the [**Discord Thailand** server](https://discord.gg/6JXCqVdmTZ), bringing a tropical twist to your server with useful utilities and fun interactions. Built with **Python** and the `discord.py` library, cocobot offers **a variety of commands** for practical tasks like weather checking, translation, and currency conversion, all wrapped in a coconut-themed package.
+**@cocobot** is your friendly, feature-rich **Discord bot** designed for the [**Discord Thailand Server**](https://discord.gg/6JXCqVdmTZ), bringing a tropical wind to your server with useful utilities and fun interactions. Built with **Python** and the `discord.py` library, cocobot offers **a variety of commands** for practical tasks like weather checking, translation, and currency conversion, all wrapped in a coconut-themed package.
 
 ![GitHub Repository Banner](https://p.ipic.vip/srmtct.jpg)
 
@@ -14,37 +14,32 @@
 
 **cocobot** comes packed with useful commands. Parameters displayed in `<...>` are mandatory, whereas `[...]` are optional parameters that default to a specific value.
 
-- **🌤️ Weather**: Get current weather conditions for any location
-  - `/weather [location]` *(string)* **Default:** Bangkok
+- **🌤️ Weather**: Get current weather conditions for any location with °C/°F toggle
+  - `/weather [location] [units]` *(string | choice)* **Default:** channel's city or Bangkok, metric
 
 - **🕓 Time**: Check the local time in any city or country
-  - `/time [location]` *(string)* **Default:** Thailand
+  - `/time [location]` *(string)* **Default:** Bangkok
 
 - **💱 Exchange Rates**: Convert between currencies with up-to-date rates
-  - `/exchangerates`
+  - `/exchangerate`
     - `[from_currency]` *(string)* **Default:** `USD`
     - `[to_currency]` *(string)* **Default:** `THB`
     - `[amount]` *(number)* **Default:** `1`
 
-- **📍 Location**: Find addresses and get a Google Maps link
-  - `/locate`
-    - `<location>` *(string)* **Required**
-    - `[city]` *(string)* **Default:** Bangkok
-
 - **🌫️ Pollution**: Check air quality index (AQI) for any city
-  - `/pollution <city>` *(string)*
+  - `/pollution [city]` *(string)* **Default:** channel's city or Bangkok
 
-- **🔤 Transliteration**: Convert Thai text to Latin script[^3]
-  - `/transliterate <text>` *(string)* Change Thai script into the Latin alphabet
+- **🔤 Transliteration**: Convert Thai text to Latin script using AI[^3]
+  - `/transliterate <text>` *(string)*
 
-- 💡 **Learn:** Shows one of the 250 core Thai words and its translation and transliteration
+- 💡 **Learn:** Shows one of the 250 core Thai words with English translation and transliteration
   - `/learn`
 
-- **🌐 Translation**: Translate text between languages using AI[^3]
+- **🌐 Translation**: Translate text between languages using AI with auto-detection[^3]
   - `/translate`
     - `<text>` *(string)* The text to be translated
-    - `[from_language]` *(string)* **Default:** Thai
-    - `[to_language]` *(string)* **Default:** English
+    - `[from_language]` *(string)* **Default:** auto (Thai/English detection)
+    - `[to_language]` *(string)* **Default:** auto (opposite of source)
 
 ## 🥥 Examples
 
@@ -53,7 +48,7 @@
 ### Get the current weather in Bangkok
 
 ```bash
-/weather location: Bangkok
+/weather location: Bangkok units: Civilized Units (°C)
 ```
 
 **Returns:** "🌤️ The weather in **Bangkok**, **Thailand** is currently clear with temperatures of `23.4°C` (feels like `25.2°C`). **Humidity** is at `69%`."
@@ -96,7 +91,7 @@
 
 ### Prerequisites
 - A server with root access (Debian/Ubuntu recommended)
-- Git, Python 3.10+, and `pip` installed
+- Git, Python 3.13+, and `pip` installed
 
 ### As Service
 
@@ -135,7 +130,7 @@
    - Use OAuth2 URL with `bot` scope and required permissions
    - Add bot to your server
 
-Your bot should now be online with the `/coco` command available.
+Your bot should now be online with slash commands available.
 
 ---
 
@@ -148,15 +143,15 @@ Your bot should now be online with the `/coco` command available.
 - `DISCORD_BOT_ID`: Bot application ID
 - `DISCORD_SERVER_ID`: Default server ID
 - At least one LLM provider API key:
-  - `GOOGLE_API_KEY`: Google Gemini API key
+  - `GEMINI_API_KEY`: Google Gemini API key (translate, transliterate)
   - `DEEPSEEK_API_KEY`: DeepSeek API key
   - `GROQ_API_KEY`: Groq API key
 
 ### LLM Provider Configuration
 
 **Summarization** (`/summarize` command):
-- `SUMMARY_PROVIDER`: LLM provider (google, groq, deepseek)
-- `SUMMARY_MODEL`: Model name (e.g., `gemini-2.5-flash`, `llama-3.3-70b-versatile`, `deepseek-chat`)
+- `SUMMARY_PROVIDER`: LLM provider (`groq`, `gemini`, `deepseek`)
+- `SUMMARY_MODEL`: Model name (e.g., `deepseek-v4-flash`, `groq/compound`, `models/gemini-3.1-flash-lite-preview`)
 
 ### Optional Configuration
 - **Database**: `DATABASE_URL`, `DB_POOL_SIZE`, `DB_ECHO`, `INIT_DB_ON_STARTUP`
@@ -168,7 +163,7 @@ Your bot should now be online with the `/coco` command available.
 
 ### API Response Caching
 
-As of `v3.4.0`, all external API responses (`/weather`, `/time`, `/exchangerate`, `/pollution`) are cached in the local database for **10 minutes** to reduce latency and API usage.
+As of `v3.4.0`, all external API responses (`/weather`, `/time`, `/exchangerate`, `/pollution`) are cached in the local database for **1 hour** (3600 seconds) to reduce latency and API usage. Cache TTL is configurable via the `CACHE_TTL` environment variable.
 
 The `CACHE_BYPASS_PRIVILEGED` constant in `config/config.py` controls whether privileged users skip the cache:
 
@@ -176,7 +171,7 @@ The `CACHE_BYPASS_PRIVILEGED` constant in `config/config.py` controls whether pr
 # config/config.py
 
 # When True, guild owners, administrators, and users with Manage Server permission
-# always receive a fresh API response, bypassing the 10-minute cache.
+# always receive a fresh API response, bypassing the 1-hour cache.
 CACHE_BYPASS_PRIVILEGED: bool = True
 ```
 
@@ -235,5 +230,5 @@ We welcome contributions via Git! Please follow these standard steps:
 [^1]: Using `.` works only if the current directory is completely empty. If not, leave don't use it and use `mv ./discord-bot/{*,.*} ../`
 [^2]: Keep your `.env` file secret and remember to add it to the `.gitignore` file.
 
-[^3]: Uses Google's Gemini 2.5 Flash and can produce inaccuracies.
-[^4]: Since `v2.2.0`, this has been handled by *Gemini 2.5 Flash Lite.* An API key is required, but usage of up to a million tokens is free.
+[^3]: Uses Google's Gemini 3.1 Flash Lite and can produce inaccuracies.
+[^4]: Since `v2.2.0`, this has been handled by *Gemini.* An API key is required, but usage of up to a million tokens is free.
