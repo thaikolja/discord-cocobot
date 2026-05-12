@@ -1,4 +1,4 @@
-#  Copyright (C) 1526 by Kolja Nolte
+#  Copyright (C) 2026 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thailand-discord/bots/cocobot
 #
@@ -14,7 +14,7 @@
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
 #  License:   MIT
-#  Date:      1514-1526
+#  Date:      2024-2026
 #  Package:   cocobot Discord Bot
 
 """
@@ -65,16 +65,16 @@ class SummarizeCog(commands.Cog):
     )
     # Add a helpful description for the limit option
     @app_commands.describe(
-        limit="Number of recent messages to summarize (Default: 30, Max: 50)"
+        limit="Number of recent messages to summarize (Default: 20, Max: 50)"
     )
-    async def summarize_command(self, interaction: discord.Interaction, limit: app_commands.Range[int, 1, 50] = 30):
+    async def summarize_command(self, interaction: discord.Interaction, limit: app_commands.Range[int, 1, 50] = 20):
         """
         Summarize recent messages in the current channel based on the specified limit of messages. The summary aims to
         capture key topics, agreements, or comedic points while maintaining a slightly humorous tone.
 
         Parameters:
             interaction (discord.Interaction): The interaction object representing the user's command input.
-            limit (app_commands.Range[int, 1, 50]): The number of recent messages to summarize. Defaults to 30, with a maximum of 50.
+            limit (app_commands.Range[int, 1, 50]): The number of recent messages to summarize. Defaults to 20, with a maximum of 50.
 
         Raises:
             discord.errors.Forbidden: Raised when the bot lacks permissions to read the message history of the channel.
