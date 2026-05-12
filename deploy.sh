@@ -8,4 +8,4 @@ COCOBOT_DIR="/opt/bots/cocobot"
 cd $COCOBOT_DIR || { echo "❌ cocobot directory not found: $COCOBOT_DIR"; exit 1; }
 
 # Run the deployment script
-./deploy-as-docker.sh
+./script/deploy-as-docker.sh
