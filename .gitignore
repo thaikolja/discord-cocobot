@@ -21,6 +21,8 @@ cocobot.db
 docs/
 *.log
 metrics/*
+skills-lock.json
+.agents
 
 # Icon must end with two \r
 Icon

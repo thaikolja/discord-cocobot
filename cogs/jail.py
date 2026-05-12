@@ -22,7 +22,7 @@ August Engelhardt harasses them in #ai-jail until they leave or are unjailed.
 #  Author:    Kolja Nolte
 #  Email:     kolja.nolte@gmail.com
 #  License:   MIT
-#  Date:      2014-2026
+#  Date:      2024-2026
 #  Package:   cocobot Discord Bot
 
 import json
