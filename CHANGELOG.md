@@ -20,6 +20,10 @@ know how this shit works.
 - **Transliterate Command**: Refined the AI prompt for more accurate phonetic output and polished the user-facing messages.
 - **AI Helper**: Improved `UseAI` utility with better formatting and type hint suppressions.
 - **Dependency Audit**: Enhanced the `dependency_audit.py` script for better command execution and output handling.
+- **Copyright Dates**: Fixed copyright year range from `2014-2026` to `2024-2026` across all source files (project started in 2024, not 2014).
+- **Default Summarize Limit**: `/summarize` default message limit reduced from `30` to `20` for faster response times.
+- **Default AI Provider**: `SUMMARY_PROVIDER` switched from `groq` to `deepseek` with `SUMMARY_MODEL` set to `deepseek-v4-flash`.
+- **Gemini Model**: Updated default `GEMINI_MODEL` from `models/gemini-3.1-flash-lite-preview` to `models/gemini-2.5-flash-lite` due to deprecation.
 
 ### Fixed
 

@@ -151,7 +151,7 @@ Your bot should now be online with slash commands available.
 
 **Summarization** (`/summarize` command):
 - `SUMMARY_PROVIDER`: LLM provider (`groq`, `gemini`, `deepseek`)
-- `SUMMARY_MODEL`: Model name (e.g., `deepseek-v4-flash`, `groq/compound`, `models/gemini-3.1-flash-lite-preview`)
+- `SUMMARY_MODEL`: Model name (e.g., `deepseek-v4-flash`, `models/gemini-2.5-flash`, `groq/compound`)
 
 ### Optional Configuration
 - **Database**: `DATABASE_URL`, `DB_POOL_SIZE`, `DB_ECHO`, `INIT_DB_ON_STARTUP`
@@ -230,5 +230,5 @@ We welcome contributions via Git! Please follow these standard steps:
 [^1]: Using `.` works only if the current directory is completely empty. If not, leave don't use it and use `mv ./discord-bot/{*,.*} ../`
 [^2]: Keep your `.env` file secret and remember to add it to the `.gitignore` file.
 
-[^3]: Uses Google's Gemini 3.1 Flash Lite and can produce inaccuracies.
+[^3]: Uses Google's Gemini 2.5 Flash Lite and can produce inaccuracies.
 [^4]: Since `v2.2.0`, this has been handled by *Gemini.* An API key is required, but usage of up to a million tokens is free.
