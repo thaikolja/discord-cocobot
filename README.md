@@ -32,6 +32,10 @@
 - **🔤 Transliteration**: Convert Thai text to Latin script using AI[^3]
   - `/transliterate <text>` *(string)*
 
+- ⚠️ **Warning System**: Moderator warning system with three-strike auto-kick
+  - `/warn <user> [reason]` *(member | string)*
+  - `/resetwarnings <user>` *(member)*
+
 - 💡 **Learn:** Shows one of the 250 core Thai words with English translation and transliteration
   - `/learn`
 
@@ -84,6 +88,14 @@
 ```
 
 **Returns:** "🇺🇸 hâwng-nám yùu-tìi-nǎi"[^4]
+
+### Warn a member who breaks the rules
+
+```bash
+/warn user: @Username reason: "Spamming in #general"
+```
+
+**Returns (first warning):** An embed with the warning card, severity-colored (gold → orange → red). On the third warning, the member is automatically kicked.
 
 ---
 
