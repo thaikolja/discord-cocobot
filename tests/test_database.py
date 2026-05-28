@@ -1,6 +1,8 @@
 import sqlite3
 
-from utils.database import init_db
+from sqlalchemy import text
+
+from utils.database import get_db_session, init_db
 
 
 def test_database_initialization(tmp_path):
@@ -21,11 +23,13 @@ def test_database_initialization(tmp_path):
     tables = [row[0] for row in cursor.fetchall()]
     conn.close()
 
-    # Only the 3 tables that are actively used by the bot should be created
+    # All actively used persistence tables should be created
     expected_tables = [
         "cache_entries",
         "rate_limits",
         "visa_reminders",
+        "jailed_users",
+        "warning_entries",
     ]
     for table in expected_tables:
         assert table in tables, f"Expected table '{table}' is missing from the database"
@@ -34,3 +38,16 @@ def test_database_initialization(tmp_path):
     obsolete_tables = ["users", "guilds", "command_usage", "bot_settings"]
     for table in obsolete_tables:
         assert table not in tables, f"Obsolete table '{table}' should not exist"
+
+
+def test_get_db_session_supports_both_access_patterns(tmp_path):
+    """Database sessions should work with both `with get_db_session()` and `next(get_db_session())`."""
+    db_path = tmp_path / "test_session_patterns.db"
+    init_db(f"sqlite:///{db_path}")
+
+    with get_db_session() as db:
+        assert db.execute(text("SELECT 1")).scalar() == 1
+
+    with next(get_db_session()) as db:
+        assert db.execute(text("SELECT 1")).scalar() == 1
+

@@ -78,6 +78,8 @@ INITIAL_EXTENSIONS = [
     'cogs.learn',
     # Administrative commands cog
     'cogs.admin',
+    # Moderator warning system cog
+    'cogs.warn',
     # AI Jail commands cog
     'cogs.jail',
     # Chat summarize command cog
