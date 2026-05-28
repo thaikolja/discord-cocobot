@@ -4,6 +4,36 @@ From time to time, a new coconut falls from the tree, and we need to update the 
 fixes, and improvements. Each entry is categorized by version number and includes a brief description of the chan-- man, you're all developers, otherwise you wouldn't be reading this; you
 know how this shit works.
 
+## v3.6.0
+
+### Added
+
+- **Moderator Warning System** (`/warn`, `/resetwarnings`): New moderator-only commands for issuing warnings to members. Three active warnings trigger an automatic kick. Warnings persist in the database across restarts.
+    - `/warn <user> [reason]`: Issue a warning (requires Moderate Members permission). Validates moderator/bot hierarchy, prevents self-warns, bot warns, owner warns, and moderator warns.
+    - `/resetwarnings <user>`: Reset a member's active warning cycle without deleting history.
+    - Optional `WARNED_ROLE_ID` in `.env`: When configured, a "Warned" role is automatically assigned on first/second warning and removed on reset or kick.
+    - **Embeds:** Warning cards are sent to the warned user via DM and posted in the channel with severity-based color coding.
+- **WarningEntry Database Model**: New `warning_entries` table tracking guild, user, moderator, reason, warning number, kick trigger, and active status.
+- **Avatar Assets**: Added Max Lützow-themed avatar images (SVG + 3 PNG resolutions).
+
+### Changed
+
+- **Version Bump**: `3.5.3` → `3.6.0`
+- **Database Session Management**: `get_db_session()` now returns a `_SessionHandle` context manager instead of a generator, providing forward and backward-compatible `with` and `for` iteration patterns.
+- **UTC Timestamps**: All database timestamps now use `datetime.now(UTC)` via a `_utcnow()` helper instead of deprecated `datetime.utcnow()`.
+- **Environment Configuration**: Renamed `.env` section from "JAIL SYSTEM CONFIGURATION" to "MODERATION & JAIL CONFIGURATION".
+- **Summarize Cog Cleanup**: Removed unused `SUMMARY_MODEL` env var retrieval and redundant log message.
+
+### Fixed
+
+- **Docker Compose**: Removed dangling `./init.sql` volume mount from PostgreSQL service.
+
+### New Contributors
+
+- **Max Luetzow** ([gitlab.com/max-luetzow](https://gitlab.com/max-luetzow)) — Avatar artwork and warning system collaboration.
+
+---
+
 ## v3.5.3
 
 - **Merged:** Branch `chore/summarize` — model defaults and `/summarize` cap adjustment.
