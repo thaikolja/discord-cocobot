@@ -18,7 +18,7 @@ echo "📂 Current directory: $(pwd)"
 
 # Pull the latest changes
 echo "📥 Pulling latest changes from GitLab..."
-git pull origin main
+git pull
 
 # Stop existing containers (if running)
 echo "🛑 Stopping existing containers..."
