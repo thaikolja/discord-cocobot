@@ -22,9 +22,10 @@ echo "📥 Pulling latest changes from GitLab..."
 git pull
 
 # Generate clean env file for Docker Compose v2 (strips comment lines)
-if [ -f ".env" ]; then
-  grep -v '^\s*#' .env | grep -v '^\s*$' > .env.docker
-  echo "📝 Generated clean .env.docker from .env"
+if [ ! -f ".env" ]; then
+  echo "❌ .env file not found"
+
+  exit 1
 fi
 
 # Stop existing containers (if running)
