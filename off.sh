@@ -19,7 +19,7 @@ if [ -f "/opt/discord/cocobot/docker-compose.yml" ]; then
     # Stop and remove all Docker containers defined in docker-compose.yml
     # --remove-orphans flag removes containers for services not defined in the compose file
     echo "🛑 Stopping existing containers..."
-    docker-compose down --remove-orphans || echo "No containers to stop or already stopped."
+    docker compose down --remove-orphans || echo "No containers to stop or already stopped."
 
     # Exit successfully after stopping containers
     exit 0
