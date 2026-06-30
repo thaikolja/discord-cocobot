@@ -11,6 +11,7 @@ cd "/opt/discord/cocobot"
 # Check if we're in the correct directory
 if [ ! -f "/opt/discord/cocobot/docker-compose.yml" ]; then
   echo "❌ docker-compose.yml not found in current directory"
+
   exit 1
 fi
 
