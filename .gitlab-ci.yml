@@ -39,12 +39,12 @@ deploy:
   stage: deploy
   image: alpine:latest
   before_script:
-    - apk add --no-cache openssh openssh-client docker-cli docker-compose
+    - apt-get update -qy
+    - apt-get install -y --no-install-recommends openssh-client docker.io
     - eval $(ssh-agent -s)
-    - ssh-add <(echo "$SSH_PRIVATE_KEY" | tr -d '\r')
+    - printf "%s\n" "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
-    - ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
   script:
     - ssh $SSH_USER@$SSH_HOST "bash $REMOTE_SCRIPT_PATH"
   only:
