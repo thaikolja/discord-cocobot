@@ -39,9 +39,9 @@ deploy:
   stage: deploy
   image: alpine:latest
   before_script:
-    - apk add --no-cache openssh docker-cli docker-compose
+    - apk add --no-cache openssh openssh-client docker-cli docker-compose
     - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - ssh-add <(echo "$SSH_PRIVATE_KEY" | tr -d '\r')
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
