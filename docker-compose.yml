@@ -4,7 +4,7 @@ services:
     container_name: cocobot
     restart: unless-stopped
     env_file:
-      - .env
+      - .env.docker
     environment:
       - ENVIRONMENT=production
       - DATABASE_URL=postgresql://cocobot:password@db:5432/cocobot

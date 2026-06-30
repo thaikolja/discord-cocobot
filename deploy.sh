@@ -21,6 +21,12 @@ echo "📂 Current directory: $(pwd)"
 echo "📥 Pulling latest changes from GitLab..."
 git pull
 
+# Generate clean env file for Docker Compose v2 (strips comment lines)
+if [ -f ".env" ]; then
+  grep -v '^\s*#' .env | grep -v '^\s*$' > .env.docker
+  echo "📝 Generated clean .env.docker from .env"
+fi
+
 # Stop existing containers (if running)
 echo "🛑 Stopping existing containers..."
 docker compose down --remove-orphans || echo "No containers to stop or already stopped"
