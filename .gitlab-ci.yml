@@ -37,7 +37,7 @@ test:
 
 deploy:
   stage: deploy
-  image: ubuntu:latest
+  image: debian:bookworm-slim
   before_script:
     - apt-get update -qy
     - apt-get install -y --no-install-recommends openssh-client
@@ -46,7 +46,7 @@ deploy:
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
   script:
-    - ssh $SSH_USER@$SSH_HOST "bash $REMOTE_SCRIPT_PATH"
+    - ssh -o StrictHostKeyChecking=accept-new $SSH_USER@$SSH_HOST "bash $REMOTE_SCRIPT_PATH"
   only:
     - main
   dependencies:
