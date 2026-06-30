@@ -2,16 +2,16 @@
 # Deployment script for Cocobot Docker container
 # This script stops the current container, pulls the latest code, rebuilds the image, and starts the new container.
 
-set -e  # Exit on any error
+set -e # Exit on any error
 
 echo "🥥 Starting Cocobot Docker deployment..."
 
-cd "/opt/bots/cocobot"
+cd "/opt/discord/cocobot"
 
 # Check if we're in the correct directory
-if [ ! -f "/opt/bots/cocobot/docker-compose.yml" ]; then
-    echo "❌ docker-compose.yml not found in current directory"
-    exit 1
+if [ ! -f "/opt/discord/cocobot/docker-compose.yml" ]; then
+  echo "❌ docker-compose.yml not found in current directory"
+  exit 1
 fi
 
 echo "📂 Current directory: $(pwd)"
@@ -37,24 +37,24 @@ sleep 5
 
 # Check if the main service is running
 if docker-compose ps | grep -q "cocobot.*Up"; then
-    echo "✅ Cocobot service is running successfully"
+  echo "✅ Cocobot service is running successfully"
 else
-    echo "❌ Cocobot service failed to start"
-    docker-compose logs cocobot
-    exit 1
+  echo "❌ Cocobot service failed to start"
+  docker-compose logs cocobot
+  exit 1
 fi
 
 # Check if database and redis are running too
 if docker-compose ps | grep -q "cocobot-db.*Up"; then
-    echo "✅ Database service is running"
+  echo "✅ Database service is running"
 else
-    echo "⚠️ Database service may not be running properly"
+  echo "⚠️ Database service may not be running properly"
 fi
 
 if docker-compose ps | grep -q "cocobot-redis.*Up"; then
-    echo "✅ Redis service is running"
+  echo "✅ Redis service is running"
 else
-    echo "⚠️ Redis service may not be running properly"
+  echo "⚠️ Redis service may not be running properly"
 fi
 
 # Show final status
