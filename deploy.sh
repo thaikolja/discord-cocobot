@@ -21,7 +21,7 @@ echo "📥 Pulling latest changes from GitLab..."
 git pull origin main
 
 # Stop existing containers (if running)
-echo "🛑 Stopping existing containers (if any)..."
+echo "🛑 Stopping existing containers..."
 docker-compose down --remove-orphans || echo "No containers to stop or already stopped"
 
 # Build the new image
