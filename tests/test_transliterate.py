@@ -25,7 +25,6 @@ import pytest_asyncio
 from discord.ext import commands
 
 # Import the Transliterate cog to test
-# Assuming the path is correct relative to your tests directory
 from cogs.transliterate import Transliterate
 
 # Import configuration for error messages
@@ -78,8 +77,9 @@ def validate_transliteration(output: str) -> bool:
 
 # Test the main transliteration flow
 @pytest.mark.asyncio
+@patch('utils.helpers.UseAI._init_client')
 @patch('utils.helpers.UseAI.prompt')
-async def test_transliteration_flow(mock_prompt, cog, interaction):
+async def test_transliteration_flow(mock_prompt, mock_init, cog, interaction):
     # Set up mock response from AI
     mock_ai_response = "sà-wàt-dii"
     mock_prompt.return_value = mock_ai_response
@@ -100,8 +100,9 @@ async def test_transliteration_flow(mock_prompt, cog, interaction):
 
 # Test error handling for API exceptions (Generic Exception)
 @pytest.mark.asyncio
+@patch('utils.helpers.UseAI._init_client')
 @patch('utils.helpers.UseAI.prompt')
-async def test_error_handling(mock_prompt, cog, interaction):
+async def test_error_handling(mock_prompt, mock_init, cog, interaction):
     # Set up mock to raise a generic exception
     mock_prompt.side_effect = Exception("API Error")
 
@@ -118,8 +119,9 @@ async def test_error_handling(mock_prompt, cog, interaction):
 
 # Test prompt construction - this test seems okay, just verifying input is in the prompt
 @pytest.mark.asyncio
+@patch('utils.helpers.UseAI._init_client')
 @patch('utils.helpers.UseAI.prompt')
-async def test_prompt_construction(mock_prompt, cog, interaction):
+async def test_prompt_construction(mock_prompt, mock_init, cog, interaction):
     # Define test cases with input text
     test_cases = [
         "สวัสดี",
@@ -152,8 +154,9 @@ async def test_prompt_construction(mock_prompt, cog, interaction):
 
 # Test handling of empty responses from AI
 @pytest.mark.asyncio
+@patch('utils.helpers.UseAI._init_client')
 @patch('utils.helpers.UseAI.prompt')
-async def test_empty_response_handling(mock_prompt, cog, interaction):
+async def test_empty_response_handling(mock_prompt, mock_init, cog, interaction):
     # Set up mock to return an empty string
     mock_prompt.return_value = ""
 
@@ -210,3 +213,53 @@ async def test_none_input(mock_prompt, cog, interaction):
 
     # Verify the AI prompt was NOT called
     mock_prompt.assert_not_called()
+
+
+# Test UseAI fallback behavior: primary fails, fallback succeeds
+@pytest.mark.asyncio
+@patch('utils.helpers.UseAI._handle_google')
+@patch('utils.helpers.UseAI._handle_deepseek')
+async def test_ai_fallback(
+    mock_deepseek, mock_google, cog, interaction
+):
+    mock_google.side_effect = Exception("Gemini rate limited")
+    mock_deepseek.return_value = "khop-khun"
+
+    from utils.helpers import UseAI
+    ai = UseAI(
+        provider='gemini',
+        api_key='test-key',
+        model='test-model',
+        fallback_provider='deepseek',
+        fallback_api_key='test-key-2',
+        fallback_model='test-model-2',
+    )
+    result = ai.prompt("ทดสอบ")
+
+    mock_google.assert_called_once()
+    mock_deepseek.assert_called_once()
+    assert result == "khop-khun"
+
+
+# Test UseAI fallback: both providers fail, returns None
+@pytest.mark.asyncio
+@patch('utils.helpers.UseAI._handle_google')
+@patch('utils.helpers.UseAI._handle_deepseek')
+async def test_ai_fallback_both_fail(
+    mock_deepseek, mock_google, cog, interaction
+):
+    mock_google.side_effect = Exception("Gemini rate limited")
+    mock_deepseek.side_effect = Exception("DeepSeek also down")
+
+    from utils.helpers import UseAI
+    ai = UseAI(
+        provider='gemini',
+        api_key='test-key',
+        model='test-model',
+        fallback_provider='deepseek',
+        fallback_api_key='test-key-2',
+        fallback_model='test-model-2',
+    )
+    result = ai.prompt("ทดสอบ")
+
+    assert result is None

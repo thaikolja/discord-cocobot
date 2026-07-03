@@ -81,7 +81,7 @@ INITIAL_EXTENSIONS = [
     # Moderator warning system cog
     'cogs.warn',
     # AI Jail commands cog
-    'cogs.jail',
+    # 'cogs.jail',
     # Chat summarize command cog
     'cogs.summarize',
 ]
@@ -243,8 +243,8 @@ class Cocobot(commands.Bot):
         # Check for visa channel nationality reminder condition
         # Only remind the user if they haven't been reminded before and their message contains "visa"
         if (
-            message.channel.name == "visa"
-            and "visa" in message.content.lower()  # Case-insensitive matching
+                message.channel.name == "visa"
+                and "visa" in message.content.lower()  # Case-insensitive matching
         ):
             # Try to check database, but allow graceful fallback for test environments
             user_already_reminded = False
@@ -254,7 +254,8 @@ class Cocobot(commands.Bot):
 
                 # Check database if user has already been reminded
                 with get_db_session() as db:
-                    user_already_reminded = DatabaseManager.has_been_reminded_about_visa(db, str(message.author.id))
+                    user_already_reminded = DatabaseManager.has_been_reminded_about_visa(db,
+                                                                                         str(message.author.id))
             except SQLAlchemyError as e:
                 # Log the exception and fall back to in-memory check
                 error_logger.error(f"Database error checking visa reminder: {e}")
@@ -300,7 +301,9 @@ class Cocobot(commands.Bot):
             # Remove all mentions from the message to check if there's any other text
             text_without_mentions = normalized_message_content_stripped
             for mention in message.mentions:
-                text_without_mentions = text_without_mentions.replace(f'<@{mention.id}>', '').replace(f'<@!{mention.id}>', '')
+                text_without_mentions = text_without_mentions.replace(f'<@{mention.id}>',
+                                                                      '').replace(
+                    f'<@!{mention.id}>', '')
             # Check if only whitespace remains after removing mentions
             if text_without_mentions.strip() == '':
                 is_cocobot_mention_alone = True
@@ -377,7 +380,7 @@ class Cocobot(commands.Bot):
             await message.channel.send(embed=embed)
         # Check for tribute to @Nal
         elif '@Nal' in message.content or any(
-            mention.name == 'nal_9345' for mention in message.mentions
+                mention.name == 'nal_9345' for mention in message.mentions
         ):
             # Create embed for Nal tribute
             embed = discord.Embed()
@@ -446,7 +449,8 @@ class Cocobot(commands.Bot):
 
     # Global error handler for application commands (slash commands)
     @staticmethod
-    async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    async def on_app_command_error(interaction: discord.Interaction,
+                                   error: app_commands.AppCommandError):
         """
         Handles and logs errors encountered during application command execution.
 
@@ -480,7 +484,8 @@ class Cocobot(commands.Bot):
                     "developers have been notified. Just kidding, nobody cares.",
                     ephemeral=True,
                 )
-        except (discord.HTTPException, discord.InteractionResponded, discord.NotFound) as followup_error:
+        except (discord.HTTPException, discord.InteractionResponded,
+                discord.NotFound) as followup_error:
             # If we can't send an error message to the user due to Discord API issues,
             # log it for debugging but don't crash the error handler
             error_logger.error(
@@ -505,7 +510,8 @@ class Cocobot(commands.Bot):
         with get_db_session() as db:
             # Find and delete any existing visa reminder for the user
             from utils.database import VisaReminder
-            reminder = db.query(VisaReminder).filter(VisaReminder.user_discord_id == user_id).first()
+            reminder = db.query(VisaReminder).filter(
+                VisaReminder.user_discord_id == user_id).first()
             if reminder:
                 db.delete(reminder)
                 db.commit()

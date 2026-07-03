@@ -32,7 +32,15 @@ from discord import app_commands
 from discord.ext import commands
 
 # Local config + AI helper for summarization
-from config.config import ERROR_MESSAGE
+from config.config import (
+    ERROR_MESSAGE,
+    SUMMARIZE_FALLBACK_PROVIDER,
+    SUMMARIZE_FALLBACK_PROVIDER_API_KEY,
+    SUMMARIZE_FALLBACK_PROVIDER_MODEL,
+    SUMMARIZE_PROVIDER,
+    SUMMARIZE_PROVIDER_API_KEY,
+    SUMMARIZE_PROVIDER_MODEL,
+)
 from utils.helpers import UseAI
 
 # Grab the shared discord logger so we stay consistent
@@ -51,10 +59,15 @@ class SummarizeCog(commands.Cog):
         """
         # Keep a handle to the bot so we can interact with Discord
         self.bot = bot
-        # Set up the AI helper using the configured model for summarization
-        import os
-        summary_provider = os.getenv("SUMMARY_PROVIDER", "deepseek")
-        self.ai = UseAI(summary_provider)
+        # Set up the AI helper using the configured provider
+        self.ai = UseAI(
+            provider=SUMMARIZE_PROVIDER,
+            api_key=SUMMARIZE_PROVIDER_API_KEY,
+            model=SUMMARIZE_PROVIDER_MODEL,
+            fallback_provider=SUMMARIZE_FALLBACK_PROVIDER,
+            fallback_api_key=SUMMARIZE_FALLBACK_PROVIDER_API_KEY,
+            fallback_model=SUMMARIZE_FALLBACK_PROVIDER_MODEL,
+        )
 
     # Register the slash command with Discord
     @app_commands.command(

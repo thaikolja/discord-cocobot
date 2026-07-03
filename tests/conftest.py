@@ -14,6 +14,10 @@
 #  Date:      2014-2025
 #  Package:   cocobot Discord Bot
 
+import os
+
+os.environ.setdefault('ENVIRONMENT', 'testing')
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import discord
