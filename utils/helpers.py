@@ -18,24 +18,19 @@
 #  Package:   cocobot Discord Bot
 
 # Import the urllib.parse module for URL parsing and handling
+import logging
 import urllib.parse
 from typing import Final
 
 import discord
+
+logger = logging.getLogger(__name__)
 
 # Import the google.genai module for interacting with Google's Generative AI
 from google import genai
 
 # Import the groq module for interacting with Groq's API
 from groq import Groq
-
-# Import the necessary API keys from the config module
-from config.config import GEMINI_API_KEY  # API key for Google Gemini services
-from config.config import GEMINI_MODEL  # API key for Google Gemini services
-from config.config import GROQ_API_KEY  # API key for Groq services
-from config.config import GROQ_MODEL  # API key for Groq services
-from config.config import DEEPSEEK_API_KEY  # API key for DeepSeek services
-from config.config import DEEPSEEK_MODEL  # Model name for DeepSeek
 
 
 # Define a class named UseAI to handle interactions with various AI providers
@@ -46,6 +41,8 @@ class UseAI:
 
     This class abstracts the complexity of different AI provider APIs,
     allowing for a unified interface to generate responses to prompts.
+    Supports an optional fallback provider that is tried automatically
+    when the primary provider raises any exception.
     """
 
     # Define a list of available AI providers
@@ -61,47 +58,66 @@ class UseAI:
     }
 
     # Constructor method to initialize the UseAI instance with the specified provider
-    def __init__(self, provider: str):
+    def __init__(
+        self,
+        provider: str,
+        api_key: str,
+        model: str,
+        fallback_provider: str | None = None,
+        fallback_api_key: str | None = None,
+        fallback_model: str | None = None,
+    ):
         """
         Initializes an instance with a specified provider and sets up the appropriate client
         and model configuration based on the selected provider.
 
         Args:
-            provider (str): The provider to use. Must be one of the available providers
-                listed in the class attribute `AVAILABLE_PROVIDERS`.
+            provider (str): The provider to use. Must be one of ``gemini``, ``deepseek``,
+                or ``groq``.
+            api_key (str): The API key for the provider.
+            model (str): The model name to use.
+            fallback_provider (str | None): Optional fallback provider name.
+            fallback_api_key (str | None): API key for the fallback provider.
+            fallback_model (str | None): Model name for the fallback provider.
 
         Raises:
             ValueError: If the provided provider is not in the list of available providers.
         """
-        # Check if the provided provider is in the list of available providers
         if provider not in self.AVAILABLE_PROVIDERS:
             raise ValueError(
                 f'Invalid provider. Available providers: {self.AVAILABLE_PROVIDERS}'
             )
 
-        # Assign the provider to the instance variable
         self.provider = provider
+        self.fallback_provider = fallback_provider
+        self._fallback_instance: 'UseAI | None' = None
+        self._fallback_api_key = fallback_api_key
+        self._fallback_model = fallback_model
 
-        # Initialize the appropriate client based on the provider
+        self._init_client(provider, api_key, model)
+
+    def _init_client(self, provider: str, api_key: str, model: str):
+        """
+        Initializes the API client and model name for the given provider.
+
+        Args:
+            provider (str): The provider to initialize a client for.
+            api_key (str): The API key.
+            model (str): The model name.
+        """
         if provider == 'groq':
-            # Set up the native Groq client with the specified API key
-            self.client = Groq(api_key=GROQ_API_KEY)
-            # Set the model name for Groq
-            self.model_name = GROQ_MODEL
+            self.client = Groq(api_key=api_key)
+            self.model_name = model
         elif provider == 'gemini':
-            # Initialize the Google Generative AI client with the Gemini API key
-            self.client = genai.Client(api_key=GEMINI_API_KEY)
-            # Set the model name for Google
-            self.model_name = GEMINI_MODEL
+            self.client = genai.Client(api_key=api_key)
+            self.model_name = model
         elif provider == 'deepseek':
-            # DeepSeek uses an OpenAI-compatible API — use the groq SDK pattern via requests
-            from openai import OpenAI as _OpenAI  # only imported when deepseek is used
+            from openai import OpenAI as _OpenAI
             self.client = _OpenAI(
-                api_key=DEEPSEEK_API_KEY,
+                api_key=api_key,
                 base_url='https://api.deepseek.com/v1',
             )
-            # Set the model name for DeepSeek
-            self.model_name = DEEPSEEK_MODEL
+            self.model_name = model
 
     # Method to send a prompt to the AI provider and get the response
     def prompt(self, prompt: str, strict: bool = True) -> str | None:
@@ -109,9 +125,9 @@ class UseAI:
         Generates and processes a response based on the provided prompt and provider.
 
         This function modifies the input prompt based on the strict flag and invokes the
-        appropriate handler for the configured provider. If the provider is recognized,
-        it processes the prompt and returns the response. For unrecognized providers,
-        it returns None.
+        appropriate handler for the configured provider. If the primary provider fails
+        with any exception, it logs a warning and silently tries the fallback provider
+        (if configured). The user never sees the raw error.
 
         Args:
             prompt (str): The input string used to generate a response.
@@ -119,14 +135,48 @@ class UseAI:
                 prompt for stricter result formatting. Defaults to True.
 
         Returns:
-            str | None: A processed string response from the provider, or None if the
-                provider is not supported.
+            str | None: A processed string response from the provider, or None if all
+                providers fail.
         """
-        # Append instruction to the prompt if strict mode is enabled
         if strict:
             prompt = f"{prompt}. Only return the result, nothing else."
 
-        # Handle the prompt based on the selected provider
+        try:
+            return self._dispatch(prompt)
+        except Exception as e:
+            logger.warning(
+                f"Provider '{self.provider}' failed for prompt: {e}"
+            )
+            if self.fallback_provider:
+                try:
+                    if self._fallback_instance is None:
+                        self._fallback_instance = UseAI(
+                            self.fallback_provider,
+                            api_key=self._fallback_api_key,
+                            model=self._fallback_model,
+                        )
+                    return self._fallback_instance._dispatch(prompt)
+                except Exception as e2:
+                    logger.error(
+                        f"Fallback provider '{self.fallback_provider}' "
+                        f"also failed: {e2}"
+                    )
+
+        return None
+
+    def _dispatch(self, prompt: str) -> str:
+        """
+        Dispatches the prompt to the appropriate handler based on the current provider.
+
+        Args:
+            prompt (str): The prompt string to send to the AI provider.
+
+        Returns:
+            str: The response content from the AI provider.
+
+        Raises:
+            ValueError: If the current provider is not recognized.
+        """
         if self.provider == 'groq':
             return self._handle_groq(prompt)
         elif self.provider == 'gemini':
@@ -134,7 +184,7 @@ class UseAI:
         elif self.provider == 'deepseek':
             return self._handle_deepseek(prompt)
 
-        return None
+        raise ValueError(f'Unknown provider: {self.provider}')
 
     def _handle_groq(self, prompt: str) -> str:
         """

@@ -18,6 +18,7 @@
 #  Package:   cocobot Discord Bot
 
 # Import the logging module for error tracking and logging purposes
+import asyncio
 import logging  # Import logging module for error tracking
 
 # Import the discord module for interacting with the Discord API
@@ -31,7 +32,13 @@ from discord.ext import commands  # For creating bot commands
 
 # Import the ERROR_MESSAGE from the config module
 from config.config import (  # Import custom error message from configuration
-    ERROR_MESSAGE
+    ERROR_MESSAGE,
+    TRANSLATE_FALLBACK_PROVIDER,
+    TRANSLATE_FALLBACK_PROVIDER_API_KEY,
+    TRANSLATE_FALLBACK_PROVIDER_MODEL,
+    TRANSLATE_PROVIDER,
+    TRANSLATE_PROVIDER_API_KEY,
+    TRANSLATE_PROVIDER_MODEL,
 )
 
 # Import the UseAI helper utility from the utils.helpers module
@@ -145,11 +152,14 @@ class TranslateCog(commands.Cog):
 
         try:
             # Initialize the AI helper with the preferred provider
-            ai = UseAI(provider='gemini')
-            # Set AI response parameters
-            ai.temperature = 0.3
-            # Well, top_p, I guess
-            ai.top_p = 0.3
+            ai = UseAI(
+                provider=TRANSLATE_PROVIDER,
+                api_key=TRANSLATE_PROVIDER_API_KEY,
+                model=TRANSLATE_PROVIDER_MODEL,
+                fallback_provider=TRANSLATE_FALLBACK_PROVIDER,
+                fallback_api_key=TRANSLATE_FALLBACK_PROVIDER_API_KEY,
+                fallback_model=TRANSLATE_FALLBACK_PROVIDER_MODEL,
+            )
             # Construct the prompt for the AI to process
             prompt = (
                 f'Translate the text "{text}" from {from_language} to {to_language}. '
@@ -157,7 +167,7 @@ class TranslateCog(commands.Cog):
             )
 
             # Get the response from the AI
-            output = ai.prompt(prompt)
+            output = await asyncio.to_thread(ai.prompt, prompt)
 
             # Check if the response is valid
             if not output:

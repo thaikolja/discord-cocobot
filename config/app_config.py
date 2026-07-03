@@ -107,68 +107,94 @@ class APIConfig:
     """
     Represents the configuration required for various APIs used in the application.
 
-    This class holds API keys needed for different services such as weather, currency conversion, geolocation,
-    and integration with external platforms like Google Gemini, Groq, DeepSeek, or Acqin. It ensures that required API keys are
-    properly set unless the application is in a testing environment. Keys are validated after initialization
-    to ensure the application has the necessary configurations.
-
-    Attributes:
-        weatherapi_key: The API key for the weather service, if applicable.
-        currencyapi_key: The API key for the currency conversion service, if applicable.
-        localtime_key: The API key for time zone or local time services, if applicable.
-        gemini_api_key: The API key for Gemini services, if applicable.
-        gemini_model: The model name for Gemini services.
-        geoapify_api_key: The API key for Geoapify services, if applicable.
-        groq_api_key: The API key for Groq services, if applicable.
-        groq_model: The model name for Groq services.
-        acqin_api_key: The API key for Acqin services, if applicable.
-        deepseek_api_key: The API key for DeepSeek services, if applicable.
-        deepseek_model: The model name for DeepSeek services.
+    Each AI-powered feature has its own fully self-contained provider configuration
+    consisting of a provider name (gemini/deepseek/groq), an API key, and a model name.
     """
+
+    # ---- Weather & time & currency (not AI) ----
     weatherapi_key: Optional[str] = None
     currencyapi_key: Optional[str] = None
     localtime_key: Optional[str] = None
-    gemini_api_key: Optional[str] = None
-    gemini_model: str = None
     geoapify_api_key: Optional[str] = None
-    groq_api_key: Optional[str] = None
-    groq_model: str = None
     acqin_api_key: Optional[str] = None
 
-    deepseek_api_key: Optional[str] = None
-    deepseek_model: str = None
+    # ---- Transliterate - primary ----
+    transliterate_provider: str = 'gemini'
+    transliterate_provider_api_key: Optional[str] = None
+    transliterate_provider_model: str = 'models/gemini-3-flash-preview'
+
+    # ---- Transliterate - fallback (leave provider empty to disable) ----
+    transliterate_fallback_provider: str = ''
+    transliterate_fallback_provider_api_key: Optional[str] = None
+    transliterate_fallback_provider_model: str = ''
+
+    # ---- Translate - primary ----
+    translate_provider: str = 'deepseek'
+    translate_provider_api_key: Optional[str] = None
+    translate_provider_model: str = 'deepseek-v4-flash'
+
+    # ---- Translate - fallback (leave provider empty to disable) ----
+    translate_fallback_provider: str = ''
+    translate_fallback_provider_api_key: Optional[str] = None
+    translate_fallback_provider_model: str = ''
+
+    # ---- Summarize - primary ----
+    summarize_provider: str = 'deepseek'
+    summarize_provider_api_key: Optional[str] = None
+    summarize_provider_model: str = 'deepseek-v4-flash'
+
+    # ---- Summarize - fallback (leave provider empty to disable) ----
+    summarize_fallback_provider: str = ''
+    summarize_fallback_provider_api_key: Optional[str] = None
+    summarize_fallback_provider_model: str = ''
+
+    _PROVIDER_FIELDS: tuple[tuple[str, ...], ...] = (
+        ('transliterate_provider', 'transliterate_provider_api_key'),
+        ('transliterate_fallback_provider', 'transliterate_fallback_provider_api_key'),
+        ('translate_provider', 'translate_provider_api_key'),
+        ('translate_fallback_provider', 'translate_fallback_provider_api_key'),
+        ('summarize_provider', 'summarize_provider_api_key'),
+        ('summarize_fallback_provider', 'summarize_fallback_provider_api_key'),
+    )
+
+    _VALID_PROVIDERS = {'gemini', 'deepseek', 'groq'}
 
     def __post_init__(self):
-        """
-        Ensures that required API keys are present in the configuration unless the application is running
-        in a testing environment.
-
-        During initialization, this method checks if the required API keys are set for weather and currency
-        services. If running in a test environment, the validation is skipped to allow more flexibility in
-        testing scenarios. An error is raised if any required API key is missing and the environment is not
-        configured properly.
-
-        Raises:
-            ConfigurationError: If a required API key is missing in the environment and the application is not
-                                running in testing mode.
-        """
-        # Check if we're in a testing environment to be more permissive
         import os
 
         if os.getenv('ENVIRONMENT') == 'testing' or os.getenv('PYTEST_CURRENT_TEST'):
-            # In testing mode, skip validation of required keys
             return
 
-        # Validate required keys are present
         required_keys = ['weatherapi_key', 'currencyapi_key']
         for key in required_keys:
             value = getattr(self, key)
             if not value:
                 env_key = key.upper().replace('KEY', 'API_KEY')
                 raise ConfigurationError(
-                    f"Required API key {env_key} is missing. Please set it in your environment.",
+                    f"Required API key {env_key} is missing. "
+                    f"Please set it in your environment.",
                     config_key=env_key,
                 )
+
+    def validate_providers(self) -> list[str]:
+        """Validate that all configured providers are recognised.
+
+        Returns a list of error messages (empty = all good).
+        """
+        errors: list[str] = []
+        for provider_field, key_field in self._PROVIDER_FIELDS:
+            provider = getattr(self, provider_field, None)
+            api_key = getattr(self, key_field, None)
+            if provider and provider not in self._VALID_PROVIDERS:
+                errors.append(
+                    f"Invalid provider '{provider}' in {provider_field}. "
+                    f"Must be one of {sorted(self._VALID_PROVIDERS)}."
+                )
+            if provider and not api_key:
+                errors.append(
+                    f"Missing API key {key_field} for provider '{provider}'."
+                )
+        return errors
 
 
 @dataclass
@@ -251,7 +277,7 @@ class SecurityConfig:
 class AppConfig:
     """Main application configuration."""
 
-    version: str = "3.6.0"
+    version: str = "3.7.0"
     name: str = "cocobot"
     description: str = "A feature-rich Discord bot for the Thailand Discord server"
     environment: str = os.getenv('ENVIRONMENT', 'production')
@@ -280,14 +306,62 @@ class AppConfig:
                 weatherapi_key=os.getenv('WEATHERAPI_API_KEY'),
                 currencyapi_key=os.getenv('CURRENCYAPI_API_KEY'),
                 localtime_key=os.getenv('LOCALTIME_API_KEY'),
-                gemini_api_key=os.getenv('GEMINI_API_KEY'),
-                gemini_model=os.getenv('GEMINI_MODEL', 'gemini-2.5-flash'),
                 geoapify_api_key=os.getenv('GEOAPFIY_API_KEY'),
-                groq_api_key=os.getenv('GROQ_API_KEY'),
-                groq_model=os.getenv('GROQ_MODEL', 'openai/gpt-oss-120b'),
                 acqin_api_key=os.getenv('ACQIN_API_KEY'),
-                deepseek_api_key=os.getenv('DEEPSEEK_API_KEY'),
-                deepseek_model=os.getenv('DEEPSEEK_MODEL', 'deepseek-chat'),
+                transliterate_provider=os.getenv(
+                    'TRANSLITERATE_PROVIDER', 'gemini'
+                ),
+                transliterate_provider_api_key=os.getenv(
+                    'TRANSLITERATE_PROVIDER_API_KEY'
+                ),
+                transliterate_provider_model=os.getenv(
+                    'TRANSLITERATE_PROVIDER_MODEL', 'models/gemini-3-flash-preview'
+                ),
+                transliterate_fallback_provider=os.getenv(
+                    'TRANSLITERATE_FALLBACK_PROVIDER', ''
+                ),
+                transliterate_fallback_provider_api_key=os.getenv(
+                    'TRANSLITERATE_FALLBACK_PROVIDER_API_KEY'
+                ),
+                transliterate_fallback_provider_model=os.getenv(
+                    'TRANSLITERATE_FALLBACK_PROVIDER_MODEL', ''
+                ),
+                translate_provider=os.getenv(
+                    'TRANSLATE_PROVIDER', 'deepseek'
+                ),
+                translate_provider_api_key=os.getenv(
+                    'TRANSLATE_PROVIDER_API_KEY'
+                ),
+                translate_provider_model=os.getenv(
+                    'TRANSLATE_PROVIDER_MODEL', 'deepseek-v4-flash'
+                ),
+                translate_fallback_provider=os.getenv(
+                    'TRANSLATE_FALLBACK_PROVIDER', ''
+                ),
+                translate_fallback_provider_api_key=os.getenv(
+                    'TRANSLATE_FALLBACK_PROVIDER_API_KEY'
+                ),
+                translate_fallback_provider_model=os.getenv(
+                    'TRANSLATE_FALLBACK_PROVIDER_MODEL', ''
+                ),
+                summarize_provider=os.getenv(
+                    'SUMMARIZE_PROVIDER', 'deepseek'
+                ),
+                summarize_provider_api_key=os.getenv(
+                    'SUMMARIZE_PROVIDER_API_KEY'
+                ),
+                summarize_provider_model=os.getenv(
+                    'SUMMARIZE_PROVIDER_MODEL', 'deepseek-v4-flash'
+                ),
+                summarize_fallback_provider=os.getenv(
+                    'SUMMARIZE_FALLBACK_PROVIDER', ''
+                ),
+                summarize_fallback_provider_api_key=os.getenv(
+                    'SUMMARIZE_FALLBACK_PROVIDER_API_KEY'
+                ),
+                summarize_fallback_provider_model=os.getenv(
+                    'SUMMARIZE_FALLBACK_PROVIDER_MODEL', ''
+                ),
             )
 
         if self.database is None:
@@ -369,6 +443,14 @@ def validate_config(config: AppConfig) -> bool:
         raise ConfigurationError(
             f"Invalid environment '{config.environment}'. Must be one of {valid_environments}",
             config_key="ENVIRONMENT",
+        )
+
+    # Validate AI provider configuration
+    provider_errors = config.api.validate_providers()
+    if provider_errors:
+        raise ConfigurationError(
+            "Invalid AI provider configuration:\n  " + "\n  ".join(provider_errors),
+            config_key="AI_PROVIDERS",
         )
 
     return True

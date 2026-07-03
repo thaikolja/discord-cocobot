@@ -19,6 +19,7 @@
 
 
 # Import the logging module for logging purposes
+import asyncio
 import logging
 
 # Import discord from the discord library
@@ -31,7 +32,15 @@ from discord import app_commands
 from discord.ext import commands
 
 # Import ERROR_MESSAGE from the config module
-from config.config import ERROR_MESSAGE
+from config.config import (
+    ERROR_MESSAGE,
+    TRANSLITERATE_FALLBACK_PROVIDER,
+    TRANSLITERATE_FALLBACK_PROVIDER_API_KEY,
+    TRANSLITERATE_FALLBACK_PROVIDER_MODEL,
+    TRANSLITERATE_PROVIDER,
+    TRANSLITERATE_PROVIDER_API_KEY,
+    TRANSLITERATE_PROVIDER_MODEL,
+)
 
 # Import UseAI from the utils.helpers module
 from utils.helpers import UseAI
@@ -54,7 +63,6 @@ class Transliterate(commands.Cog):
         Sets up the bot instance and AI provider.
         """
         self.bot = bot  # Assign the bot instance to a class variable
-        self.ai_provider = 'gemini'  # Set the default AI provider
 
     # Define a command for transliterating Thai text
     @app_commands.command(
@@ -93,12 +101,26 @@ class Transliterate(commands.Cog):
 
         try:
             # Initialize the AI helper for the requested task
-            ai = UseAI(provider=self.ai_provider)
+            ai = UseAI(
+                provider=TRANSLITERATE_PROVIDER,
+                api_key=TRANSLITERATE_PROVIDER_API_KEY,
+                model=TRANSLITERATE_PROVIDER_MODEL,
+                fallback_provider=TRANSLITERATE_FALLBACK_PROVIDER,
+                fallback_api_key=TRANSLITERATE_FALLBACK_PROVIDER_API_KEY,
+                fallback_model=TRANSLITERATE_FALLBACK_PROVIDER_MODEL,
+            )
 
             # Construct a detailed prompt for the AI
+            # PROMPT V2 — simplified for speed
+            # prompt = (
+            #     f"Transliterate '{text}' from Thai to Latin script using phonetic "
+            #     "spelling with diacritics for tones. Separate syllables with hyphens "
+            #     "within words, spaces between words. Example: 'สวัสดี' → 'sà-wàt-dii'."
+            # )
+            # PROMPT V1 — detailed instructions (slower)
             prompt = (
                 "You are a helpful assistant that transliterates Thai text into Latin characters "
-                "using a phonetic system that non-Thai speakers can understand."
+                "using a phonetic system that non-Thai speakers can understand. "
                 "Transliterate the following Thai text into Latin characters using a "
                 "phonetic system understandable to English speakers: "
                 f"'{text}'.\n"
@@ -120,7 +142,7 @@ class Transliterate(commands.Cog):
             )
 
             # Send the constructed prompt to the AI and get a response
-            answer = ai.prompt(prompt)
+            answer = await asyncio.to_thread(ai.prompt, prompt)
 
             # Check if the AI responded with content
             if not answer or answer.isspace():
