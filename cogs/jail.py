@@ -71,7 +71,7 @@ class JailCog(commands.Cog):
         """
         url = f'{self.august_base_url}{endpoint}'
         headers = {
-            'Content-Type':     'application/json',
+            'Content-Type': 'application/json',
             'X-Internal-Token': self.august_secret,
         }
 
@@ -98,10 +98,10 @@ class JailCog(commands.Cog):
     )
     @app_commands.checks.has_permissions(administrator=True)
     async def jail_command(
-        self,
-        interaction: discord.Interaction,
-        user: discord.Member,
-        reason: str = None,
+            self,
+            interaction: discord.Interaction,
+            user: discord.Member,
+            reason: str = None,
     ):
         """Jail a Discord member."""
         # Ensure the database is ready
@@ -115,7 +115,8 @@ class JailCog(commands.Cog):
 
             if existing:
                 await interaction.response.send_message(
-                    f'🥥 A genuine *fruitless* attempt - **{user.mention}** is already in jail. Poor {user.mention}...', ephemeral=True
+                    f'🥥 A genuine *fruitless* attempt - **{user.mention}** is already in jail. Poor {user.mention}...',
+                    ephemeral=True
                 )
 
                 return
@@ -170,7 +171,7 @@ class JailCog(commands.Cog):
         # Notify August to start the harassment loop
         await self._call_august(
             '/start-jail', {
-                'user_id':  str(user.id),
+                'user_id': str(user.id),
                 'username': user.display_name,
             }
         )
@@ -198,9 +199,9 @@ class JailCog(commands.Cog):
     @app_commands.describe(user='The member to unjail')
     @app_commands.checks.has_permissions(administrator=True)
     async def unjail_command(
-        self,
-        interaction: discord.Interaction,
-        user: discord.Member,
+            self,
+            interaction: discord.Interaction,
+            user: discord.Member,
     ):
         """Unjail a Discord member and restore their roles."""
         init_db()

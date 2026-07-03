@@ -154,16 +154,26 @@ Your bot should now be online with slash commands available.
 - `DISCORD_BOT_TOKEN`: Discord bot token from Developer Portal
 - `DISCORD_BOT_ID`: Bot application ID
 - `DISCORD_SERVER_ID`: Default server ID
-- At least one LLM provider API key:
-  - `GEMINI_API_KEY`: Google Gemini API key (translate, transliterate)
-  - `DEEPSEEK_API_KEY`: DeepSeek API key
-  - `GROQ_API_KEY`: Groq API key
+- At least one LLM provider API key, configured per feature (see [LLM Provider Configuration](#llm-provider-configuration)):
+  - `TRANSLITERATE_PROVIDER_API_KEY`
+  - `TRANSLATE_PROVIDER_API_KEY`
+  - `SUMMARIZE_PROVIDER_API_KEY`
 
 ### LLM Provider Configuration
 
-**Summarization** (`/summarize` command):
-- `SUMMARY_PROVIDER`: LLM provider (`groq`, `gemini`, `deepseek`)
-- `SUMMARY_MODEL`: Model name (e.g., `deepseek-v4-flash`, `models/gemini-2.5-flash`, `groq/compound`)
+**As of `v3.7.0`**, every AI-powered feature (`/translate`, `/transliterate`, `/summarize`) has its own fully self-contained provider configuration and an optional fallback provider. The supported providers are `gemini`, `deepseek`, and `groq`.
+
+For each feature you set:
+- `<FEATURE>_PROVIDER` (e.g. `TRANSLATE_PROVIDER=deepseek`)
+- `<FEATURE>_PROVIDER_API_KEY`
+- `<FEATURE>_PROVIDER_MODEL` (e.g. `deepseek-v4-flash`, `models/gemini-3-flash-preview`, `groq/compound`)
+
+And, optionally, a fallback that kicks in automatically when the primary provider raises an error:
+- `<FEATURE>_FALLBACK_PROVIDER`
+- `<FEATURE>_FALLBACK_PROVIDER_API_KEY`
+- `<FEATURE>_FALLBACK_PROVIDER_MODEL`
+
+To disable a fallback, set `<FEATURE>_FALLBACK_PROVIDER` to an empty string. The full list of variables is documented in `.env.example`.
 
 ### Optional Configuration
 - **Database**: `DATABASE_URL`, `DB_POOL_SIZE`, `DB_ECHO`, `INIT_DB_ON_STARTUP`

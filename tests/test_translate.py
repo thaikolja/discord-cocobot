@@ -56,8 +56,9 @@ def interaction():
 
 # Test case for successful translation with specified languages
 @pytest.mark.asyncio
+@patch('utils.helpers.UseAI._init_client')
 @patch('utils.helpers.UseAI.prompt')
-async def test_successful_translation(mock_prompt, cog, interaction):
+async def test_successful_translation(mock_prompt, mock_init, cog, interaction):
     # Set up mock response from AI with expected translation
     mock_prompt.return_value = "Hello world"
 
@@ -81,8 +82,9 @@ async def test_successful_translation(mock_prompt, cog, interaction):
 
 
 @pytest.mark.asyncio
+@patch('utils.helpers.UseAI._init_client')
 @patch('utils.helpers.UseAI.prompt')
-async def test_auto_detect_english_to_thai(mock_prompt, cog, interaction):
+async def test_auto_detect_english_to_thai(mock_prompt, mock_init, cog, interaction):
     mock_prompt.return_value = "สวัสดี"
 
     await cog.translate_command.callback(cog, interaction, text="Hello")
@@ -95,8 +97,9 @@ async def test_auto_detect_english_to_thai(mock_prompt, cog, interaction):
 
 
 @pytest.mark.asyncio
+@patch('utils.helpers.UseAI._init_client')
 @patch('utils.helpers.UseAI.prompt')
-async def test_auto_detect_thai_to_english(mock_prompt, cog, interaction):
+async def test_auto_detect_thai_to_english(mock_prompt, mock_init, cog, interaction):
     mock_prompt.return_value = "Hello world"
 
     await cog.translate_command.callback(cog, interaction, text="สวัสดีค่ะ โลก")
@@ -112,8 +115,9 @@ async def test_auto_detect_thai_to_english(mock_prompt, cog, interaction):
 
 # Test case for translation with special characters
 @pytest.mark.asyncio
+@patch('utils.helpers.UseAI._init_client')
 @patch('utils.helpers.UseAI.prompt')
-async def test_translation_with_special_characters(mock_prompt, cog, interaction):
+async def test_translation_with_special_characters(mock_prompt, mock_init, cog, interaction):
     # Set up mock response from AI with expected translation
     mock_prompt.return_value = "¿Cómo estás?"
 

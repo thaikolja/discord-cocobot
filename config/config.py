@@ -51,20 +51,38 @@ LOCALTIME_API_KEY: str = get_global_config().api.localtime_key
 # CurrencyAPI service API key
 CURRENCYAPI_API_KEY: str = get_global_config().api.currencyapi_key
 
-# Groq AI services API key and model
-GROQ_API_KEY: str = get_global_config().api.groq_api_key
-GROQ_MODEL: str = get_global_config().api.groq_model
-
-# Gemini API key and model
-GEMINI_API_KEY: str = get_global_config().api.gemini_api_key
-GEMINI_MODEL: str = get_global_config().api.gemini_model
-
 # AcqIn service API key
 ACQIN_API_KEY: str = get_global_config().api.acqin_api_key
 
-# DeepSeek service API key and model
-DEEPSEEK_API_KEY: str = get_global_config().api.deepseek_api_key
-DEEPSEEK_MODEL: str = get_global_config().api.deepseek_model
+# ---- Transliterate - primary ----
+TRANSLITERATE_PROVIDER: str = get_global_config().api.transliterate_provider
+TRANSLITERATE_PROVIDER_API_KEY: str = get_global_config().api.transliterate_provider_api_key
+TRANSLITERATE_PROVIDER_MODEL: str = get_global_config().api.transliterate_provider_model
+
+# ---- Transliterate - fallback ----
+TRANSLITERATE_FALLBACK_PROVIDER: str = get_global_config().api.transliterate_fallback_provider
+TRANSLITERATE_FALLBACK_PROVIDER_API_KEY: str = get_global_config().api.transliterate_fallback_provider_api_key
+TRANSLITERATE_FALLBACK_PROVIDER_MODEL: str = get_global_config().api.transliterate_fallback_provider_model
+
+# ---- Translate - primary ----
+TRANSLATE_PROVIDER: str = get_global_config().api.translate_provider
+TRANSLATE_PROVIDER_API_KEY: str = get_global_config().api.translate_provider_api_key
+TRANSLATE_PROVIDER_MODEL: str = get_global_config().api.translate_provider_model
+
+# ---- Translate - fallback ----
+TRANSLATE_FALLBACK_PROVIDER: str = get_global_config().api.translate_fallback_provider
+TRANSLATE_FALLBACK_PROVIDER_API_KEY: str = get_global_config().api.translate_fallback_provider_api_key
+TRANSLATE_FALLBACK_PROVIDER_MODEL: str = get_global_config().api.translate_fallback_provider_model
+
+# ---- Summarize - primary ----
+SUMMARIZE_PROVIDER: str = get_global_config().api.summarize_provider
+SUMMARIZE_PROVIDER_API_KEY: str = get_global_config().api.summarize_provider_api_key
+SUMMARIZE_PROVIDER_MODEL: str = get_global_config().api.summarize_provider_model
+
+# ---- Summarize - fallback ----
+SUMMARIZE_FALLBACK_PROVIDER: str = get_global_config().api.summarize_fallback_provider
+SUMMARIZE_FALLBACK_PROVIDER_API_KEY: str = get_global_config().api.summarize_fallback_provider_api_key
+SUMMARIZE_FALLBACK_PROVIDER_MODEL: str = get_global_config().api.summarize_fallback_provider_model
 
 # Standard error message to display to users when something goes wrong
 ERROR_MESSAGE: str = "🥥 Oops, something's cracked, and it's **not** the coconut!"
