@@ -382,6 +382,10 @@ class RecapCog(commands.Cog):
                 expand_prompt = f"Your judgment was too short ({len(recap_output)} characters). Expand it to at least 80 characters while keeping the same sarcastic, insulting style:\n\n{recap_output}"
                 recap_output = await asyncio.to_thread(ai.prompt, expand_prompt, False)
 
+                if not recap_output:
+                    await interaction.followup.send(f"{ERROR_MESSAGE} The AI failed to expand the judgment.")
+                    return
+
             # Soft truncate at 650 characters
             recap_output = self._soft_truncate(recap_output, 650)
 
