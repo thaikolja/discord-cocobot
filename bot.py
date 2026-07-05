@@ -84,6 +84,8 @@ INITIAL_EXTENSIONS = [
     'cogs.jail',
     # Chat summarize command cog
     'cogs.summarize',
+    # AI-powered judging recap command cog
+    'cogs.recap',
 ]
 
 

@@ -60,8 +60,16 @@ class UseAI:
         'response_mime_type': 'text/plain',  # Format of the response
     }
 
-    # Constructor method to initialize the UseAI instance with the specified provider
-    def __init__(self, provider: str):
+    # Constructor method to initialize the UseAI instance with the specified provider and settings
+    def __init__(
+        self,
+        provider: str,
+        api_key: str | None = None,
+        model: str | None = None,
+        fallback_provider: str | None = None,
+        fallback_api_key: str | None = None,
+        fallback_model: str | None = None,
+    ):
         """
         Initializes an instance with a specified provider and sets up the appropriate client
         and model configuration based on the selected provider.
@@ -69,6 +77,11 @@ class UseAI:
         Args:
             provider (str): The provider to use. Must be one of the available providers
                 listed in the class attribute `AVAILABLE_PROVIDERS`.
+            api_key (str, optional): Custom API key for the provider.
+            model (str, optional): Custom model name for the provider.
+            fallback_provider (str, optional): Fallback provider to use in case of failure.
+            fallback_api_key (str, optional): Custom API key for the fallback provider.
+            fallback_model (str, optional): Custom model name for the fallback provider.
 
         Raises:
             ValueError: If the provided provider is not in the list of available providers.
@@ -79,29 +92,46 @@ class UseAI:
                 f'Invalid provider. Available providers: {self.AVAILABLE_PROVIDERS}'
             )
 
-        # Assign the provider to the instance variable
+        # Assign the provider and config to the instance variables
         self.provider = provider
+        self.api_key = api_key
+        self.model_name = model
 
-        # Initialize the appropriate client based on the provider
+        # Fallback settings
+        if fallback_provider and fallback_provider not in self.AVAILABLE_PROVIDERS:
+            raise ValueError(
+                f'Invalid fallback provider. Available providers: {self.AVAILABLE_PROVIDERS}'
+            )
+        self.fallback_provider = fallback_provider
+        self.fallback_api_key = fallback_api_key
+        self.fallback_model = fallback_model
+
+        # Lazy initialization - client will be created on first prompt() call
+        self.client = None
+        self._client_initialized = False
+
+    def _init_client(self, provider: str, api_key: str | None = None, model: str | None = None):
+        """Initializes client and returns (client, model_name) tuple."""
         if provider == 'groq':
-            # Set up the native Groq client with the specified API key
-            self.client = Groq(api_key=GROQ_API_KEY)
-            # Set the model name for Groq
-            self.model_name = GROQ_MODEL
+            resolved_key = api_key or GROQ_API_KEY
+            resolved_model = model or GROQ_MODEL
+            client = Groq(api_key=resolved_key)
+            return client, resolved_model
         elif provider == 'gemini':
-            # Initialize the Google Generative AI client with the Gemini API key
-            self.client = genai.Client(api_key=GEMINI_API_KEY)
-            # Set the model name for Google
-            self.model_name = GEMINI_MODEL
+            resolved_key = api_key or GEMINI_API_KEY
+            resolved_model = model or GEMINI_MODEL
+            client = genai.Client(api_key=resolved_key)
+            return client, resolved_model
         elif provider == 'deepseek':
-            # DeepSeek uses an OpenAI-compatible API — use the groq SDK pattern via requests
-            from openai import OpenAI as _OpenAI  # only imported when deepseek is used
-            self.client = _OpenAI(
-                api_key=DEEPSEEK_API_KEY,
+            resolved_key = api_key or DEEPSEEK_API_KEY
+            resolved_model = model or DEEPSEEK_MODEL
+            from openai import OpenAI as _OpenAI
+            client = _OpenAI(
+                api_key=resolved_key,
                 base_url='https://api.deepseek.com/v1',
             )
-            # Set the model name for DeepSeek
-            self.model_name = DEEPSEEK_MODEL
+            return client, resolved_model
+        raise ValueError(f"Unknown provider: {provider}")
 
     # Method to send a prompt to the AI provider and get the response
     def prompt(self, prompt: str, strict: bool = True) -> str | None:
@@ -122,17 +152,60 @@ class UseAI:
             str | None: A processed string response from the provider, or None if the
                 provider is not supported.
         """
+        # Lazy initialization - create client on first use
+        if not self._client_initialized:
+            self.client, self.model_name = self._init_client(self.provider, self.api_key, self.model_name)
+            self._client_initialized = True
+
         # Append instruction to the prompt if strict mode is enabled
         if strict:
             prompt = f"{prompt}. Only return the result, nothing else."
 
-        # Handle the prompt based on the selected provider
-        if self.provider == 'groq':
-            return self._handle_groq(prompt)
-        elif self.provider == 'gemini':
-            return self._handle_google(prompt)
-        elif self.provider == 'deepseek':
-            return self._handle_deepseek(prompt)
+        try:
+            # Handle the prompt based on the selected provider
+            if self.provider == 'groq':
+                return self._handle_groq(prompt)
+            elif self.provider == 'gemini':
+                return self._handle_google(prompt)
+            elif self.provider == 'deepseek':
+                return self._handle_deepseek(prompt)
+        except Exception as e:
+            if self.fallback_provider:
+                import logging
+                logger = logging.getLogger('discord')
+                logger.warning(
+                    f"Primary provider '{self.provider}' failed: {e}. Retrying with fallback '{self.fallback_provider}'."
+                )
+                try:
+                    # Let's instantiate a temporary client for the fallback provider
+                    fallback_client, fallback_model = self._init_client(
+                        self.fallback_provider, self.fallback_api_key, self.fallback_model
+                    )
+
+                    orig_provider = self.provider
+                    orig_client = self.client
+                    orig_model = self.model_name
+
+                    self.provider = self.fallback_provider
+                    self.client = fallback_client
+                    self.model_name = fallback_model
+
+                    try:
+                        if self.provider == 'groq':
+                            return self._handle_groq(prompt)
+                        elif self.provider == 'gemini':
+                            return self._handle_google(prompt)
+                        elif self.provider == 'deepseek':
+                            return self._handle_deepseek(prompt)
+                    finally:
+                        self.provider = orig_provider
+                        self.client = orig_client
+                        self.model_name = orig_model
+                except Exception as fallback_err:
+                    logger.error(f"Fallback provider '{self.fallback_provider}' also failed: {fallback_err}")
+                    raise fallback_err
+            else:
+                raise e
 
         return None
 
