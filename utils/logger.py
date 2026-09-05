@@ -36,7 +36,7 @@ def setup_logging(
     log_level: str = os.getenv("LOG_LEVEL", "WARNING"),
     log_file: str = None,
     max_bytes: int = 10485760,
-    backup_count: int = os.getenv("LOG_BACKUP_COUNT", 5),
+    backup_count: int = int(os.getenv("LOG_BACKUP_COUNT", "5")),
 ):
     """
     Set up centralized logging with both file and console handlers.

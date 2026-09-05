@@ -24,15 +24,17 @@ This module provides caching functionality using Redis for performance optimizat
 and reduced API calls.
 """
 
-import asyncio
 import json
 import logging
 import time
 from typing import Any, Optional
 
-from redis.asyncio import Redis
-
 from utils.logger import get_logger
+
+try:
+    from redis.asyncio import Redis
+except ImportError:  # redis is optional; live cogs use DatabaseManager cache
+    Redis = None  # type: ignore[misc, assignment]
 
 
 class CacheManager:
@@ -42,8 +44,11 @@ class CacheManager:
         self.logger = get_logger(__name__)
         self.default_ttl = default_ttl
 
-        # Initialize Redis connection if URL is provided
-        if redis_url:
+        self.redis_client = None
+        self.use_redis = False
+
+        # Initialize Redis connection if URL is provided and the package is installed
+        if redis_url and Redis is not None:
             try:
                 self.redis_client = Redis.from_url(redis_url, decode_responses=True)
                 self.use_redis = True
@@ -54,9 +59,6 @@ class CacheManager:
                 )
                 self.redis_client = None
                 self.use_redis = False
-        else:
-            self.redis_client = None
-            self.use_redis = False
 
         # In-memory fallback cache
         self.memory_cache = {}
@@ -316,18 +318,12 @@ def api_cached(ttl: int = 300, key_prefix: str = "api"):
     return decorator
 
 
-# Initialize cache at module level
 async def init_cache():
-    """Initialize the cache system."""
+    """Initialize the cache system. Call from a running event loop if needed."""
     get_cache_manager()
-    # Test the cache connection
     test_key = "cocobot:cache:test"
     await cache_set(test_key, "test_value", 60)
     if await cache_get(test_key) == "test_value":
         logging.getLogger(__name__).info("Cache system initialized successfully")
     else:
         logging.getLogger(__name__).warning("Cache system may not be working properly")
-
-
-# Run initialization if module is loaded
-asyncio.create_task(init_cache())
