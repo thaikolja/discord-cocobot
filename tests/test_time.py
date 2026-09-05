@@ -129,7 +129,7 @@ async def test_invalid_location(mock_set_cache, mock_get_cache, cog, interaction
 
         # Verify that the send_message method was called once with the expected error message
         interaction.response.send_message.assert_awaited_once_with(
-            f"{ERROR_MESSAGE} Couldn't find time for `Nowhere`. Maybe it's in a coconut timezone?"
+            f"{ERROR_MESSAGE} `Nowhere` is not on August's sundial. Try a real place, not a hallucination."
         )
 
 
@@ -149,7 +149,7 @@ async def test_api_error_handling(mock_set_cache, mock_get_cache, cog, interacti
 
         # Verify that the send_message method was called once with the expected error message
         interaction.response.send_message.assert_awaited_once_with(
-            f"{ERROR_MESSAGE} Couldn't find time for `Bangkok`. Maybe it's in a coconut timezone?"
+            f"{ERROR_MESSAGE} `Bangkok` is not on August's sundial. Try a real place, not a hallucination."
         )
 
 

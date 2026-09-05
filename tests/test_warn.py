@@ -350,5 +350,3 @@ async def test_resetwarnings_clears_active_warning_cycle(
         ).all()
         assert len(historical_warnings) == 2
         assert all(warning.is_active is False for warning in historical_warnings)
-
-

@@ -113,8 +113,10 @@ async def test_error_handling(mock_prompt, cog, interaction):
     # Verify the specific error message for generic exceptions was sent (matching ACTUAL output)
     # OLD: expected_error_message = f"✍️ {ERROR_MESSAGE} Something went spectacularly wrong. The AI might have achieved sentience and refused, or maybe just a plain old bug. Who
     # knows?"
-    expected_error_message = "🥥 Oops, something's cracked, and it's **not** the coconut! Blame @Kolja, the coconut head; he programmed me, after all!"  # Adjusted based on ACTUAL
-    # output
+    expected_error_message = (
+        "🥥 Oops, something's cracked, and it's **not** the coconut! "
+        "The copra press jammed. Sit in the sun with August until Kolja oils the gears."
+    )
     interaction.followup.send.assert_awaited_once_with(expected_error_message)
 
 
@@ -163,7 +165,10 @@ async def test_empty_response_handling(mock_prompt, cog, interaction):
 
     # Verify the specific error message for empty AI responses was sent (matching ACTUAL output)
     # OLD: expected_error_message = f"✍️ The AI seems to be speechless. It returned nothing useful. How poetic."
-    expected_error_message = "🥥 Oops, something's cracked, and it's **not** the coconut! @cocobot seems to be speechless. It didn't give anything useful. Poetic as always..."  #
+    expected_error_message = (
+        "🥥 Oops, something's cracked, and it's **not** the coconut! "
+        "The sun-king of Kabakon considered your syllables and chose silence. Rarely a compliment."
+    )  #
     # Adjusted based on ACTUAL output
     interaction.followup.send.assert_awaited_once_with(expected_error_message)
 
@@ -182,7 +187,9 @@ async def test_whitespace_input(mock_prompt, cog, interaction):
 
     # Verify the specific message for empty input was sent (matching ACTUAL output)
     # OLD: expected_message = "✍️ Provide some actual Thai text, maybe? Empty input isn't very helpful."
-    expected_message = '✍️ How about adding some text in Thai, you cocotwat!'  # Adjusted based on ACTUAL output
+    expected_message = (
+        "✍️ Empty tribute? Kabakon is not impressed. Offer actual Thai, not a blank copra husk."
+    )
     interaction.followup.send.assert_awaited_once_with(expected_message)
 
     # Verify the AI prompt was NOT called
@@ -206,7 +213,9 @@ async def test_none_input(mock_prompt, cog, interaction):
 
     # Verify the specific message for empty input was sent (matching ACTUAL output)
     # OLD: expected_message = "✍️ Provide some actual Thai text, maybe? Empty input isn't very helpful."
-    expected_message = '✍️ How about adding some text in Thai, you cocotwat!'  # Adjusted based on ACTUAL output
+    expected_message = (
+        "✍️ Empty tribute? Kabakon is not impressed. Offer actual Thai, not a blank copra husk."
+    )
     interaction.followup.send.assert_awaited_once_with(expected_message)
 
     # Verify the AI prompt was NOT called
@@ -221,7 +230,11 @@ async def test_reuses_single_useai_instance(mock_useai_cls, interaction):
     bot = commands.Bot(command_prefix='!', intents=discord.Intents.default())
     cog = Transliterate(bot)
 
-    mock_useai_cls.assert_called_once_with(provider='gemini')
+    mock_useai_cls.assert_called_once_with(
+        provider='gemini',
+        temperature=0.0,
+        disable_thinking=True,
+    )
     assert cog.ai is mock_ai
 
     await cog.transliterate_command.callback(cog, interaction, text="สวัสดี")

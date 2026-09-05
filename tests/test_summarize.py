@@ -131,7 +131,9 @@ async def test_summarize_command_no_messages(cog, interaction):
     await cog.summarize_command.callback(cog, interaction, limit=10)
 
     interaction.response.defer.assert_called_once()
-    interaction.followup.send.assert_called_once_with("Nothing to summarize here. Is the channel as deserted as August's Kabakon?")
+    interaction.followup.send.assert_called_once_with(
+        "Nothing to recap. This channel is as empty as Kabakon after the copra ran out."
+    )
 
 
 async def test_summarize_command_llm_failure(cog, interaction):
@@ -144,7 +146,7 @@ async def test_summarize_command_llm_failure(cog, interaction):
 
     interaction.followup.send.assert_called_once()
     args = interaction.followup.send.call_args[0][0]
-    assert "failed to generate a summary" in args
+    assert "declined to waste sunlight" in args
 
 
 async def test_summarize_command_history_forbidden(cog, interaction):
@@ -155,4 +157,4 @@ async def test_summarize_command_history_forbidden(cog, interaction):
 
     interaction.followup.send.assert_called_once()
     args = interaction.followup.send.call_args[0][0]
-    assert "permission to read the message history" in args
+    assert "not allowed to read this channel" in args

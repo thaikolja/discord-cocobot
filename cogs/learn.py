@@ -18,118 +18,132 @@
 #  Package:   cocobot Discord Bot
 
 
-# Importing the json module to handle JSON data
+# JSON for the Thai word list that is definitely not a spreadsheet
 import json
 
-# Importing the os module to interact with the operating system
+# os.path.isfile so we fail before opening a ghost file
 import os
 
-# Importing the random module to generate random numbers
+# Random word of the day, without claiming pedagogical rigor
 import random
 
-# Importing the discord module to interact with the Discord API
+# Discord types for the slash interaction
 import discord
 
-# Importing the app_commands module from discord to create application commands
+# Slash command decorator lives here
 from discord import app_commands
 
-# Importing the commands module from discord.ext to create bot commands
+# Cog base class
 from discord.ext import commands
 
-# Importing the ERROR_MESSAGE constant from the config module
+# Shared coconut error line for when the vocab file ghosts us
 from config.config import ERROR_MESSAGE
 
 
-# Defining a new class LearnCog that inherits from commands.Cog
+# Flash-card cog: one random Thai word, zero curriculum
 # noinspection PyUnresolvedReferences
 class LearnCog(commands.Cog):
-    # Initializing the LearnCog class with a bot instance
+
+    # discord.py hands us the bot; we just keep it
     def __init__(self, bot: commands.Bot):
 
-        # Assigning the bot instance to the self.bot attribute
+        # Stash for later; this cog barely uses it, but the pattern is the pattern
         self.bot = bot
 
-    # Defining a new application command named "learn" with a description
+    # Slash name "learn" — not "random_thai_noun", unfortunately
     @app_commands.command(
         name="learn",
         description='Displays one of 250 core Thai words and its translation',
     )
-    # Defining an asynchronous method learn_command that handles the "learn" command
+    # One interaction, no options: keep it one-tap
     async def learn_command(self, interaction: discord.Interaction):
 
-        # Specifying the file path to the JSON file containing the word list
+        # Relative path from process CWD; deploy with the assets folder or cry
         word_list_path = './assets/data/thai-words.json'
 
-        # Checking if the word list file exists
+        # Missing file: don't pretend we have 250 words in our head
         if not os.path.isfile(word_list_path):
-            # Sending an error message to the interaction if the file does not exist
+
+            # Tell the user the coconut is empty
             await interaction.response.send_message(
                 f"{ERROR_MESSAGE}: No vocabulary found."
             )
-            # Returning from the function to prevent further execution
+
+            # Stop before json.load invents a traceback
             return
 
-        # Attempting to open and read the content of the word list file
+        # JSON can be truncated mid-deploy; catch that
         try:
-            # Opening the word list file in read mode with UTF-8 encoding
+
+            # UTF-8 because Thai is not Latin-1, despite what Windows thinks
             with open(word_list_path, 'r', encoding='utf-8') as file:
-                # Loading the JSON data from the file
+
+                # Parse the whole list into memory; 250 words is not Big Data
                 data = json.load(file)
-        # Catching potential JSON decoding errors
+
+        # File exists but isn't JSON anymore
         except json.JSONDecodeError:
-            # Handling potential errors in parsing JSON data
+
+            # Blame the file, not the user
             await interaction.response.send_message(
                 f"{ERROR_MESSAGE}: Failed to read vocabulary data. The file may be "
                 f"corrupted."
             )
-            # Returning from the function to prevent further execution
+
+            # Don't fall through with a half-parsed list
             return
-        # Catching all other exceptions
+
+        # Permissions, encoding surprises, the usual
         except Exception as e:
-            # Catching all other exceptions and displaying the error message
+
+            # Surface the exception text; admins will paste it in #dev anyway
             await interaction.response.send_message(
                 f"{ERROR_MESSAGE}: An unexpected error occurred: {str(e)}"
             )
-            # Returning from the function to prevent further execution
+
+            # Abort the flash card
             return
 
-        # Checking if the word list is empty
+        # Empty list is valid JSON and still useless
         if not data:
-            # Sending an error message to the interaction if the word list is empty
+
+            # File was there, just hollow
             await interaction.response.send_message(
                 f"{ERROR_MESSAGE}: I found the vocabulary file, but it contains no "
                 f"words. Weird."
             )
-            # Returning from the function to prevent further execution
+
+            # random.choice on [] is a ValueError party
             return
 
-        # Selecting a random word from the word list
+        # Pick one entry; fairness is not a requirement
         word = random.choice(data)
 
-        # Checking if the selected word contains necessary fields
+        # Need english, thai, and how to say it — missing any one is junk data
         if (
             not word.get('english')
             or not word.get('thai')
             or not word.get('transliteration')
         ):
-            # Sending an error message to the interaction if the word is missing key
-            # data
+
+            # Don't send "None means None" into Discord
             await interaction.response.send_message(
                 f"{ERROR_MESSAGE}: Something's wrong with this word entry. Missing "
                 f"key data."
             )
-            # Returning from the function to prevent further execution
+
+            # Skip this broken row
             return
 
-        # Sending a sentence with the word's English translation, Thai translation,
-        # and transliteration
+        # The actual lesson, wrapped in markdown like a gift
         await interaction.response.send_message(
             f'💡 **"{word["english"]}"** means **"{word["thai"]}"** in Thai and is '
             f'spoken like `{word["transliteration"]}`'
         )
 
 
-# Defining an asynchronous setup function to add the LearnCog to the bot
+# Extension entrypoint discord.py expects
 async def setup(bot: commands.Bot):
-    # Adding the LearnCog to the bot
+
+    # Register LearnCog on the bot
     await bot.add_cog(LearnCog(bot))

@@ -45,6 +45,9 @@
     - `[from_language]` *(string)* **Default:** auto (Thai/English detection)
     - `[to_language]` *(string)* **Default:** auto (opposite of source)
 
+- **📝 Summarize**: Recap recent messages in the current channel
+  - `/summarize [limit]` *(integer)* **Default:** 20, **Max:** 50
+
 ## 🥥 Examples
 
 **cocobot** uses [slash commands](https://support-apps.discord.com/hc/en-us/articles/26501837786775-Slash-Commands-FAQ). Here are some examples. The parameter with the colon (`:`) at the end are the parameters you can choose as described in the **Features** section.

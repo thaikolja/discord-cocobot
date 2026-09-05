@@ -16,3 +16,5 @@
 #  License:   MIT
 #  Date:      2024-2026
 #  Package:   cocobot Discord Bot
+
+# Empty on purpose: pytest still wants this so tests/ is a package, not a junk drawer

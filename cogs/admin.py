@@ -23,41 +23,70 @@ Admin commands for Cocobot.
 This module contains administrative commands that can only be used by server admins.
 """
 
+# Discord.py: the actual reason this coconut has opinions in a chat app
 import discord
+
+# Cog machinery so admin toys live in their own crate
 from discord.ext import commands
 
 
+# Server-owner buttons that civilians should never see
 class AdminCog(commands.Cog):
     """
     Administrative commands that can only be used by server admins.
     """
 
+    # Remember which bot we're bossing around
     def __init__(self, bot):
+
+        # Stash the bot so later commands can poke its visa memory
         self.bot = bot
 
+    # Hide this from the public help list; it's not a party trick
     @commands.command(name="reset_reminder", hidden=True)
+    # Administrator only — yes, "I have a role" is not enough
     @commands.has_permissions(administrator=True)
+    # Wipe a user's visa nag so they can be nagged again like it's 2019
     async def reset_visa_reminder(self, ctx, member: discord.Member = None):
         """
         Reset the visa reminder status for a user.
         If no user is specified, reset for the command sender.
         Usage: !reset_reminder [@user] (only works for admins)
         """
+
+        # No mention? Fine, reset the admin who just typed the command
         if member is None:
+
+            # Default target is the person holding the admin stick
             member = ctx.author
 
-        # Reset the visa reminder status for the user
+        # Ask the bot to forget that this user already got the visa sermon
         success = await self.bot.reset_visa_reminder_for_user(str(member.id))
 
+        # Database actually knew this human existed
         if success:
-            response = f"✅ Visa reminder status reset for {member.mention}. They will be reminded again on their next 'visa' message in the visa channel."
-        else:
-            response = f"⚠️ {member.mention} was not found in the visa reminder database or was never reminded before."
 
-        # Send an ephemeral message that only the command author can see
-        # This is more reliable than trying to delete the command message
+            # Confirm they will hear about visas again. Lucky them.
+            response = (
+                f"✅ Visa reminder status reset for {member.mention}. They will be "
+                f"reminded again on their next 'visa' message in the visa channel."
+            )
+
+        # Either never reminded, or the DB shrugged
+        else:
+
+            # Soft warning instead of pretending we deleted a ghost
+            response = (
+                f"⚠️ {member.mention} was not found in the visa reminder database "
+                f"or was never reminded before."
+            )
+
+        # Ephemeral so the channel doesn't look like a secret police log
         await ctx.send(response, ephemeral=True)
 
 
+# discord.py's handshake: load this cog or it stays a decorative file
 async def setup(bot):
+
+    # Plug AdminCog into the running bot
     await bot.add_cog(AdminCog(bot))

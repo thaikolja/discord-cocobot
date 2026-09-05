@@ -62,3 +62,41 @@ def test_missing_section_returns_none(tmp_path: Path):
 
 def test_missing_placeholder_returns_none():
     assert render_language_prompt('translate', text='hello') is None
+
+
+def test_transliterate_useai_disables_thinking_and_zero_temperature():
+    from cogs.transliterate import Transliterate
+    from cogs.translate import TranslateCog
+    from discord.ext import commands
+    from discord import Intents
+
+    bot = commands.Bot(command_prefix='!', intents=Intents.default())
+    transliterate = Transliterate(bot)
+    translate = TranslateCog(bot)
+
+    assert transliterate.ai.temperature == 0.0
+    assert transliterate.ai.disable_thinking is True
+    assert translate.ai.temperature is None
+    assert translate.ai.disable_thinking is False
+
+
+def test_gemini_thinking_config_uses_budget_for_2_5_and_level_for_3():
+    from utils.helpers import UseAI
+
+    class FakeThinking:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
+
+    class FakeTypes:
+        ThinkingConfig = FakeThinking
+
+    class FakeGenai:
+        types = FakeTypes
+
+    two_five = UseAI(provider='gemini', disable_thinking=True)
+    two_five.model_name = 'gemini-2.5-flash-lite'
+    assert two_five._gemini_thinking_config(FakeGenai).kwargs == {'thinking_budget': 0}
+
+    three = UseAI(provider='gemini', disable_thinking=True)
+    three.model_name = 'gemini-3.5-flash-lite'
+    assert three._gemini_thinking_config(FakeGenai).kwargs == {'thinking_level': 'minimal'}
