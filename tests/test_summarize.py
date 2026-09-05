@@ -1,6 +1,21 @@
-#  Copyright (C) 2025 by Kolja Nolte
+#  Copyright (C) 2026 by Kolja Nolte
 #  kolja.nolte@gmail.com
-#  ... (License header as per other files) ...
+#  https://gitlab.com/thailand-discord/bots/cocobot
+#
+#  This work is licensed under the MIT License. You are free to use, copy, modify,
+#  merge, publish, distribute, sublicense, and/or sell copies of the Software,
+#  and to permit persons to whom the Software is furnished to do so, subject to the
+#  condition that the above copyright notice and this permission notice shall be
+#  included in all
+#  copies or substantial portions of the Software.
+#
+#  For more information, visit: https://opensource.org/licenses/MIT
+#
+#  Author:    Kolja Nolte
+#  Email:     kolja.nolte@gmail.com
+#  License:   MIT
+#  Date:      2024-2026
+#  Package:   cocobot Discord Bot
 
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -116,7 +131,9 @@ async def test_summarize_command_no_messages(cog, interaction):
     await cog.summarize_command.callback(cog, interaction, limit=10)
 
     interaction.response.defer.assert_called_once()
-    interaction.followup.send.assert_called_once_with("Nothing to summarize here. Is the channel as deserted as August's Kabakon?")
+    interaction.followup.send.assert_called_once_with(
+        "Nothing to recap. This channel is as empty as Kabakon after the copra ran out."
+    )
 
 
 async def test_summarize_command_llm_failure(cog, interaction):
@@ -129,7 +146,7 @@ async def test_summarize_command_llm_failure(cog, interaction):
 
     interaction.followup.send.assert_called_once()
     args = interaction.followup.send.call_args[0][0]
-    assert "failed to generate a summary" in args
+    assert "declined to waste sunlight" in args
 
 
 async def test_summarize_command_history_forbidden(cog, interaction):
@@ -140,4 +157,4 @@ async def test_summarize_command_history_forbidden(cog, interaction):
 
     interaction.followup.send.assert_called_once()
     args = interaction.followup.send.call_args[0][0]
-    assert "permission to read the message history" in args
+    assert "not allowed to read this channel" in args

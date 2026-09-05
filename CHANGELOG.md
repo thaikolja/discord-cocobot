@@ -1,8 +1,58 @@
 # Changelog
 
-From time to time, a new coconut falls from the tree, and we need to update the changelog. This file serves as a historical record of all changes made to the project, including new features, bug
-fixes, and improvements. Each entry is categorized by version number and includes a brief description of the chan-- man, you're all developers, otherwise you wouldn't be reading this; you
-know how this shit works.
+From time to time, a new coconut falls from the tree, and we need to update the changelog. This file serves as a historical record of all changes made to the project, including new features, bug fixes, and improvements. Each entry is categorized by version number and includes a brief description of the chan-- fuck it, you're all developers, otherwise you wouldn't be reading this.
+
+**You know how this shit works.**
+
+## v3.8.0
+
+### Removed
+
+- **`/roast`**: Recap cog, prompt/knowledge assets, and all `RECAP_*` environment variables.
+- **`/jail` and `/unjail`**: Jail cog, August Engelhardt internal API integration, `JailedUser` model, and `JAIL_*` / `AUGUST_*` environment variables. Moderation is `/warn` only.
+
+### Changed
+
+- **Version**: `3.7.0` → `3.8.0`
+- **Gemini prompts**: `/translate`, `/transliterate`, and `/summarize` load templates from `assets/data/language-prompt-definition.md` (cached in memory).
+- **AI clients**: Translate and transliterate reuse one `UseAI` instance per cog and run `prompt()` on `asyncio.to_thread` so Gemini I/O does not block the event loop.
+- **Environment files**: Reorganized `.env` / `.env.example` (Discord, AI, APIs, database, cache, logging, security, moderation, environment).
+- **Transliterate sampling**: `/transliterate` is the only command that sets `temperature=0.0` and disables Gemini thinking (`thinking_level=minimal` on 3.x, `thinking_budget=0` on 2.5). Groq/DeepSeek get `temperature=0` on that path only.
+- **User-facing errors**: Discord copy uses Kabakon / coconut tone; logs stay precise and do not leak exception text to users.
+- **Python 3.13**: Runtime venv is 3.13-only (Gemini/`pydantic_core` ABI).
+- **Lint**: `flake8` is clean on `bot.py`, `cogs/`, `config/`, `utils/`, `scripts/`, and `tests/`.
+- **Docker / deploy**: Image is `python:3.13-slim` (matches GitLab CI). `.dockerignore` keeps secrets and junk out of the image. `deploy.sh` uses `git pull --ff-only` and Compose `--status running` checks.
+
+---
+
+## v3.7.0
+
+### Added
+
+- **Per-Feature AI Provider Configuration**: Each AI-powered feature (`/translate`, `/transliterate`, `/summarize`) now has its own fully self-contained provider configuration (provider, API key, model). Operators can mix and match providers per feature — e.g. Gemini for transliteration, DeepSeek for translation, Groq for summarization — instead of sharing a single global provider per service.
+- **AI Fallback Providers**: Every AI feature now supports an optional `FALLBACK_PROVIDER` (plus its own API key and model). If the primary provider raises any exception, `UseAI` automatically retries the same prompt with the fallback provider, transparently to the user.
+- **`APIConfig.validate_providers()`**: New validation method that checks all configured AI providers are in the allowed set (`gemini`, `deepseek`, `groq`) and that an API key is present for each non-empty provider. Wired into `validate_config()` so misconfiguration fails fast on startup.
+- **New Environment Variables**: Added `TRANSLITERATE_PROVIDER`, `TRANSLITERATE_PROVIDER_API_KEY`, `TRANSLITERATE_PROVIDER_MODEL`, `TRANSLITERATE_FALLBACK_PROVIDER`, `TRANSLITERATE_FALLBACK_PROVIDER_API_KEY`, `TRANSLITERATE_FALLBACK_PROVIDER_MODEL`, `TRANSLATE_PROVIDER`, `TRANSLATE_PROVIDER_API_KEY`, `TRANSLATE_PROVIDER_MODEL`, `TRANSLATE_FALLBACK_PROVIDER`, `TRANSLATE_FALLBACK_PROVIDER_API_KEY`, `TRANSLATE_FALLBACK_PROVIDER_MODEL`, `SUMMARIZE_PROVIDER`, `SUMMARIZE_PROVIDER_API_KEY`, `SUMMARIZE_PROVIDER_MODEL`, `SUMMARIZE_FALLBACK_PROVIDER`, `SUMMARIZE_FALLBACK_PROVIDER_API_KEY`, `SUMMARIZE_FALLBACK_PROVIDER_MODEL`.
+- **Async AI Calls**: `/translate` and `/transliterate` now invoke the AI provider via `asyncio.to_thread`, so long-running model calls no longer block the Discord event loop.
+- **Cog-Level Test Patching**: `test_translate.py` and `test_transliterate.py` now patch `UseAI._init_client` so tests no longer require real API keys to instantiate the AI helper.
+
+### Changed
+
+- **Version Bump**: `3.6.0` → `3.7.0`
+- **Removed Global Provider Config**: The old shared `GEMINI_API_KEY`, `GEMINI_MODEL`, `GROQ_API_KEY`, `GROQ_MODEL`, `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` constants (and their `GEMINI_MODEL` / `GROQ_MODEL` env-var entries) have been removed from `config/config.py` and `config/app_config.py`. Use the per-feature variables above.
+- **`UseAI` Constructor**: The `UseAI.__init__` signature now requires `api_key` and `model` and accepts optional `fallback_provider`, `fallback_api_key`, `fallback_model`. Provider/client/model initialization is factored out into a private `_init_client` method for reuse.
+- **`.env.example` AI Section**: Restructured into clearly labeled per-feature blocks (Transliterate / Translate / Summarize, each with primary and fallback), with inline sign-up links and instructions on how to disable a fallback.
+- **`pyproject.toml` Pytest Config**: All pytest settings (including `filterwarnings` and `asyncio_default_fixture_loop_scope`) consolidated into `[tool.pytest.ini_options]`; `pytest.ini` removed.
+- **CI Image**: `.gitlab-ci.yml` switched to the `debian` image and SSH deploy steps now use strict host-key checking.
+- **Docker Compose Env Handling**: `docker-compose.yml` and `scripts/deploy-as-docker.sh` updated to use the `--env-file` flag for cleaner environment injection.
+- **Removed `on.sh`**: The legacy `on.sh` systemd shortcut was removed in favour of `deploy.sh` / `scripts/deploy-as-service.sh`.
+
+### Fixed
+
+- **AI provider latency blocking the bot**: Wrapping `ai.prompt` in `asyncio.to_thread` prevents the translate and transliterate cogs from stalling the Discord event loop on slow model responses.
+- **`pyproject.toml` config warning**: Pytest no longer warns about `pytest.ini` being ignored now that all settings live in `pyproject.toml`.
+
+---
 
 ## v3.7.0
 

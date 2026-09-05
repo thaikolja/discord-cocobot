@@ -24,18 +24,40 @@ This module provides comprehensive monitoring, metrics collection,
 and health check functionality for the bot.
 """
 
+# JSON dumps for the metrics file nobody will open until an outage
 import json
+
+# Logging when health checks fail at 2am
 import logging
+
+# Locks because defaultdict is not a team sport
 import threading
+
+# Time for histograms of "how long did that slash command take"
 import time
+
+# defaultdict so we don't initialize every counter by hand
 from collections import defaultdict
+
+# Context manager decorator for timing blocks
 from contextlib import contextmanager
+
+# Metric dataclass
 from dataclasses import dataclass
+
+# Wall-clock timestamps
 from datetime import datetime
+
+# Metric type enum
 from enum import Enum
+
+# Path for the metrics/ dump folder
 from pathlib import Path
+
+# Typing soup
 from typing import Any, Callable, Dict, List, Optional
 
+# psutil: CPU/RAM so we can brag about being idle
 import psutil
 
 
@@ -43,15 +65,17 @@ class MetricType(Enum):
     """Types of metrics that can be collected."""
 
     COUNTER = "counter"
+
     GAUGE = "gauge"
+
     HISTOGRAM = "histogram"
+
     SUMMARY = "summary"
 
 
 @dataclass
 class Metric:
     """Represents a single metric."""
-
     name: str
     type: MetricType
     value: float
@@ -61,11 +85,13 @@ class Metric:
 
 class MetricsCollector:
     """Collects and stores application metrics."""
-
     def __init__(self):
         self.metrics: Dict[str, List[Metric]] = defaultdict(list)
+
         self._lock = threading.Lock()
+
         self.start_time = datetime.utcnow()
+
         self.logger = logging.getLogger(__name__)
 
     def add_metric(
@@ -113,17 +139,21 @@ class MetricsCollector:
         """Get the latest value for a specific metric."""
         with self._lock:
             metrics = self.metrics.get(name, [])
+
             if metrics:
                 return metrics[-1].value
+
         return None
 
     def get_metrics_summary(self) -> Dict[str, Any]:
         """Get a summary of all metrics."""
         with self._lock:
             summary = {}
+
             for name, metrics in self.metrics.items():
                 if metrics:
                     values = [m.value for m in metrics]
+
                     summary[name] = {
                         'count': len(values),
                         'latest': values[-1],
@@ -131,6 +161,7 @@ class MetricsCollector:
                         'min': min(values),
                         'max': max(values),
                     }
+
             return summary
 
     def clear_metrics(self, name: str = None):
@@ -139,6 +170,7 @@ class MetricsCollector:
             if name:
                 if name in self.metrics:
                     del self.metrics[name]
+
             else:
                 self.metrics.clear()
 
@@ -148,6 +180,7 @@ class HealthChecker:
 
     def __init__(self):
         self.checks: Dict[str, Callable[[], bool]] = {}
+
         self.logger = logging.getLogger(__name__)
 
     def register_check(self, name: str, check_func: Callable[[], bool]):
@@ -163,9 +196,12 @@ class HealthChecker:
                 with db_session_getter() as db:
                     # Run a simple query to test connectivity
                     db.execute("SELECT 1")
+
                     return True
+
             except Exception as e:
                 self.logger.error(f"Database health check failed: {e}")
+
                 return False
 
         self.register_check("database", check_db)
@@ -177,17 +213,22 @@ class HealthChecker:
     def check_all(self) -> Dict[str, bool]:
         """Run all registered health checks."""
         results = {}
+
         for name, check_func in self.checks.items():
             try:
                 results[name] = check_func()
+
             except Exception as e:
                 self.logger.error(f"Health check '{name}' failed with error: {e}")
+
                 results[name] = False
+
         return results
 
     def is_healthy(self) -> bool:
         """Check if all health checks pass."""
         results = self.check_all()
+
         return all(results.values()) if results else True
 
 
@@ -196,7 +237,9 @@ class PerformanceMonitor:
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+
         self.metrics_collector = MetricsCollector()
+
         self.start_time = datetime.utcnow()
 
     def get_system_metrics(self) -> Dict[str, float]:
@@ -212,6 +255,7 @@ class PerformanceMonitor:
     def collect_system_metrics(self):
         """Collect and store system metrics."""
         metrics = self.get_system_metrics()
+
         for name, value in metrics.items():
             self.metrics_collector.set_gauge(f"system_{name}", value)
 
@@ -222,6 +266,7 @@ class PerformanceMonitor:
     def get_uptime_metrics(self) -> Dict[str, float]:
         """Get uptime-related metrics."""
         uptime = self.get_uptime()
+
         return {
             'uptime_seconds': uptime,
             'uptime_hours': uptime / 3600,
@@ -232,13 +277,17 @@ class PerformanceMonitor:
     def time_execution(self, metric_name: str, labels: Dict[str, str] = None):
         """Context manager to time execution of a block and record it as a metric."""
         start_time = time.time()
+
         try:
             yield
+
         finally:
             execution_time = time.time() - start_time
+
             self.metrics_collector.observe_histogram(
                 metric_name, execution_time, labels
             )
+
             self.logger.debug(f"{metric_name} executed in {execution_time:.3f}s")
 
     def time_function(self, metric_name: str = None):
@@ -246,6 +295,7 @@ class PerformanceMonitor:
 
         def decorator(func):
             nonlocal metric_name
+
             if metric_name is None:
                 metric_name = f"function_{func.__name__}_duration"
 
@@ -263,12 +313,15 @@ class BotMetrics:
 
     def __init__(self):
         self.performance_monitor = PerformanceMonitor()
+
         self.health_checker = HealthChecker()
+
         self.logger = logging.getLogger(__name__)
 
     def increment_command_usage(self, command_name: str, success: bool = True):
         """Increment command usage counter."""
         labels = {'command': command_name, 'success': str(success)}
+
         self.performance_monitor.metrics_collector.increment_counter(
             "command_executions_total", labels
         )
@@ -278,6 +331,7 @@ class BotMetrics:
     ):
         """Record command execution duration."""
         labels = {'command': command_name, 'success': str(success)}
+
         self.performance_monitor.metrics_collector.observe_histogram(
             "command_duration_seconds", duration_seconds, labels
         )
@@ -285,6 +339,7 @@ class BotMetrics:
     def increment_api_call(self, api_name: str, success: bool = True):
         """Increment API call counter."""
         labels = {'api': api_name, 'success': str(success)}
+
         self.performance_monitor.metrics_collector.increment_counter(
             "api_calls_total", labels
         )
@@ -294,6 +349,7 @@ class BotMetrics:
     ):
         """Record API call duration."""
         labels = {'api': api_name, 'success': str(success)}
+
         self.performance_monitor.metrics_collector.observe_histogram(
             "api_duration_seconds", duration_seconds, labels
         )
@@ -301,8 +357,10 @@ class BotMetrics:
     def increment_error(self, error_type: str, error_message: str = None):
         """Increment error counter."""
         labels = {'type': error_type}
+
         if error_message:
             labels['message'] = error_message[:100]  # Truncate long messages
+
         self.performance_monitor.metrics_collector.increment_counter(
             "errors_total", labels
         )
@@ -310,6 +368,7 @@ class BotMetrics:
     def record_user_interaction(self, interaction_type: str, user_id: str):
         """Record user interaction."""
         labels = {'type': interaction_type, 'user_id': str(user_id)}
+
         self.performance_monitor.metrics_collector.increment_counter(
             "user_interactions_total", labels
         )
@@ -319,15 +378,19 @@ class BotMetrics:
         command_metrics = self.performance_monitor.metrics_collector.get_metric(
             "command_executions_total"
         )
+
         stats = defaultdict(lambda: {'total': 0, 'success': 0, 'failure': 0})
 
         for metric in command_metrics:
             cmd = metric.labels.get('command', 'unknown')
+
             success = metric.labels.get('success', 'true') == 'true'
 
             stats[cmd]['total'] += metric.value
+
             if success:
                 stats[cmd]['success'] += metric.value
+
             else:
                 stats[cmd]['failure'] += metric.value
 
@@ -336,13 +399,16 @@ class BotMetrics:
     def export_metrics(self) -> str:
         """Export metrics in a standard format (like Prometheus text format)."""
         output = []
+
         # Add system metrics
         system_metrics = self.performance_monitor.get_system_metrics()
+
         for name, value in system_metrics.items():
             output.append(f"system_{name} {value}")
 
         # Add uptime metrics
         uptime_metrics = self.performance_monitor.get_uptime_metrics()
+
         for name, value in uptime_metrics.items():
             output.append(f"bot_{name} {value}")
 
@@ -353,9 +419,12 @@ class BotMetrics:
         ) in self.performance_monitor.metrics_collector.metrics.items():
             if metrics:
                 latest = metrics[-1]
+
                 labels_str = ",".join([f'{k}="{v}"' for k, v in latest.labels.items()])
+
                 if labels_str:
                     output.append(f'{metric_name}{{{labels_str}}} {latest.value}')
+
                 else:
                     output.append(f'{metric_name} {latest.value}')
 
@@ -366,7 +435,9 @@ class BotMetrics:
         if filepath is None:
             # Create metrics directory if it doesn't exist
             metrics_dir = Path("metrics")
+
             metrics_dir.mkdir(exist_ok=True)
+
             filepath = (
                 metrics_dir
                 / f"metrics_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.json"
@@ -387,22 +458,27 @@ class BotMetrics:
 
 # Global instances
 _metrics_instance = None
+
 _health_checker_instance = None
 
 
 def get_bot_metrics() -> BotMetrics:
     """Get the global bot metrics instance."""
     global _metrics_instance
+
     if _metrics_instance is None:
         _metrics_instance = BotMetrics()
+
     return _metrics_instance
 
 
 def get_health_checker() -> HealthChecker:
     """Get the global health checker instance."""
     global _health_checker_instance
+
     if _health_checker_instance is None:
         _health_checker_instance = HealthChecker()
+
     return _health_checker_instance
 
 
@@ -440,16 +516,24 @@ def time_command(command_name: str):
     def decorator(func):
         def wrapper(*args, **kwargs):
             start_time = time.time()
+
             success = True
+
             try:
                 result = func(*args, **kwargs)
+
                 return result
+
             except Exception:
                 success = False
+
                 raise
+
             finally:
                 duration = time.time() - start_time
+
                 record_command_duration(command_name, duration, success)
+
                 increment_command_usage(command_name, success)
 
         return wrapper
@@ -463,16 +547,24 @@ def time_api_call(api_name: str):
     def decorator(func):
         def wrapper(*args, **kwargs):
             start_time = time.time()
+
             success = True
+
             try:
                 result = func(*args, **kwargs)
+
                 return result
+
             except Exception:
                 success = False
+
                 raise
+
             finally:
                 duration = time.time() - start_time
+
                 record_api_duration(api_name, duration, success)
+
                 increment_api_call(api_name, success)
 
         return wrapper
@@ -482,4 +574,5 @@ def time_api_call(api_name: str):
 
 # Initialize metrics at module level
 bot_metrics = get_bot_metrics()
+
 health_checker = get_health_checker()

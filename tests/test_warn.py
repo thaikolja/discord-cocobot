@@ -1,5 +1,3 @@
-"""Tests for the moderator warning system."""
-
 #  Copyright (C) 2026 by Kolja Nolte
 #  kolja.nolte@gmail.com
 #  https://gitlab.com/thailand-discord/bots/cocobot
@@ -18,6 +16,8 @@
 #  License:   MIT
 #  Date:      2024-2026
 #  Package:   cocobot Discord Bot
+
+"""Tests for the moderator warning system."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -350,5 +350,3 @@ async def test_resetwarnings_clears_active_warning_cycle(
         ).all()
         assert len(historical_warnings) == 2
         assert all(warning.is_active is False for warning in historical_warnings)
-
-

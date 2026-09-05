@@ -24,12 +24,19 @@ This module provides input validation, sanitization, and security best practices
 to protect against common vulnerabilities.
 """
 
+# Regex: the last honest firewall before Discord markdown
 import re
+
+# Lists of allowed schemes and choices
 from typing import List, Optional
+
+# urlparse for scheme checks
 from urllib.parse import urlparse
 
+# Bleach because hand-rolled HTML sanitizers are how you get XSS
 import bleach
 
+# Domain errors, not random ValueError with a shrug
 from .exceptions import SecurityError, ValidationError
 
 
@@ -47,6 +54,7 @@ class InputValidator:
 
     # Regex patterns for common validations
     EMAIL_PATTERN = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+
     URL_PATTERN = re.compile(
         r'^https?://'  # http:// or https://
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?|'  # domain...
@@ -56,7 +64,9 @@ class InputValidator:
         r'(?:/?|[/?]\S+)$',
         re.IGNORECASE,
     )
+
     DISCORD_ID_PATTERN = re.compile(r'^\d{17,20}$')  # Discord IDs are 17-20 digits
+
     CURRENCY_CODE_PATTERN = re.compile(r'^[A-Z]{3}$')  # ISO 4217 currency codes
 
     @classmethod
@@ -113,6 +123,7 @@ class InputValidator:
             raise ValidationError(f"Invalid {field_name} format", field_name)
 
         parsed = urlparse(url)
+
         if parsed.scheme not in allowed_schemes:
             raise ValidationError(
                 f"Invalid scheme for {field_name}. Allowed: {', '.join(allowed_schemes)}",
@@ -263,6 +274,7 @@ class InputSanitizer:
         'h5',
         'h6',
     ]
+
     ALLOWED_ATTRIBUTES = {
         'code': ['class'],
         'pre':  ['class'],
@@ -388,6 +400,7 @@ class InputSanitizer:
         # Limit length (255 is typical filesystem limit)
         if len(filename) > 255:
             name, ext = os.path.splitext(filename)
+
             filename = name[: 255 - len(ext)] + ext
 
         return filename
@@ -414,12 +427,15 @@ class InputSanitizer:
         text = re.sub(
             r'<script[^>]*>.*?</script>', '', text, flags=re.IGNORECASE | re.DOTALL
         )
+
         text = re.sub(
             r'<iframe[^>]*>.*?</iframe>', '', text, flags=re.IGNORECASE | re.DOTALL
         )
+
         text = re.sub(
             r'<object[^>]*>.*?</object>', '', text, flags=re.IGNORECASE | re.DOTALL
         )
+
         text = re.sub(
             r'<embed[^>]*>.*?</embed>', '', text, flags=re.IGNORECASE | re.DOTALL
         )
@@ -575,14 +591,18 @@ def validate_and_sanitize_input(
     # Validation based on type
     if input_type == "text":
         max_length = kwargs.get('max_length', 1000)
+
         min_length = kwargs.get('min_length', 0)
+
         input_value = InputValidator.validate_length(
             input_value, min_length, max_length
         )
+
         input_value = InputSanitizer.sanitize_text(input_value, max_length)
 
     elif input_type == "url":
         input_value = InputValidator.validate_url(input_value)
+
         input_value = InputSanitizer.sanitize_url(input_value)
 
     elif input_type == "email":
@@ -597,6 +617,7 @@ def validate_and_sanitize_input(
     else:
         # For unknown types, apply basic text sanitization
         max_length = kwargs.get('max_length', 1000)
+
         input_value = InputSanitizer.sanitize_text(input_value, max_length)
 
     return input_value
@@ -614,6 +635,7 @@ def escape_markdown(text: str) -> str:
     """
     # Characters to escape in Discord markdown
     markdown_chars = r'([*_~`\\>\[\](){}#+\-=|.!])'
+
     return re.sub(markdown_chars, r'\\\1', text)
 
 
@@ -635,6 +657,7 @@ def safe_format_string(template: str, **kwargs) -> str:
     for placeholder in placeholders:
         # Strip whitespace
         clean_placeholder = placeholder.strip()
+
         # Check if it contains only safe variable names (letters, numbers, underscore)
         # This ensures no method calls, attribute access, or other dangerous operations
         if (
@@ -647,24 +670,32 @@ def safe_format_string(template: str, **kwargs) -> str:
 
     # Escape markdown in all values
     safe_kwargs = {}
+
     for key, value in kwargs.items():
         if isinstance(value, str):
             safe_kwargs[key] = escape_markdown(str(value))
+
         else:
             safe_kwargs[key] = value
 
     try:
         return template.format(**safe_kwargs)
+
     except (KeyError, ValueError, TypeError) as e:
         raise ValidationError(f"Error formatting string: {str(e)}")
 
 
 # Initialize commonly used validators
 email_validator = InputValidator.validate_email
+
 url_validator = InputValidator.validate_url
+
 discord_id_validator = InputValidator.validate_discord_id
+
 currency_validator = InputValidator.validate_currency_code
 
 text_sanitizer = InputSanitizer.sanitize_text
+
 html_sanitizer = InputSanitizer.sanitize_html
+
 url_sanitizer = InputSanitizer.sanitize_url

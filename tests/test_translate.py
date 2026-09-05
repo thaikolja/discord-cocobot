@@ -14,7 +14,8 @@
 #  Date:      2014-2025
 #  Package:   cocobot Discord Bot
 
-# Import mocking utilities from unittest.mock
+import asyncio
+import time
 from unittest.mock import AsyncMock, patch
 
 # Import pytest framework for testing
@@ -142,3 +143,79 @@ async def test_translation_with_special_characters(mock_prompt, mock_init, cog, 
     mock_prompt.assert_called_once_with(
         'Translate the text "How are you?" from English to Spanish. Keep the tone and meaning of the original text. Stay accurate.'
     )
+
+
+@pytest.mark.asyncio
+@patch('cogs.translate.UseAI')
+async def test_reuses_single_useai_instance(mock_useai_cls, bot, interaction):
+    mock_ai = mock_useai_cls.return_value
+    mock_ai.prompt.return_value = "Hello"
+    cog = TranslateCog(bot)
+
+    mock_useai_cls.assert_called_once_with(provider='gemini')
+    assert cog.ai is mock_ai
+
+    await cog.translate_command.callback(
+        cog, interaction, text="สวัสดี", from_language="Thai", to_language="English"
+    )
+    await cog.translate_command.callback(
+        cog, interaction, text="ลาก่อน", from_language="Thai", to_language="English"
+    )
+
+    mock_useai_cls.assert_called_once()
+    assert mock_ai.prompt.call_count == 2
+
+
+@pytest.mark.asyncio
+@patch('utils.helpers.UseAI.prompt')
+async def test_prompt_is_offloaded_to_thread(mock_prompt, cog, interaction):
+    mock_prompt.return_value = "Hello"
+    seen = {}
+    real_to_thread = asyncio.to_thread
+
+    async def spy(fn, *args, **kwargs):
+        seen['fn'] = fn
+        seen['args'] = args
+        return await real_to_thread(fn, *args, **kwargs)
+
+    with patch('cogs.translate.asyncio.to_thread', side_effect=spy):
+        await cog.translate_command.callback(
+            cog, interaction, text="สวัสดี", from_language="Thai", to_language="English"
+        )
+
+    assert seen['fn'] == cog.ai.prompt
+    assert seen['args'][0].startswith('Translate the text "สวัสดี"')
+    interaction.followup.send.assert_awaited_once_with("📚️ **Translation:** Hello")
+
+
+@pytest.mark.asyncio
+@patch('utils.helpers.UseAI.prompt')
+async def test_concurrent_translates_do_not_serialize_on_event_loop(mock_prompt, cog):
+    def slow_prompt(*_args, **_kwargs):
+        time.sleep(0.2)
+        return "Hello"
+
+    mock_prompt.side_effect = slow_prompt
+
+    def make_interaction():
+        interaction = AsyncMock()
+        interaction.response.is_done = lambda: False
+        return interaction
+
+    first = make_interaction()
+    second = make_interaction()
+    started = time.perf_counter()
+    await asyncio.gather(
+        cog.translate_command.callback(
+            cog, first, text="สวัสดี", from_language="Thai", to_language="English"
+        ),
+        cog.translate_command.callback(
+            cog, second, text="ลาก่อน", from_language="Thai", to_language="English"
+        ),
+    )
+    elapsed = time.perf_counter() - started
+
+    assert elapsed < 0.35
+    assert mock_prompt.call_count == 2
+    first.followup.send.assert_awaited_once()
+    second.followup.send.assert_awaited_once()

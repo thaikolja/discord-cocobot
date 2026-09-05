@@ -103,7 +103,7 @@ async def test_invalid_currency_length(cog, interaction):
     interaction.response.send_message.assert_awaited_once()
 
     # Check if the response contains the expected error message for invalid currency codes
-    assert "Invalid currency codes" in interaction.response.send_message.call_args[0][0]
+    assert "not currencies" in interaction.response.send_message.call_args[0][0]
 
 
 # Mark this function as an asynchronous test case

@@ -17,40 +17,47 @@
 #  Date:      2024-2026
 #  Package:   cocobot Discord Bot
 
-# Import the datetime class from the datetime module for handling date and time
+# Cache payloads are JSON strings; decode before we talk money
 import json
+
+# When the money-changers shrug, we still want a traceback
+import logging
+
+# Parse the API's last_updated_at into something humanize understands
 from datetime import datetime
 
-# Import the aiohttp library for asynchronous HTTP requests
+# Async HTTP so we don't block the bot on currencyapi
 import aiohttp
 
-# Import the discord library for Discord functionality
+# Interaction types and send_message
 import discord
 
-# Import app_commands from discord for slash command functionality
+# Slash command + describe
 from discord import app_commands
 
-# Import commands from discord.ext for creating bot commands
+# Cog base
 from discord.ext import commands
 
-# Import the naturaltime function from the humanize module for human-readable time
+# "3 minutes ago" beats ISO timestamps in a chat channel
 from humanize import naturaltime
 
-# Import the necessary configuration constants from the config module
+# API key, cache-bypass flag, and the shared error banner
 from config.config import CACHE_BYPASS_PRIVILEGED, CURRENCYAPI_API_KEY, ERROR_MESSAGE
 
-# Import the database manager for caching
+# SQLite/async cache so we don't hammer the paid endpoint
 from utils.database import DatabaseManager
 
+# Logger named after this module, not "root"
+logger = logging.getLogger(__name__)
 
-# Define the ExchangerateCog class as a subclass of commands.Cog
+
+# USD→THB is the house default; coconut shells are not ISO codes
 # noinspection PyUnresolvedReferences
 class ExchangerateCog(commands.Cog):
     """
     A Discord Cog for fetching and displaying the current exchange rate between two currencies.
     """
 
-    # Initialize the ExchangerateCog with a bot instance
     def __init__(self, bot: commands.Bot):
         """
         Initializes the ExchangerateCog with the given bot instance.
@@ -58,21 +65,20 @@ class ExchangerateCog(commands.Cog):
         Parameters:
         bot (commands.Bot): The bot instance to which this cog is added.
         """
-        # Store the bot instance for later use
+        # Stash the bot; every cog's first ritual
         self.bot = bot
 
-    # Define a slash command named "exchangerate" with a description
+    # Command name matches the file; keep Discord's catalog boring
     @app_commands.command(
         name="exchangerate",
         description='Get the current exchange rate between two currencies',
     )
-    # Describe the parameters for the slash command
+    # Defaults: tourist math, one dollar into baht
     @app_commands.describe(
         from_currency='The currency to convert from (Default: USD)',
         to_currency='The currency to convert to (Default: THB)',
         amount='The amount of money to convert (Default: 1)',
     )
-    # Define the asynchronous function that handles the "exchangerate" command
     async def exchangerate_command(
         self,
         interaction: discord.Interaction,
@@ -89,24 +95,29 @@ class ExchangerateCog(commands.Cog):
         to_currency (str): The currency to convert to. Defaults to 'THB'.
         amount (int): The amount of money to convert. Defaults to 1.
         """
-        # Strip whitespace and convert the currency codes to uppercase
+        # ISO codes are uppercase; users type "usd " with a space, of course
         from_currency = from_currency.strip().upper()
+
+        # Same treatment for the target
         to_currency = to_currency.strip().upper()
 
-        # Check if the currency codes are valid (3 letters)
+        # Three letters or it isn't a currency in this bot's universe
         if len(to_currency) != 3 or len(from_currency) != 3:
-            # Send an error message if the currency codes are invalid
+            # Don't even call the API for "DOLLAR" or "฿"
             await interaction.response.send_message(
-                f"{ERROR_MESSAGE} Invalid currency codes. Please use 3-letter currency codes like `USD`, `THB`, `EUR`, etc."
+                f"{ERROR_MESSAGE} Those are not currencies. USD, THB, EUR — three letters, like a proper offering. Coconut shells are not ISO codes."
             )
-            return  # Exit the command early
 
-        # Construct the API URL with the sanitized currency codes and API key
+            # Early exit before we burn quota
+            return
+
+        # Key in the query string; that's how this vendor rolls
         api_url = f'https://api.currencyapi.com/v3/latest?apikey={CURRENCYAPI_API_KEY}&currencies={to_currency}&base_currency={from_currency}'
 
+        # Cache per pair, not per amount — amount is just multiplication
         cache_key = f"exchange:{from_currency}:{to_currency}"
 
-        # Bypass the cache for privileged users (admins, owners, moderators) if configured
+        # Mods can force a live fetch if CACHE_BYPASS_PRIVILEGED is on
         user_is_privileged = (
             CACHE_BYPASS_PRIVILEGED
             and interaction.guild is not None
@@ -117,32 +128,49 @@ class ExchangerateCog(commands.Cog):
             )
         )
 
+        # Cache, HTTP, math, send — one try so errors share a punchline
         try:
+            # Privileged users skip the fridge; everyone else gets leftovers
             cached_data = None if user_is_privileged else await DatabaseManager.async_get_cache_entry(cache_key)
+
+            # Hit: parse JSON we stored ourselves
             if cached_data:
+                # Trust our cache format; if it's garbage, the outer except catches it
                 data = json.loads(cached_data)
+
+            # Miss: talk to currencyapi
             else:
-                # Create an aiohttp session and make the API request
+                # One session, one GET, then close
                 async with aiohttp.ClientSession() as session:
+                    # Follow the URL we built above
                     async with session.get(api_url) as response:
-                        # Check if the response status is not OK (i.e., not in the 200-399 range)
+                        # Non-2xx: vendor said no
                         if response.status != 200:
-                            # Construct an error message if the request was unsuccessful
+                            # Maybe the pair doesn't exist; coconut money definitely doesn't
                             output = f"{ERROR_MESSAGE} Couldn't convert **{from_currency}** into **{to_currency}**. Are you sure they even exist? Coconut money doesn't count."
+
+                            # Reply immediately; no cache write
                             await interaction.response.send_message(output)
+
+                            # Don't fall through into json()
                             return
+
+                        # Happy HTTP: parse the body
                         else:
-                            # Parse the JSON data from the response
+                            # Vendor JSON: meta + data[code].value
                             data = await response.json()
 
-                # Cache the successful json response for 10 minutes (600 seconds)
+                # Ten minutes is plenty for FX chatter
                 await DatabaseManager.async_set_cache_entry(cache_key, json.dumps(data), 600)
 
-            # Check if the target currency exists in the response data
+            # Pair might 200 and still omit the target (vendor quirks)
             if to_currency not in data.get('data', {}):
+                # Spell-check the ISO code, not our cache key
                 output = f"{ERROR_MESSAGE} Invalid target currency **{to_currency}**. Please check the currency code and try again."
+
+            # We have a rate; format it for humans
             else:
-                # Convert the last updated time to a human-readable format
+                # Vendor timestamp → "5 minutes ago"
                 updated_humanized = naturaltime(
                     datetime.strptime(
                         data['meta']['last_updated_at'],
@@ -150,24 +178,36 @@ class ExchangerateCog(commands.Cog):
                     )
                 )
 
-                # Calculate the converted value and round it to 2 decimal places
+                # Multiply then round; this is chat, not a Bloomberg terminal
                 value = round(
                     data['data'][to_currency]['value'] * amount, 2
                 )
 
-                # Construct the output message with the exchange rate details
+                # The money line
                 output = f"💰 `{amount}` **{from_currency}** is currently `{value}` **{to_currency}** (Updated: {updated_humanized})"
 
-            # Send the output message to the user
+            # One send for both success and "invalid target"
             await interaction.response.send_message(output)
 
+        # Network, JSON, cache, permissions — all become a shrug
         except Exception as e:
-            # Handle any unexpected errors
-            output = f"{ERROR_MESSAGE} An error occurred while fetching exchange rate: {str(e)}"
+            # Log the pair so we can replay the request
+            logger.error(
+                f"Exchange-rate lookup failed for {from_currency}->{to_currency}: {e}",
+                exc_info=True,
+            )
+
+            # User-facing: coins remain unconverted
+            output = (
+                f"{ERROR_MESSAGE} The money-changers of Kabakon shrugged. "
+                "Your coins remain unconverted, pilgrim."
+            )
+
+            # Still try to answer; if this fails too, discord.py will log it
             await interaction.response.send_message(output)
 
 
-# Define the asynchronous setup function to add the ExchangerateCog to the bot
+# Load the cog
 async def setup(bot: commands.Bot):
     """
     A setup function to add the ExchangerateCog to the bot.
@@ -175,5 +215,5 @@ async def setup(bot: commands.Bot):
     Parameters:
     bot (commands.Bot): The bot instance to which this cog is added.
     """
-    # Add an instance of ExchangerateCog to the bot
+    # Standard add_cog dance
     await bot.add_cog(ExchangerateCog(bot))
