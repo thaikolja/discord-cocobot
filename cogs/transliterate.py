@@ -18,6 +18,9 @@
 #  Package:   cocobot Discord Bot
 
 
+# Import asyncio so blocking Gemini calls can run off the event loop
+import asyncio
+
 # Import the logging module for logging purposes
 import logging
 
@@ -35,6 +38,7 @@ from config.config import ERROR_MESSAGE
 
 # Import UseAI from the utils.helpers module
 from utils.helpers import UseAI
+from utils.prompts import render_language_prompt
 
 # Set up a logger for this module
 logger = logging.getLogger(__name__)
@@ -55,6 +59,7 @@ class Transliterate(commands.Cog):
         """
         self.bot = bot  # Assign the bot instance to a class variable
         self.ai_provider = 'gemini'  # Set the default AI provider
+        self.ai = UseAI(provider=self.ai_provider)
 
     # Define a command for transliterating Thai text
     @app_commands.command(
@@ -92,41 +97,18 @@ class Transliterate(commands.Cog):
             return
 
         try:
-            # Initialize the AI helper for the requested task
-            ai = UseAI(provider=self.ai_provider)
+            prompt = render_language_prompt('transliterate', text=text)
+            if not prompt:
+                await interaction.followup.send(ERROR_MESSAGE)
+                return
 
-            # Construct a detailed prompt for the AI
-            prompt = (
-                "You are a helpful assistant that transliterates Thai text into Latin characters "
-                "using a phonetic system that non-Thai speakers can understand."
-                "Transliterate the following Thai text into Latin characters using a "
-                "phonetic system understandable to English speakers: "
-                f"'{text}'.\n"
-                "\n"
-                "Instructions:\n"
-                "1. Use diacritics (like ā, á, â, à, ǎ) on vowels to represent the five "
-                "Thai tones (mid, high, falling, low, rising) accurately for each "
-                "syllable.\n"
-                "2. Separate syllables within a word using a hyphen (-).\n"
-                "3. Separate distinct words with a single space.\n"
-                "4. Use specific consonant mappings for initial sounds: 'ก' = 'g', "
-                "'ป' = 'bp', 'ต' = 'dt'. For other consonants and vowels, use a "
-                "consistent, common phonetic representation.\n"
-                "5. Ensure the output contains only Latin characters, hyphens, "
-                "spaces, and the necessary diacritics.\n"
-                "Example: 'สวัสดี' might become 'sà-wàt-dii'.\n"
-                "\n"
-                "Provide only the transliterated text as the result."
-            )
-
-            # Send the constructed prompt to the AI and get a response
-            answer = ai.prompt(prompt)
+            answer = await asyncio.to_thread(self.ai.prompt, prompt)
 
             # Check if the AI responded with content
             if not answer or answer.isspace():
                 # Log at debug level if the AI response is empty or whitespace
                 logger.debug(
-                    f"AI returned an empty or whitespace response for input: {text}"
+                    f"Aweome, what do you want me to do with \"{text}\" empty response?! You're dumber than a cooconut!"
                 )
                 # Inform the user the AI didn't provide a useful response
                 await interaction.followup.send(

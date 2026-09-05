@@ -34,6 +34,7 @@ from discord.ext import commands
 # Local config + AI helper for summarization
 from config.config import ERROR_MESSAGE
 from utils.helpers import UseAI
+from utils.prompts import render_language_prompt
 
 # Grab the shared discord logger so we stay consistent
 logger = logging.getLogger('discord')
@@ -126,14 +127,10 @@ class SummarizeCog(commands.Cog):
             # Combine everything into one big string for the AI
             transcript = "\n".join(transcript_lines)
 
-            # This is where we tell the AI how to behave - keep it short and a bit cheeky
-            prompt = (
-                "Provide a concise summary of the following chat transcript with **no more than 800 characters**. "
-                "Capture the **main topics**, agreements, or funny remarks without listing every detail. "
-                "Write as paragraph. Keep the tone slightly sarcastic and humorous, but not too much. Avoid being too formal. "
-                "Return only the summary and nothing else. The summary must be **useful**. The content to summarize: \n\n"
-                f"{transcript}"
-            )
+            prompt = render_language_prompt('summarize', transcript=transcript)
+            if not prompt:
+                await interaction.followup.send(ERROR_MESSAGE)
+                return
 
             # We're running this in a separate thread so we don't freeze the whole bot
             summary = await asyncio.to_thread(self.ai.prompt, str(prompt), False)

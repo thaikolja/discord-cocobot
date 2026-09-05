@@ -17,6 +17,9 @@
 #  Date:      2024-2026
 #  Package:   cocobot Discord Bot
 
+# Import asyncio so blocking Gemini calls can run off the event loop
+import asyncio
+
 # Import the logging module for error tracking and logging purposes
 import logging  # Import logging module for error tracking
 
@@ -36,6 +39,7 @@ from config.config import (  # Import custom error message from configuration
 
 # Import the UseAI helper utility from the utils.helpers module
 from utils.helpers import UseAI  # Import AI helper utility
+from utils.prompts import render_language_prompt
 
 # Configure the logger for this module to track activities and errors
 logger = logging.getLogger(__name__)
@@ -84,6 +88,9 @@ class TranslateCog(commands.Cog):
         """
         # Store the bot instance for later use
         self.bot = bot
+        self.ai = UseAI(provider='gemini')
+        self.ai.temperature = 0.3
+        self.ai.top_p = 0.3
 
     # Define a new slash command for translation
     @app_commands.command(
@@ -144,20 +151,17 @@ class TranslateCog(commands.Cog):
             return
 
         try:
-            # Initialize the AI helper with the preferred provider
-            ai = UseAI(provider='gemini')
-            # Set AI response parameters
-            ai.temperature = 0.3
-            # Well, top_p, I guess
-            ai.top_p = 0.3
-            # Construct the prompt for the AI to process
-            prompt = (
-                f'Translate the text "{text}" from {from_language} to {to_language}. '
-                'Keep the tone and meaning of the original text. Stay accurate.'
+            prompt = render_language_prompt(
+                'translate',
+                text=text,
+                from_language=from_language,
+                to_language=to_language,
             )
+            if not prompt:
+                await interaction.followup.send(ERROR_MESSAGE)
+                return
 
-            # Get the response from the AI
-            output = ai.prompt(prompt)
+            output = await asyncio.to_thread(self.ai.prompt, prompt)
 
             # Check if the response is valid
             if not output:

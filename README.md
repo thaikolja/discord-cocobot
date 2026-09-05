@@ -171,7 +171,7 @@ Your bot should now be online with slash commands available.
 - **Logging**: `LOG_LEVEL`, `LOG_FILE`, `LOG_MAX_BYTES`, `LOG_BACKUP_COUNT`
 - **Security**: `MAX_CONTENT_LENGTH`, `ALLOWED_MENTIONS`, `ENABLE_CORS`
 - **Environment**: `ENVIRONMENT` (development/production), `DEBUG`
-- **Jail System**: `JAIL_ROLE_ID`, `AUGUST_INTERNAL_PORT`, `AUGUST_INTERNAL_SECRET`
+- **Moderation**: `WARNED_ROLE_ID`
 
 ### API Response Caching
 

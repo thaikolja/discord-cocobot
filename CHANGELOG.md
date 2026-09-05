@@ -4,6 +4,22 @@ From time to time, a new coconut falls from the tree, and we need to update the 
 fixes, and improvements. Each entry is categorized by version number and includes a brief description of the chan-- man, you're all developers, otherwise you wouldn't be reading this; you
 know how this shit works.
 
+## v3.8.0
+
+### Removed
+
+- **`/roast`**: Recap cog, prompt/knowledge assets, and all `RECAP_*` environment variables.
+- **`/jail` and `/unjail`**: Jail cog, August Engelhardt internal API integration, `JailedUser` model, and `JAIL_*` / `AUGUST_*` environment variables. Moderation is `/warn` only.
+
+### Changed
+
+- **Version**: `3.6.0` → `3.8.0`
+- **Gemini prompts**: `/translate`, `/transliterate`, and `/summarize` load templates from `assets/data/language-prompt-definition.md` (cached in memory).
+- **AI clients**: Translate and transliterate reuse one `UseAI` instance per cog and run `prompt()` on `asyncio.to_thread` so Gemini I/O does not block the event loop.
+- **Environment files**: Reorganized `.env` / `.env.example` (Discord, AI, APIs, database, cache, logging, security, moderation, environment).
+
+---
+
 ## v3.6.0
 
 ### Added

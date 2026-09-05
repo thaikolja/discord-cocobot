@@ -16,6 +16,7 @@ logs/*.log
 !LICENSE
 !CHANGELOG.md
 !CONTRIBUTING.md
+!assets/data/language-prompt-definition.md
 .vscode/
 cocobot.db
 docs/
