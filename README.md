@@ -45,6 +45,9 @@
     - `[from_language]` *(string)* **Default:** auto (Thai/English detection)
     - `[to_language]` *(string)* **Default:** auto (opposite of source)
 
+- **📝 Summarize**: Recap recent messages in the current channel
+  - `/summarize [limit]` *(integer)* **Default:** 20, **Max:** 50
+
 ## 🥥 Examples
 
 **cocobot** uses [slash commands](https://support-apps.discord.com/hc/en-us/articles/26501837786775-Slash-Commands-FAQ). Here are some examples. The parameter with the colon (`:`) at the end are the parameters you can choose as described in the **Features** section.
@@ -181,7 +184,7 @@ To disable a fallback, set `<FEATURE>_FALLBACK_PROVIDER` to an empty string. The
 - **Logging**: `LOG_LEVEL`, `LOG_FILE`, `LOG_MAX_BYTES`, `LOG_BACKUP_COUNT`
 - **Security**: `MAX_CONTENT_LENGTH`, `ALLOWED_MENTIONS`, `ENABLE_CORS`
 - **Environment**: `ENVIRONMENT` (development/production), `DEBUG`
-- **Jail System**: `JAIL_ROLE_ID`, `AUGUST_INTERNAL_PORT`, `AUGUST_INTERNAL_SECRET`
+- **Moderation**: `WARNED_ROLE_ID`
 
 ### API Response Caching
 
