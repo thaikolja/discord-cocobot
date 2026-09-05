@@ -17,11 +17,10 @@ fi
 
 echo "📂 Current directory: $(pwd)"
 
-# Pull the latest changes
+# Fast-forward only so a dirty or diverged server clone cannot silently merge
 echo "📥 Pulling latest changes from GitLab..."
-git pull
+git pull --ff-only
 
-# Generate clean env file for Docker Compose v2 (strips comment lines)
 if [ ! -f ".env" ]; then
   echo "❌ .env file not found"
 
@@ -43,8 +42,8 @@ docker compose up -d
 # Wait a moment for services to start
 sleep 5
 
-# Check if the main service is running
-if docker compose ps | grep -q "cocobot.*Up"; then
+# Compose v2 may print "Up" or "running"
+if docker compose ps --status running --services | grep -qx cocobot; then
   echo "✅ Cocobot service is running successfully"
 else
   echo "❌ Cocobot service failed to start"
@@ -52,14 +51,13 @@ else
   exit 1
 fi
 
-# Check if database and redis are running too
-if docker compose ps | grep -q "cocobot-db.*Up"; then
+if docker compose ps --status running --services | grep -qx db; then
   echo "✅ Database service is running"
 else
   echo "⚠️ Database service may not be running properly"
 fi
 
-if docker compose ps | grep -q "cocobot-redis.*Up"; then
+if docker compose ps --status running --services | grep -qx redis; then
   echo "✅ Redis service is running"
 else
   echo "⚠️ Redis service may not be running properly"

@@ -21,6 +21,7 @@ From time to time, a new coconut falls from the tree, and we need to update the 
 - **User-facing errors**: Discord copy uses Kabakon / coconut tone; logs stay precise and do not leak exception text to users.
 - **Python 3.13**: Runtime venv is 3.13-only (Gemini/`pydantic_core` ABI).
 - **Lint**: `flake8` is clean on `bot.py`, `cogs/`, `config/`, `utils/`, `scripts/`, and `tests/`.
+- **Docker / deploy**: Image is `python:3.13-slim` (matches GitLab CI). `.dockerignore` keeps secrets and junk out of the image. `deploy.sh` uses `git pull --ff-only` and Compose `--status running` checks.
 
 ---
 
