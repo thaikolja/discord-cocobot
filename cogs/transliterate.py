@@ -18,35 +18,29 @@
 #  Package:   cocobot Discord Bot
 
 
-# Gemini is blocking; asyncio lets us hide that from Discord's event loop
-import asyncio
-
-# When transliteration goes sideways, logs beat vibes
+# Import the logging module for logging purposes
 import logging
 
-# Yes, this is still a Discord bot, not a linguistics thesis
+# Import discord from the discord library
 import discord
 
-# Slash commands live here, because prefix commands are so 2018
+# Import app_commands from the discord library
 from discord import app_commands
 
-# Cog plumbing: the official way to bolt features onto the coconut
+# Import necessary components from the discord.ext.commands module
 from discord.ext import commands
 
-# Shared "oops" copy so we don't invent a new apology each time
+# Import ERROR_MESSAGE from the config module
 from config.config import ERROR_MESSAGE
 
-# Thin wrapper around whoever is currently pretending to know Thai phonetics
+# Import UseAI from the utils.helpers module
 from utils.helpers import UseAI
 
-# Prompt templates, because raw f-strings of instructions age like milk
-from utils.prompts import render_language_prompt
-
-# Module logger; name matches the file so grep actually works
+# Set up a logger for this module
 logger = logging.getLogger(__name__)
 
 
-# Thai-to-Latin via AI, because a lookup table would be a second career
+# Define the Transliterate cog class
 class Transliterate(commands.Cog):
     """
     A cog that attempts to transliterate Thai text into something resembling Latin script.
@@ -59,25 +53,14 @@ class Transliterate(commands.Cog):
         Initializes the cog.
         Sets up the bot instance and AI provider.
         """
-        # Hold the bot so setup() doesn't have to smuggle it later
-        self.bot = bot
+        self.bot = bot  # Assign the bot instance to a class variable
+        self.ai_provider = 'gemini'  # Set the default AI provider
 
-        # Gemini is the default; swap it only if you enjoy debugging encodings
-        self.ai_provider = 'gemini'
-
-        # Temperature 0: we want romanization, not creative spelling
-        self.ai = UseAI(
-            provider=self.ai_provider,
-            temperature=0.0,
-            disable_thinking=True,
-        )
-
-    # Discord needs a name and a sales pitch for the slash command
+    # Define a command for transliterating Thai text
     @app_commands.command(
         name="transliterate",
         description='Transliterates Thai words and sentences into the English alphabet'
     )
-    # Parameter hint so users don't paste English and wonder why nothing happens
     @app_commands.describe(text='The Thai text to be butchered into Latin script.')
     async def transliterate_command(self, interaction: discord.Interaction, text: str):
         """
@@ -87,118 +70,103 @@ class Transliterate(commands.Cog):
                 interaction (discord.Interaction): The context for the command invocation.
                 text (str): The Thai input string, assuming it is indeed Thai.
         """
-        # Discord times out fast; defer before Gemini even wakes up
         try:
-            # Inspector: discord.py types vs runtime, classic
+            # Notify the user that a response may take a while
             # noinspection PyUnresolvedReferences
             await interaction.response.defer()
-
-        # Token expired while we were still saying hello
         except discord.errors.NotFound:
-            # Log the ghost ping so we know it wasn't a model failure
-            logger.warning(
-                "Transliterate defer failed: interaction expired before acknowledgement "
-                f"(user_id={interaction.user.id})."
-            )
-
-            # Nothing left to follow up on
+            # Interaction has already expired, log and return
+            logger.warning(f"Interaction expired for transliterate command by {interaction.user}")
             return
-
-        # Any other Discord hiccup: log and bail, don't pretend we deferred
         except Exception as e:
-            # Keep the user id; future-you will thank present-you
-            logger.error(
-                f"Transliterate defer failed for user_id={interaction.user.id}: {e}",
-                extra={'cause': 'discord_interaction_defer'},
-            )
-
-            # Stop here; followup would just 404
+            # Log other defer errors but continue
+            logger.error(f"Failed to defer interaction: {e}")
             return
 
-        # Whitespace-only "Thai" is not a tribute, it's a shrug
+        # Check if the input is just whitespace
         if not text or text.isspace():
-            # Kabakon flavor, still a hard no
+            # Inform the user that the input cannot be just whitespace
             await interaction.followup.send(
-                "✍️ Empty tribute? Kabakon is not impressed. Offer actual Thai, not a blank copra husk."
+                "✍️ How about adding some text in Thai, you cocotwat!"
             )
-
-            # No model call for an empty string, we're not that bored
             return
 
-        # Prompt, call, clean, send — the happy path, theoretically
         try:
-            # Bake the user text into the canned transliterate prompt
-            prompt = render_language_prompt('transliterate', text=text)
+            # Initialize the AI helper for the requested task
+            ai = UseAI(provider=self.ai_provider)
 
-            # Missing template is a deploy bug, not a user typo
-            if not prompt:
-                # Generic error; don't leak that the prompt file vanished
-                await interaction.followup.send(ERROR_MESSAGE)
+            # Construct a detailed prompt for the AI
+            prompt = (
+                "You are a helpful assistant that transliterates Thai text into Latin characters "
+                "using a phonetic system that non-Thai speakers can understand."
+                "Transliterate the following Thai text into Latin characters using a "
+                "phonetic system understandable to English speakers: "
+                f"'{text}'.\n"
+                "\n"
+                "Instructions:\n"
+                "1. Use diacritics (like ā, á, â, à, ǎ) on vowels to represent the five "
+                "Thai tones (mid, high, falling, low, rising) accurately for each "
+                "syllable.\n"
+                "2. Separate syllables within a word using a hyphen (-).\n"
+                "3. Separate distinct words with a single space.\n"
+                "4. Use specific consonant mappings for initial sounds: 'ก' = 'g', "
+                "'ป' = 'bp', 'ต' = 'dt'. For other consonants and vowels, use a "
+                "consistent, common phonetic representation.\n"
+                "5. Ensure the output contains only Latin characters, hyphens, "
+                "spaces, and the necessary diacritics.\n"
+                "Example: 'สวัสดี' might become 'sà-wàt-dii'.\n"
+                "\n"
+                "Provide only the transliterated text as the result."
+            )
 
-                # No prompt, no party
-                return
+            # Send the constructed prompt to the AI and get a response
+            answer = ai.prompt(prompt)
 
-            # Off-thread so the rest of the bot can still serve weather memes
-            answer = await asyncio.to_thread(self.ai.prompt, prompt)
-
-            # Empty model output is a warning, not a "success with vibes"
+            # Check if the AI responded with content
             if not answer or answer.isspace():
-                # Length helps when reproducing filter nonsense
-                logger.warning(
-                    "Transliterate Gemini returned empty text; check model output filters "
-                    f"and prompt render for input_length={len(text)}."
+                # Log at debug level if the AI response is empty or whitespace
+                logger.debug(
+                    f"AI returned an empty or whitespace response for input: {text}"
                 )
-
-                # User-facing: the sun-king chose silence. Rarely a compliment.
+                # Inform the user the AI didn't provide a useful response
                 await interaction.followup.send(
-                    f"{ERROR_MESSAGE} The sun-king of Kabakon considered your syllables and chose silence. Rarely a compliment."
+                    f"{ERROR_MESSAGE} @cocobot seems to be speechless. It didn't give anything useful. Poetic as always..."
                 )
-
-                # Don't send quotes around nothing
                 return
 
-            # Strip quotes and colons the model loves to sprinkle on
+            # Clean the AI response to remove extraneous characters
             transliteration = (
                 answer.strip().replace(':', '').replace('"', '').replace("'", "")
             )
 
-            # Collapse the model's "poetic spacing" into one space
+            # Further clean the transliteration by collapsing multiple spaces
             transliteration = ' '.join(transliteration.split())
 
-            # Finally: Latin-ish letters, Discord-ready
+            # Send the final transliterated text to the user
             await interaction.followup.send(f"✍️ **Transliteration:** {transliteration}")
 
-        # ValueError usually means the helper hated the input
         except ValueError as ve:
-            # Length + exception; enough to debug without dumping Thai into logs forever
-            logger.warning(
-                f"Transliterate rejected input as ValueError (length={len(text)}): {ve}"
-            )
-
-            # Tell them to send actual Thai, not keyboard soup
+            # Log and handle ValueError exceptions
+            logger.warning(f"ValueError during transliteration for input '{text}': {ve}")
+            # Inform the user about a value-related error
             await interaction.followup.send(
-                f"{ERROR_MESSAGE} That offering would not even ferment into copra. Send proper Thai, not whatever that was."
+                f"{ERROR_MESSAGE} Looks like there was invalid data somewhere. Check your input, maybe?"
             )
-
-        # Provider down, network, surprise AttributeError — all land here
         except Exception as e:
-            # Stack traces for Kolja; jokes for the channel
-            logger.error(
-                f"Transliterate failed during Gemini/provider call (length={len(text)}): {e}",
-                exc_info=True,
+            # Log and handle unexpected exceptions (use warning as this is often during testing)
+            logger.warning(
+                f"An error occurred during transliteration for input '{text}': {e}"
             )
-
-            # Copra press jammed: technically accurate if you squint
+            # Inform the user that something went wrong, and blame the programmer
             await interaction.followup.send(
-                f"{ERROR_MESSAGE} The copra press jammed. Sit in the sun with August until Kolja oils the gears."
+                f"{ERROR_MESSAGE} Blame @Kolja, the coconut head; he programmed me, after all!"
             )
 
 
-# discord.py entry point: load this cog or the command never exists
+# Function to add the Transliterate cog to the bot instance
 async def setup(bot: commands.Bot):
     """
     Adds the Transliterate cog to the bot.
     Standard setup procedure for cogs.
     """
-    # Instantiate and attach; no extra options, keep it boring
     await bot.add_cog(Transliterate(bot))

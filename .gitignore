@@ -16,7 +16,6 @@ logs/*.log
 !LICENSE
 !CHANGELOG.md
 !CONTRIBUTING.md
-!assets/data/language-prompt-definition.md
 .vscode/
 cocobot.db
 docs/
@@ -172,7 +171,6 @@ celerybeat.pid
 # Environments
 .env
 !.env.example
-.env.docker
 .venv
 env/
 venv/
@@ -213,5 +211,3 @@ cython_debug/
 
 .iflow/
 gha-creds-*.json
-AGENTS.md
-.agents

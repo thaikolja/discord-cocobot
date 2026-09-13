@@ -30,62 +30,62 @@ Raises:
     No explicit errors are raised by this method.
 """
 
-# Regex: because "tate" deserves a word-boundary, not a half-hearted in-string match
+# Import the regular expression module for pattern matching in text
 import re
 
-# Time math for cooldowns; coconut wisdom since whenever datetime was invented
+# Import datetime for current time operations
 from datetime import datetime, timedelta
 
-# The actual Discord SDK, not a coconut with a websocket taped on
+# Import the discord.py library for interacting with the Discord API
 import discord
 
-# Slash-command error types live here, because of course they do
+# Import app_commands for application command error handling
 from discord import app_commands
 
-# Prefix commands still exist; we keep the extension around like a lucky shell
+# Import the commands extension from discord.py for bot command handling
 from discord.ext import commands
 
-# SQLAlchemy's "something exploded in the database" exception
+# Import SQLAlchemy error for database exception handling
 from sqlalchemy.exc import SQLAlchemyError
 
-# Version string and the one guild we actually care about
+# Import configuration constants from the config file
 from config.config import COCOBOT_VERSION, DISCORD_SERVER_ID
 
-# Sessions, init, and the manager that pretends visa reminders are a real product
+# Import database functions
 from utils.database import DatabaseManager, get_db_session, init_db
 
-# Loggers: one for the bot, one for commands, one for "oh no"
+# Import setup function for logging configuration
 from utils.logger import bot_logger, command_logger, error_logger, setup_logging
 
-# Spin up logging before anyone asks why the coconut is silent
+# Configure advanced logging settings
 setup_logging(log_level="INFO")
 
-# Cogs loaded at boot — the whole personality of this nut
+# List of initial extensions (cogs) to load on startup
 INITIAL_EXTENSIONS = [
-    # Clock flex for people who forgot Thailand is UTC+7
+    # Time-related commands cog
     'cogs.time',
-    # Baht vs. everything else, including regret
+    # Currency exchange functionality cog
     'cogs.exchangerate',
-    # Weather, because "it's hot" still needs an API
+    # Weather information commands cog
     'cogs.weather',
-    # Romanization for when the Thai keyboard is a suggestion
+    # Text transliteration commands cog
     'cogs.transliterate',
-    # Actual translation, not vibes
+    # Translation commands cog
     'cogs.translate',
-    # AQI so you can blame the air scientifically
+    # Air pollution information cog
     'cogs.pollution',
-    # Language drills; the coconut as a tutor
+    # Learning-related commands cog
     'cogs.learn',
-    # Admin knobs for people with too much power
+    # Administrative commands cog
     'cogs.admin',
-    # Warnings: the polite coconut slap
-    'cogs.warn',
-    # Summarize the chat so nobody has to scroll
+    # AI Jail commands cog
+    'cogs.jail',
+    # Chat summarize command cog
     'cogs.summarize',
 ]
 
 
-# Main bot class: commands.Bot with extra coconut
+# Define the main bot class inheriting from commands.Bot
 class Cocobot(commands.Bot):
     """
     Represents a Discord bot with specific functionalities such as command handling,
@@ -107,10 +107,10 @@ class Cocobot(commands.Bot):
             handled through database interactions.
     """
 
-    # Pin the advertised version so `/cocobot` doesn't invent a number
+    # Version identifier for the bot
     version: str = COCOBOT_VERSION
 
-    # Constructor: intents, cooldowns, and a set tests still poke
+    # Constructor method to initialize the bot
     def __init__(self):
         """
         Initializes a Discord bot with custom intents and attributes for tracking user actions
@@ -125,25 +125,26 @@ class Cocobot(commands.Bot):
                 This is kept for compatibility with tests, although reminder logic has transitioned
                 to using a database.
         """
-        # Start from Discord's default intents, then turn on the spicy ones
+        # Initialize default Discord intents
         intents = discord.Intents.default()
 
-        # Members: so we can tell who is who, not just a snowflake
+        # Enable member-related intents for tracking member information
         intents.members = True
 
-        # Message content: privileged, required, and Discord's favorite lecture
+        # Enable message content intent to read message content
         intents.message_content = True
 
-        # Prefix '!' because slash commands weren't enough for nostalgia
+        # Call the parent class constructor with command prefix and intents
         super().__init__(command_prefix='!', intents=intents)
 
-        # Per-user cooldown map for the tate easter egg
+        # Dictionary to track cooldowns for the 'tate' command per user
         self.tate_cooldowns = {}
 
-        # In-memory visa reminders; tests still check this even after we grew a DB
+        # Set to track users reminded in the visa channel (for backward compatibility)
+        # The actual logic now uses database, but this is kept for tests
         self.reminded_users = set()
 
-    # Load cogs, init DB, shove commands onto the guild
+    # Setup hook to load extensions and sync commands
     async def setup_hook(self):
         """
         Performs setup operations for the application, including database initialization,
@@ -158,37 +159,36 @@ class Cocobot(commands.Bot):
             ModuleNotFoundError: If an extension module cannot be found.
             AttributeError: If an attribute required for loading an extension is missing.
         """
-        # Create tables before anyone tries to remind a visa applicant
+        # Initialize database
         init_db()
 
-        # Walk the cog list like a packing list for a beach trip
+        # Iterate through the list of initial extensions
         for extension in INITIAL_EXTENSIONS:
-            # One cog at a time so a bad import doesn't nuke the whole fruit
+            # Try to load the current extension
             try:
-                # discord.py logs this; we just await and hope
+                # Asynchronously load the extension (discord.py will log this automatically)
                 await self.load_extension(extension)
-
-            # Missing module, bad import, or someone renamed a class
+            # Catch extension loading errors (ImportError, ModuleNotFoundError, etc.)
             except (ImportError, ModuleNotFoundError, AttributeError) as e:
-                # Log it loud; a silent failed cog is how you ship a dummy
+                # Log the failure to load the extension along with the error details
                 bot_logger.error(
                     f'Failed to load extension {extension}. {type(e).__name__}: {e}',
                     exc_info=True
                 )
 
-        # Target guild object from the configured server ID
+        # Create a discord.Object representing the target guild using its ID
         guild = discord.Object(id=DISCORD_SERVER_ID)
 
-        # Copy globals onto the guild so slash commands show up this century
+        # Copy global application commands to the specified guild
         self.tree.copy_global_to(guild=guild)
 
-        # Sync; Discord will pretend this is instant
+        # Synchronize the application command tree with the specified guild
         await self.tree.sync(guild=guild)
 
-        # Confirm the tree actually landed
+        # Log that the command tree synchronization is complete
         bot_logger.info('Commands loaded...')
 
-    # Fired when Discord finally admits we exist
+    # Event that triggers when the bot is ready and online
     async def on_ready(self):
         """
         Logs the bot's readiness and sets up activity status and guild connections upon startup.
@@ -203,20 +203,20 @@ class Cocobot(commands.Bot):
             No explicit errors are raised by this method.
 
         """
-        # Username + ID so logs can prove which coconut woke up
+        # Log an informational message indicating the bot is ready, including its
+        # username
         bot_logger.info(f'🥥 {self.user} is ready! (ID: {self.user.id})')
 
-        # Playing "Waiting for a coconut to fall" — accurate job description
+        # Set the bot's activity status
         await self.change_presence(
             activity=discord.Game(name="Waiting for a coconut to fall")
         )
 
-        # List every guild so we notice if we joined the wrong island
+        # Log guild information where the bot is present
         for guild in self.guilds:
-            # Name and ID; "unknown" guilds are how incidents start
             bot_logger.info(f'Connected to guild: {guild.name} (ID: {guild.id})')
 
-    # Every message walks through this gauntlet
+    # Event that triggers for every message received
     async def on_message(self, message):
         """
         Handles incoming messages sent in Discord channels and performs various actions
@@ -233,40 +233,33 @@ class Cocobot(commands.Bot):
                 user reminder checks or updates.
 
         """
-        # Ignore our own messages; infinite coconut loops are not a feature
+        # Check if the message author is the bot itself to prevent self-responses
         if message.author == self.user:
-            # Leave immediately, pride intact
+            # Exit the handler if the message is from the bot
             return
 
-        # Visa channel + the word "visa" = nationality nag, once
+        # Check for visa channel nationality reminder condition
+        # Only remind the user if they haven't been reminded before and their message contains "visa"
         if (
             message.channel.name == "visa"
             and "visa" in message.content.lower()  # Case-insensitive matching
         ):
-            # Default: we have not nagged this human yet
+            # Try to check database, but allow graceful fallback for test environments
             user_already_reminded = False
-
-            # DB first; tests and outages fall back to a set
             try:
-                # Harmless if already initialized
+                # Initialize database if not already done
                 init_db()  # Safe to call multiple times
 
-                # Ask the database if this Discord ID already got the speech
+                # Check database if user has already been reminded
                 with get_db_session() as db:
-                    # Persistent reminder flag, not vibes
                     user_already_reminded = DatabaseManager.has_been_reminded_about_visa(db, str(message.author.id))
-
-            # Database sulking: log it and use RAM like it's 2019
             except SQLAlchemyError as e:
-                # Don't hide SQL failures behind a coconut emoji
+                # Log the exception and fall back to in-memory check
                 error_logger.error(f"Database error checking visa reminder: {e}")
-
-                # In-memory fallback the tests still love
                 user_already_reminded = message.author.id in self.reminded_users
 
-            # First-time visa chatter: send the nationality reminder
             if not user_already_reminded:
-                # Silent ping so we don't wake the whole island
+                # Send a reminder to mention nationality in the visa channel
                 await message.channel.send(
                     f"🥥 **Friendly reminder to {message.author.mention}**: Don't forget "
                     f"to **mention your nationality** when asking questions in this "
@@ -274,66 +267,52 @@ class Cocobot(commands.Bot):
                     "significantly based on your nationality.",
                     silent=True,
                 )
-
-                # Persist the nag so we don't become that bot
+                # Mark user as reminded in the database if available, otherwise in-memory
                 try:
-                    # Init again in case the first call never ran
                     init_db()  # Ensure database is initialized
 
-                    # Write the reminder row
                     with get_db_session() as db:
-                        # Mark this user as already reminded
                         DatabaseManager.mark_user_as_reminded_about_visa(db, str(message.author.id))
-
-                # DB write failed; we still remember in RAM
                 except SQLAlchemyError as e:
-                    # Log it; silent failure is how duplicates happen
+                    # Log the exception instead of failing silently
                     error_logger.error(f"Database error marking user as reminded: {e}")
 
-                # Tests inspect this set; keep it honest
+                # Always add to in-memory set for backward compatibility with tests
                 self.reminded_users.add(message.author.id)
-
-                # Stop here; no tate GIFs in visa support
+                # Prevent further processing for this message
                 return
 
-        # Flag for the "who is this coconut" embed
+        # Flag for sending Cocobot info embed
         send_cocobot_info_embed = False
 
-        # Trim so "!cocobot " still counts as a hello
+        # Strip whitespace from message content
         normalized_message_content_stripped = message.content.strip()
 
-        # Exact !cocobot, case-insensitive because thumbs exist
+        # Check if message is exactly '!cocobot'
         is_cocobot_command = normalized_message_content_stripped.lower() == '!cocobot'
 
-        # Mention-only ping: no extra text, just @cocobot
+        # Check if Cocobot is mentioned alone (no other text)
+        # The message should only contain the mention and nothing else (except whitespace)
         is_cocobot_mention_alone = False
-
-        # Did they actually ping us, or just talk about coconuts?
         if any(mention.id == self.user.id for mention in message.mentions):
-            # Start with the stripped text, then peel mentions off
+            # Remove all mentions from the message to check if there's any other text
             text_without_mentions = normalized_message_content_stripped
-
-            # Strip every mention form Discord might have used
             for mention in message.mentions:
-                # Both <@id> and the nick form <@!id>
                 text_without_mentions = text_without_mentions.replace(f'<@{mention.id}>', '').replace(f'<@!{mention.id}>', '')
-
-            # If nothing but whitespace remains, they pinged us alone
+            # Check if only whitespace remains after removing mentions
             if text_without_mentions.strip() == '':
-                # That's a hello, not a conversation
                 is_cocobot_mention_alone = True
 
-        # Humans only; bots pinging bots is a crime against CPU
+        # Set flag if command or mention alone detected, and author is not a bot
         if not message.author.bot and (is_cocobot_command or is_cocobot_mention_alone):
-            # Flip the flag so we send the intro embed
             send_cocobot_info_embed = True
 
-        # Intro embed path
+        # Send Cocobot info embed if flag is set
         if send_cocobot_info_embed:
-            # Re-import so tests can patch the version without restarting the universe
+            # Import version again to get the mocked value during tests
             from config.config import COCOBOT_VERSION as CURRENT_VERSION
 
-            # Green embed: service announcement with a Gitlab invite
+            # Create embed for Cocobot info
             embed = discord.Embed(
                 timestamp=datetime.now(),
                 title="🥥 Cocobot at your service!",
@@ -344,80 +323,70 @@ class Cocobot(commands.Bot):
                             f"Cocovores are invited to [contribute](https://gitlab.com/thailand-discord/bots/cocobot) to my code.",
                 color=discord.Color.green(),
             )
-
-            # Thumbnail if Discord gave us a face
+            # Add bot avatar as thumbnail if available
             if self.user.display_avatar:
-                # Use the current avatar URL, not a fossil
                 embed.set_thumbnail(url=self.user.display_avatar.url)
-
-            # Footer older than most of the server
+            # Set footer text
             embed.set_footer(text="© Coconut wisdom since 1875")
-
-            # Drop the embed in-channel
+            # Send the embed to the channel
             await message.channel.send(embed=embed)
-
-            # Don't also process this as a prefix command
+            # Prevent further processing for this message
             return
 
-        # Word-boundary tate; "estate" is not a meme
+        # Regular expression pattern to detect the word 'tate'
         tate_pattern = r'(?<!\w)tate(?!\w)'
 
-        # Case-insensitive hunt for the Bottom G
+        # Search for 'tate' in message content
         if re.search(tate_pattern, message.content, re.IGNORECASE):
-            # Clock for the 3-minute nap
+            # Get current time
             now = datetime.now()
 
-            # Who summoned this
+            # Get message author
             user = message.author
 
-            # Already on cooldown?
+            # Check if user is in cooldown dictionary
             if user.id in self.tate_cooldowns:
-                # Last GIF timestamp
+                # Get last used timestamp
                 last_used = self.tate_cooldowns[user.id]
 
-                # How long since we last indulged
+                # Calculate time since last use
                 time_since = now - last_used
 
-                # Three minutes of peace for the GIF CDN
+                # Check if cooldown period has not passed
                 if time_since < timedelta(minutes=3):
-                    # Tell them the Bottom G is napping
+                    # Inform user about cooldown
                     await message.channel.send(
                         f"🥥 Sorry, {user.mention}, the Bottom G is tired from all "
                         f"the Bottom G'ing and needs a 3-minute break."
                     )
 
-                    # No GIF, no further processing
+                    # Prevent further processing for this message
                     return
 
-            # Stamp the cooldown, new user or post-nap
+            # Update last used timestamp (either for new user or after cooldown has
+            # passed)
             self.tate_cooldowns[user.id] = now
 
-            # Empty embed, image does the talking
+            # Create embed for 'tate' GIF
             embed = discord.Embed()
-
-            # Tenor URL that has survived longer than it should
             embed.set_image(url='https://c.tenor.com/fyrqnSBR4gcAAAAd/tenor.gif')
 
-            # Send the GIF
+            # Send the embed to the channel
             await message.channel.send(embed=embed)
-
-        # Tribute path for @Nal / nal_9345
+        # Check for tribute to @Nal
         elif '@Nal' in message.content or any(
             mention.name == 'nal_9345' for mention in message.mentions
         ):
-            # Another image-only embed
+            # Create embed for Nal tribute
             embed = discord.Embed()
-
-            # Hosted tribute image
             embed.set_image(url='https://smmallcdn.net/kolja/1749743431468/nal.avif')
-
-            # Send it
+            # Send the embed to the channel
             await message.channel.send(embed=embed)
 
-        # Always let prefix commands have a turn
+        # Process any commands contained in the message
         await self.process_commands(message)
 
-    # Prefix-command error dump
+    # Global error handler for commands
     async def on_command_error(self, ctx, error):
         """
         Handles errors triggered by command execution in the bot.
@@ -432,71 +401,48 @@ class Cocobot(commands.Bot):
                 encountered issue.
 
         """
-        # Unknown command: point at /help instead of gaslighting
+        # Handle command not found errors
         if isinstance(error, commands.CommandNotFound):
-            # User-facing miss
             await ctx.send(
                 f"❌ Command '{ctx.command}' not found. Use `/help` to see available "
                 f"commands."
             )
-
-            # Log who asked for a ghost command
             command_logger.warning(f"Command not found: {ctx.command} by {ctx.author}")
-
-            # Done with this error
             return
 
-        # Missing args: name the param, don't shrug
+        # Handle missing required arguments
         elif isinstance(error, commands.MissingRequiredArgument):
-            # Tell them which knob they skipped
             await ctx.send(f"❌ Missing required argument: {error.param.name}")
-
-            # Log for the "users never read usage" archive
             command_logger.warning(
                 f"Missing required argument in {ctx.command}: {error.param.name}"
             )
-
-            # Stop here
             return
 
-        # Bad types / parse failures
+        # Handle bad argument errors
         elif isinstance(error, commands.BadArgument):
-            # Echo the converter's complaint
             await ctx.send(f"❌ Invalid argument provided: {error}")
-
-            # Log it
             command_logger.warning(f"Bad argument in {ctx.command}: {error}")
-
-            # Stop
             return
 
-        # Rate limit: show seconds, not a lecture
+        # Handle command on cooldown errors
         elif isinstance(error, commands.CommandOnCooldown):
-            # retry_after, two decimals, coconut-adjacent hourglass
             await ctx.send(
                 f"⏳ This command is on cooldown. Try again in {error.retry_after:.2f}s"
             )
-
-            # Info, not a crime
             command_logger.info(f"Command on cooldown: {ctx.command} by {ctx.author}")
-
-            # Stop
             return
 
-        # Everything else: generic coconut crack
+        # Log other errors
         else:
-            # Don't dump tracebacks into the channel
             await ctx.send(
                 "🥥 Oops, something's cracked, and it's **not** the coconut! The "
                 "developers have been notified."
             )
-
-            # Developers were, in fact, notified via this log
             error_logger.error(
                 f"Error in command {ctx.command}: {error}", exc_info=True
             )
 
-    # Slash-command errors: ephemeral, slightly ruder
+    # Global error handler for application commands (slash commands)
     @staticmethod
     async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
         """
@@ -517,37 +463,30 @@ class Cocobot(commands.Bot):
             discord.NotFound: If the interaction or channel is no longer available.
             discord.InteractionResponded: If an attempt is made to respond to an already-responded interaction.
         """
-        # Respond or follow up; Discord is picky about which
         try:
-            # Already answered? Follow-up only
             if interaction.response.is_done():
-                # Ephemeral so the channel doesn't become a graveyard
+                # If response is already done, follow up instead
                 await interaction.followup.send(
                     "🥥 Oops, something's cracked, and it's **not** the coconut! The "
                     "developers have been notified. Just kidding, nobody cares.",
                     ephemeral=True,
                 )
-
-            # First response still available
             else:
-                # Same joke, as the initial reply
+                # If no response yet, send response
                 await interaction.response.send_message(
                     "🥥 Oops, something's cracked, and it's **not** the coconut! The "
                     "developers have been notified. Just kidding, nobody cares.",
                     ephemeral=True,
                 )
-
-        # HTTP / already-responded / gone interaction: log, don't crash
         except (discord.HTTPException, discord.InteractionResponded, discord.NotFound) as followup_error:
-            # Error handler that throws is a special kind of failure
+            # If we can't send an error message to the user due to Discord API issues,
+            # log it for debugging but don't crash the error handler
             error_logger.error(
                 f"Failed to send error message to user: {followup_error}", exc_info=True
             )
 
-        # Always log the original slash error
         error_logger.error(f"Error in app command: {error}", exc_info=True)
 
-    # Test/admin helper: wipe one user's visa nag
     @staticmethod
     async def reset_visa_reminder_for_user(user_id: str):
         """
@@ -561,29 +500,16 @@ class Cocobot(commands.Bot):
             bool: True if a visa reminder was deleted, False if no reminder was found.
 
         """
-        # Session scoped to this reset
         with get_db_session() as db:
-            # Model import kept local; circular imports are a lifestyle
+            # Find and delete any existing visa reminder for the user
             from utils.database import VisaReminder
-
-            # One row per user, if we're lucky
             reminder = db.query(VisaReminder).filter(VisaReminder.user_discord_id == user_id).first()
-
-            # Found it: delete and commit
             if reminder:
-                # Remove the row
                 db.delete(reminder)
-
-                # Persist
                 db.commit()
-
-                # Caller can celebrate
                 return True
-
-            # Nothing to reset
             return False
 
-    # Custom run: token from the module so tests can patch it
     def run(self, **kwargs):
         """
         Fetches the Discord bot token and starts the bot.
@@ -597,35 +523,26 @@ class Cocobot(commands.Bot):
             **kwargs: Arbitrary keyword arguments, typically passed during initialization
                 and execution of the bot's runtime context.
         """
-        # sys.modules is how pytest pretends to be production
+        # Access the token variable from the current module context
+        # The module globals will have the patched value during tests
         import sys
 
-        # Grab the loaded bot module, if any
+        # Get the 'bot' module to access potentially patched variables
         bot_module = sys.modules.get('bot')
-
-        # Patched token lives as a module attribute in tests
         if bot_module:
-            # getattr so a missing name isn't a crash
             token = getattr(bot_module, 'DISCORD_BOT_TOKEN', None)
-
-        # Module not loaded (weird, but possible)
         else:
-            # Force the config fallback
             token = None
 
-        # No module token: read config the grown-up way
         if token is None:
-            # Import here so tests can patch config too
+            # Fallback to config if not found in module (shouldn't happen in normal use)
             from config.config import DISCORD_BOT_TOKEN
 
-            # Real token, hopefully
             token = DISCORD_BOT_TOKEN
 
-        # Hand off to discord.py; kwargs unused but kept for signature
         super().run(token)
 
 
-# CLI entry: construct and run
 def main():
     """
     The main entry point of the application. This function initializes and starts a bot instance.
@@ -636,14 +553,12 @@ def main():
     Raises:
         Any exception related to bot initialization or runtime errors.
     """
-    # One Cocobot to rule the Thailand Discord
+    # Initialize an instance of the Cocobot class
     bot = Cocobot()
 
-    # Token is fetched inside run(); we just press go
+    # Run the bot using the token retrieved from the configuration
     bot.run()  # Use the custom run method that gets the token internally
 
 
-# Script entry, not import-time fireworks
 if __name__ == "__main__":
-    # Start the coconut
     main()

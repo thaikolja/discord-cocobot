@@ -18,44 +18,38 @@
 #  Package:   cocobot Discord Bot
 
 
-# Cache payloads ride as JSON strings; we pack and unpack them here
 import json
 
-# Named logger so weather failures don't hide in the root logger
+# Import the logging library
 import logging
-
-# Unique button IDs; Discord will not share custom_ids like a commune
 import uuid
 
-# Socket timeout alias used when WeatherAPI ghosts us
+# Import the timeout error exception from the socket module
 from socket import timeout as timeout_error
 
-# Async HTTP; requests would block the event loop and the coconut
+# Import the aiohttp library for async HTTP requests
 import aiohttp
 
-# Discord types for embeds, views, and interactions
+# Import the main discord module
 import discord
 
-# Slash commands and their describe/choice decorators
+# Import app_commands for slash command functionality
 from discord import app_commands
 
-# Cog base class
+# Import commands extension from discord.ext
 from discord.ext import commands
 
-# API key, error copy, and who gets to skip the cache
+# Import required configuration constants
 from config.config import CACHE_BYPASS_PRIVILEGED, ERROR_MESSAGE, WEATHERAPI_API_KEY
 
-# Cache get/set so we don't hammer WeatherAPI every humidity check
+# Import the database manager for caching
 from utils.database import DatabaseManager
-
-# Channel city fallback plus URL-safe location strings
 from utils.helpers import resolve_channel_location, sanitize_url
 
-# Module logger: weather.py, not "root"
+# Configure the logger for this module
 logger = logging.getLogger(__name__)
 
 
-# Persistent view: one button to flip °C / °F
 class WeatherView(discord.ui.View):
     """
     Represents a custom Discord UI view for toggling weather temperature units.
@@ -78,7 +72,6 @@ class WeatherView(discord.ui.View):
             temperature units.
     """
 
-    # Build the toggle button and stash location + units
     def __init__(self, location: str, initial_units: str, weather_cog: "WeatherCog") -> None:
         """
         Initializes a view containing a button for toggling weather temperature units.
@@ -96,32 +89,32 @@ class WeatherView(discord.ui.View):
             weather_cog: The weather cog instance, used for interacting with weather
                 APIs.
         """
-        # timeout=None: the button outlives the original interaction
+        # Initialize with no timeout for persistent button functionality
         super().__init__(timeout=None)
 
-        # Last interaction, in case we need it later
+        # Store the last interaction object for reference
         self._last_interaction = None
 
-        # Location string we will hit WeatherAPI with
+        # Store the location string for API requests
         self.location = location
 
-        # metric or imperial, currently showing
+        # Store the current units system (metric/imperial)
         self.current_units = initial_units
 
-        # Cog holds the shared ClientSession
+        # Store reference to the weather cog for API access
         self.weather_cog = weather_cog
 
-        # Label for the *next* unit system; Freedom vs Civilized is the joke
+        # Determine the appropriate label for the toggle button
         label_next = (
             "Freedom Units (°F)"
             if self.current_units == "metric"
             else "Civilized Units (°C)"
         )
 
-        # UUID so two weather cards don't share a custom_id
+        # Create a unique custom_id for the button for this specific view instance
         self.button_custom_id = f"toggle_weather_units_{uuid.uuid4()}"
 
-        # Primary button; PyTypeChecker doesn't love ui.Button assignment
+        # Create a button for toggling temperature units
         # noinspection PyTypeChecker
         self.toggle_button = discord.ui.Button(
             label=f"Show in {label_next}",
@@ -129,13 +122,12 @@ class WeatherView(discord.ui.View):
             custom_id=self.button_custom_id,
         )
 
-        # Wire clicks to the toggle handler
+        # Assign the callback function for button clicks
         self.toggle_button.callback = self.on_toggle_units
 
-        # Attach the button to this view
+        # Add the button to the view
         self.add_item(self.toggle_button)
 
-    # Discord asks; we store the interaction and always allow
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         """
         Checks the validity of a given interaction and stores it for later use.
@@ -152,13 +144,12 @@ class WeatherView(discord.ui.View):
             bool: Returns True if the interaction is allowed to proceed; otherwise,
                 False.
         """
-        # Remember who clicked
+        # Store the interaction object for later reference
         self._last_interaction = interaction
 
-        # Always proceed; privilege checks happen on fetch
+        # Allow the interaction to proceed
         return True
 
-    # Flip units, refetch or cache, rewrite the embed
     async def on_toggle_units(self, interaction: discord.Interaction) -> None:
         """
         Handles the user interaction to toggle between metric and imperial weather units
@@ -168,32 +159,29 @@ class WeatherView(discord.ui.View):
             interaction (discord.Interaction): The interaction object representing the user's
                 action in Discord, used to trigger this handler.
         """
-        # Defer so Discord doesn't time out while we talk to WeatherAPI
+        # Acknowledge the interaction without immediate visible response
         # noinspection PyUnresolvedReferences
         await interaction.response.defer()
 
-        # Flip the unit system
+        # Switch between metric and imperial units
         target_units = "imperial" if self.current_units == "metric" else "metric"
 
-        # Degree symbol matching the target
+        # Set the appropriate temperature unit symbol
         unit_symbol = "°F" if target_units == "imperial" else "°C"
 
-        # WeatherAPI field names: temp_f vs temp_c
+        # Determine which API keys to use based on units
         temp_key = "temp_f" if target_units == "imperial" else "temp_c"
 
-        # Same split for feels-like
+        # Determine which feels-like key to use based on units
         feels_key = "feelslike_f" if target_units == "imperial" else "feelslike_c"
 
-        # Sanitize so "Bangkok?" doesn't become a broken query
+        # Sanitize the location string for the API request
         sanitized = sanitize_url(self.location)
 
-        # Current-conditions endpoint with the bot's key
         url = f"https://api.weatherapi.com/v1/current.json?key={WEATHERAPI_API_KEY}&q={sanitized}"
-
-        # Cache keyed by place + units so °C and °F don't collide
         cache_key = f"weather:{sanitized}:{target_units}"
 
-        # Admins/owners/mods skip cache when the flag is on
+        # Bypass the cache for privileged users (admins, owners, moderators) if configured
         user_is_privileged = (
             CACHE_BYPASS_PRIVILEGED
             and interaction.guild is not None
@@ -204,163 +192,151 @@ class WeatherView(discord.ui.View):
             )
         )
 
-        # Network + parse + embed update
         try:
-            # Privileged users always miss cache on purpose
             cached_data = None if user_is_privileged else await DatabaseManager.async_get_cache_entry(cache_key)
-
-            # Hit: decode JSON
             if cached_data:
-                # Cached string back to dict
                 data = json.loads(cached_data)
-
-            # Miss: actually call WeatherAPI
             else:
-                # 10s timeout; Thailand humidity isn't worth hanging
+                # Make the API request with a timeout
                 async with self.weather_cog.session.get(url, timeout=10) as resp:
-                    # 4xx/5xx become exceptions
+                    # Raise an exception for HTTP errors
                     resp.raise_for_status()
 
-                    # Parse body
+                    # Parse the JSON response data
                     data = await resp.json()
 
-                # Ten minutes; weather doesn't change that fast in Bangkok
+                # Cache the response for 10 minutes (600 seconds)
                 await DatabaseManager.async_set_cache_entry(cache_key, json.dumps(data), 600)
 
-            # Need both location and current blobs
+            # Check for required data sections
             if not data.get("location") or not data.get("current"):
-                # Log the truncated payload
+                # Log error for debugging purposes
                 logger.error("Incomplete weather data on toggle: %r", data)
 
-                # Ephemeral error; don't wreck the original embed
+                # Send error message to the user
                 return await interaction.followup.send(
                     f"{ERROR_MESSAGE} Incomplete data while toggling.", ephemeral=True
                 )
 
-            # Place metadata
+            # Extract location data from response
             loc = data["location"]
 
-            # Current observation
+            # Extract current weather data from response
             cur = data["current"]
 
-            # Condition object, or empty if WeatherAPI got lazy
+            # Extract condition data with empty fallback
             cond = cur.get("condition", {})
 
-            # City name
+            # Extract city name with fallback
             city = loc.get("name", "Unknown")
 
-            # Country name
+            # Extract country name with fallback
             country = loc.get("country", "Unknown")
 
-            # Temperature in the requested unit
+            # Extract temperature value
             temp = cur.get(temp_key)
 
-            # Feels-like in the same unit
+            # Extract feels-like temperature value
             feels = cur.get(feels_key)
 
-            # Humidity percent
+            # Extract humidity value
             humidity = cur.get("humidity")
 
-            # Condition text, lowercased for the sentence
+            # Extract weather condition text with fallback
             cond_text = cond.get("text", "unknown").lower()
 
-            # Icon path from the API
+            # Extract weather icon URL
             icon = cond.get("icon")
 
-            # Protocol-relative URLs need https:
+            # Format the full icon URL if available
             icon_url = f"https:{icon}" if icon else None
 
-            # All three metrics required or we refuse to lie
+            # Ensure all required weather metrics are present
             if temp is None or feels is None or humidity is None:
-                # Log the current blob
+                # Log the error for debugging
                 logger.error("Missing metrics on toggle: %r", cur)
 
-                # Ephemeral parse failure
+                # Send error message to the user
                 return await interaction.followup.send(
                     f"{ERROR_MESSAGE} Failed to parse key metrics while toggling.",
                     ephemeral=True,
                 )
 
-            # Rebuild the blue weather embed
+            # Create a new Discord embed for weather information
             embed = discord.Embed(
                 title=f"Weather in {city}, {country}",
                 description=f"Currently **{cond_text}**.",
                 color=discord.Color.blue(),
             )
 
-            # Thumbnail if we have an icon
+            # Add the weather icon if available
             if icon_url:
-                # Discord will fetch it
                 embed.set_thumbnail(url=icon_url)
 
-            # Temperature field
+            # Add temperature field to the embed
             embed.add_field(
                 name="Temperature", value=f"`{temp}{unit_symbol}`", inline=True
             )
 
-            # Feels-like field
+            # Add feels-like temperature field
             embed.add_field(
                 name="Feels Like", value=f"`{feels}{unit_symbol}`", inline=True
             )
 
-            # Humidity field
+            # Add humidity percentage field
             embed.add_field(name="Humidity", value=f"`{humidity}%`", inline=True)
 
-            # Footer says which unit system won
+            # Add units information to embed footer
             embed.set_footer(text=f"Units: {target_units.capitalize()}")
 
-            # Fresh timestamp
+            # Add current timestamp to the embed
             embed.timestamp = discord.utils.utcnow()
 
-            # Remember the new unit system
+            # Update the current units state
             self.current_units = target_units
 
-            # Next click should offer the other system
+            # Update button label for next toggle
             next_label = (
                 "Freedom Units (°F)"
                 if self.current_units == "metric"
                 else "Civilized Units (°C)"
             )
 
-            # Update button copy
+            # Change the button text to reflect new toggle option
             self.toggle_button.label = f"Show in {next_label}"
 
-            # Edit the original message in place
+            # Update the original message with new embed and view
             await interaction.message.edit(embed=embed, view=self)
 
-            # Success sentinel
+            # Return None to indicate success
             return None
 
-        # HTTP errors from WeatherAPI
         except aiohttp.ClientResponseError as e:
-            # Status + exception text
+            # Log HTTP errors from the API
             logger.error("HTTP error %s on toggle: %s", e.status, e)
 
-            # Generic API error copy
+            # Create default error message
             msg = f"{ERROR_MESSAGE} Weather API error ({e.status}) while toggling."
 
-            # 400 usually means "that isn't a place"
+            # Override with more specific message for common errors
             if e.status == 400:
-                # Name the bad location
                 msg = f"{ERROR_MESSAGE} Invalid location '{self.location}'."
 
-            # Ephemeral so the channel stays clean
+            # Send error message to the user
             return await interaction.followup.send(msg, ephemeral=True)
 
-        # Anything else: log stack, show the exception
         except Exception as e:
-            # exception() includes traceback
+            # Log unexpected errors
             logger.exception(
                 "Unexpected error toggling weather units for %s: {e}", self.location, e
             )
 
-            # Surface the error string
+            # Send generic error message to the user
             return await interaction.followup.send(
                 f"{ERROR_MESSAGE} {e}", ephemeral=True
             )
 
 
-# Cog: /weather plus a shared aiohttp session
 class WeatherCog(commands.Cog):
     """
     A Discord bot cog for retrieving and displaying weather information using the WeatherAPI.
@@ -378,7 +354,6 @@ class WeatherCog(commands.Cog):
             the bot.
     """
 
-    # Bind bot, open session, empty view list
     def __init__(self, bot: commands.Bot):
         """
         Initializes the WeatherCog with a bot instance and sets up an aiohttp session.
@@ -386,16 +361,15 @@ class WeatherCog(commands.Cog):
         Args:
                         bot: The Discord bot instance.
         """
-        # Keep the bot for add_view
+        # Store reference to the bot
         self.bot = bot
 
-        # One session for the cog lifetime
+        # Create HTTP session for API requests
         self.session = aiohttp.ClientSession()
 
-        # Strong refs so persistent views aren't GC'd
+        # Initialize list to track persistent views
         self.persistent_views = []
 
-    # Hook after load; views register in the command instead
     async def cog_load(self):
         """
         Registers persistent views after the cog is loaded.
@@ -403,31 +377,26 @@ class WeatherCog(commands.Cog):
 
     # Views will be registered via bot.add_view in the command handler
 
-    # Close HTTP when the cog is yanked
     async def cog_unload(self):
         """
         Closes the aiohttp session when the cog is unloaded.
         """
-        # Don't leak connectors
+        # Clean up HTTP session when cog is removed
         await self.session.close()
 
-    # Slash command metadata: name + description
     @app_commands.command(
         name="weather", description="Get the current weather for a location"
     )
-    # Argument help text
     @app_commands.describe(
         location="The location you want the weather for (defaults to the channel's city, or Bangkok)",
         units="Unit system: Metric (°C) or Imperial (°F).",
     )
-    # Two choices: Civilized vs Freedom, as the server demanded
     @app_commands.choices(
         units=[
             app_commands.Choice(name="Civilized Units (°C)", value="metric"),
             app_commands.Choice(name="Freedom Units (°F)", value="imperial"),
         ]
     )
-    # The actual /weather handler
     async def weather_command(
         self,
         interaction: discord.Interaction,
@@ -459,37 +428,32 @@ class WeatherCog(commands.Cog):
             None: The function sends an embed or error message directly to the user on successful
                 execution or on failure.
         """
-        # Defer publicly; weather takes longer than Discord's 3s
+        # Defer response to allow time for API call
         # noinspection PyUnresolvedReferences
         await interaction.response.defer(ephemeral=False)
 
-        # No location: channel city or Bangkok
         if location is None:
-            # Helper knows the channel map
             location = resolve_channel_location(interaction)
 
-        # Default metric if they skipped the choice
+        # Use metric units by default if not specified
         units_val = units.value if units else "metric"
 
-        # Symbol for the embed
+        # Select temperature symbol based on units
         symbol = "°C" if units_val == "metric" else "°F"
 
-        # API temp field
+        # Select temperature key based on units
         temp_k = "temp_c" if units_val == "metric" else "temp_f"
 
-        # API feels-like field
+        # Select feels-like key based on units
         feels_k = "feelslike_c" if units_val == "metric" else "feelslike_f"
 
-        # URL-safe query
+        # Sanitize location for API request
         sanitized = sanitize_url(location)
 
-        # Current weather endpoint
         url = f"https://api.weatherapi.com/v1/current.json?key={WEATHERAPI_API_KEY}&q={sanitized}"
-
-        # Cache key includes units
         cache_key = f"weather:{sanitized}:{units_val}"
 
-        # Same privilege bypass as the toggle
+        # Bypass the cache for privileged users (admins, owners, moderators) if configured
         user_is_privileged = (
             CACHE_BYPASS_PRIVILEGED
             and interaction.guild is not None
@@ -500,188 +464,168 @@ class WeatherCog(commands.Cog):
             )
         )
 
-        # Fetch, parse, embed, register view
         try:
-            # Skip cache for privileged users
             cached_data = None if user_is_privileged else await DatabaseManager.async_get_cache_entry(cache_key)
-
-            # Use cache
             if cached_data:
-                # JSON string to dict
                 data = json.loads(cached_data)
-
-            # Live request
             else:
-                # 10 second timeout
+                # Make the API request with a timeout
                 async with self.session.get(url, timeout=10) as resp:
 
-                    # Fail on HTTP errors
+                    # Raise exception for HTTP errors
                     resp.raise_for_status()
 
-                    # Parse JSON
+                    # Parse the JSON response
                     data = await resp.json()
 
-                # Cache 10 minutes
+                # Cache the response for 10 minutes (600 seconds)
                 await DatabaseManager.async_set_cache_entry(cache_key, json.dumps(data), 600)
 
-            # Need location + current
+            # Check for required data sections
             if not data.get("location") or not data.get("current"):
-                # Log incomplete payload
+                # Log error for debugging
                 logger.error("Incomplete data for %s: %r", location, data)
 
-                # Follow-up error
+                # Send error message to user
                 return await interaction.followup.send(
                     f"{ERROR_MESSAGE} Incomplete data received."
                 )
 
-            # Location blob
+            # Extract location data
             loc = data["location"]
 
-            # Current blob
+            # Extract current weather data
             cur = data["current"]
 
-            # Condition with fallback
+            # Extract condition data with empty fallback
             cond = cur.get("condition", {})
 
-            # City
+            # Extract city name with fallback
             city = loc.get("name", "Unknown City")
 
-            # Country
+            # Extract country name with fallback
             country = loc.get("country", "Unknown Country")
 
-            # Temperature
+            # Extract temperature value
             temp = cur.get(temp_k)
 
-            # Feels-like
+            # Extract feels-like temperature value
             feels = cur.get(feels_k)
 
-            # Humidity
+            # Extract humidity value
             humidity = cur.get("humidity")
 
-            # Condition sentence
+            # Extract weather condition text with fallback
             cond_text = cond.get("text", "unknown").lower()
 
-            # Icon path
+            # Extract weather icon URL
             icon = cond.get("icon")
 
-            # Full icon URL
+            # Format the full icon URL if available
             icon_url = f"https:{icon}" if icon else None
 
-            # Require all three metrics
+            # Ensure all required weather metrics are present
             if temp is None or feels is None or humidity is None:
-                # Log missing fields
+                # Log the error for debugging
                 logger.error("Missing metrics for %s: %r", location, cur)
 
-                # User-facing parse error
+                # Send error message to user
                 return await interaction.followup.send(
                     f"{ERROR_MESSAGE} Failed to parse essential weather details."
                 )
 
-            # Build embed
+            # Create a new Discord embed for weather information
             embed = discord.Embed(
                 title=f"Weather in {city}, {country}",
                 description=f"Currently **{cond_text}**.",
                 color=discord.Color.blue(),
             )
 
-            # Icon thumbnail
+            # Add the weather icon if available
             if icon_url:
-                # Set it
                 embed.set_thumbnail(url=icon_url)
 
-            # Temperature
+            # Add temperature field to the embed
             embed.add_field(name="Temperature", value=f"`{temp}{symbol}`", inline=True)
 
-            # Feels like
+            # Add feels-like temperature field
             embed.add_field(name="Feels Like", value=f"`{feels}{symbol}`", inline=True)
 
-            # Humidity
+            # Add humidity percentage field
             embed.add_field(name="Humidity", value=f"`{humidity}%`", inline=True)
 
-            # Footer with unit system
+            # Add units information to embed footer
             embed.set_footer(text=f"Units: {units_val.capitalize()}")
 
-            # Timestamp now
+            # Add current timestamp to the embed
             embed.timestamp = discord.utils.utcnow()
 
-            # Toggle view bound to this location
+            # Create the weather view with toggle button
             view = WeatherView(location, units_val, self)
 
-            # Keep a reference
+            # Store the view for persistence
             self.persistent_views.append(view)
 
-            # Register for persistent custom_id handling
+            # Register view with the bot for persistent functionality
             self.bot.add_view(view)
 
-            # Send embed + button
+            # Send the response with embed and view
             await interaction.followup.send(embed=embed, view=view)
 
-            # Success
+            # Return None to indicate success
             return None
 
-        # Body wasn't JSON
         except aiohttp.ContentTypeError as e:
-            # Log decode failure
+            # Log JSON parsing errors
             logger.error("JSON decode error for %s: %s", location, e)
 
-            # Tell the user the service sent garbage
+            # Send error message to user
             return await interaction.followup.send(
                 f"{ERROR_MESSAGE} Received invalid data from the weather service."
             )
 
-        # HTTP status errors
         except aiohttp.ClientResponseError as e:
-            # Log status
+            # Log HTTP errors
             logger.error("HTTP error %s for %s: %s", e.status, location, e)
 
-            # Default message
+            # Create default error message
             msg = f"{ERROR_MESSAGE} Weather API error ({e.status})."
 
-            # Bad API key
+            # Override with more specific messages for common errors
             if e.status == 401:
-                # Don't leak the key, just say it's wrong
                 msg = f"{ERROR_MESSAGE} Invalid API key."
-
-            # Bad location
             elif e.status == 400:
-                # Quote the query
                 msg = f"{ERROR_MESSAGE} Invalid location '{location}'."
 
-            # Send whatever we picked
+            # Send error message to user
             return await interaction.followup.send(msg)
 
-        # Network-level aiohttp errors
         except aiohttp.ClientError as e:
-            # Log
+            # Log network/client errors
             logger.error("AIOHTTP error for %s: %s", location, e)
 
-            # Network copy
+            # Send network error message to user
             return await interaction.followup.send(
                 f"{ERROR_MESSAGE} Network issue contacting weather service."
             )
 
-        # Socket timeout
         except timeout_error:
-            # Log location
+            # Log timeout errors
             logger.error("Timeout for %s", location)
 
-            # Timeout copy
+            # Send timeout error message to user
             return await interaction.followup.send(
                 f"{ERROR_MESSAGE} The weather service timed out."
             )
 
-        # Catch-all with the Kabakon line
-        except Exception:
-            # Full traceback; exception is attached by logger.exception
-            logger.exception("Unexpected weather error for %s", location)
+        except Exception as e:
+            # Log unexpected errors
+            logger.exception("Unexpected error for %s: {e}", location)
 
-            # User-facing monsoon of incompetence
-            return await interaction.followup.send(
-                f"{ERROR_MESSAGE} The sky over Kabakon refused to report. Try again after the next monsoon of incompetence."
-            )
+            # Send generic error message to user
+            return await interaction.followup.send(f"{ERROR_MESSAGE} {e}")
 
 
-# discord.py entry: add this cog
 async def setup(bot: commands.Bot):
     """
     Registers the WeatherCog with the given bot instance.
@@ -694,5 +638,5 @@ async def setup(bot: commands.Bot):
             registered.
 
     """
-    # Attach WeatherCog to the bot
+    # Register the WeatherCog with the bot
     await bot.add_cog(WeatherCog(bot))

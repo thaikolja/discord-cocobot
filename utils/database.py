@@ -25,24 +25,13 @@ This module provides database models, connection handling, and repository patter
 for persistent data storage.
 """
 
-# Threads for the sync SQLAlchemy bits we wrap in asyncio.to_thread
 import asyncio
-
-# Logging when the .db file refuses to exist
 import logging
-
-# Env vars for DATABASE_URL and the "init on import" switch
 import os
-
-# UTC timestamps that we then strip because SQLite likes naive datetimes
-from datetime import UTC, datetime, timedelta
-
-# Optional URL argument
+from datetime import datetime, timedelta
 from typing import Optional
 
-# Column types we actually use
 from sqlalchemy import (
-    Boolean,
     Column,
     DateTime,
     Integer,
@@ -50,11 +39,7 @@ from sqlalchemy import (
     Text,
     create_engine,
 )
-
-# Declarative base and session factory
 from sqlalchemy.orm import declarative_base, sessionmaker
-
-# Server-side now() for created_at defaults
 from sqlalchemy.sql import func
 
 # Create base class for SQLAlchemy models
@@ -64,22 +49,12 @@ Base = declarative_base()
 class CacheEntry(Base):
     """Cache model for storing cached API responses."""
 
-    # Table name in SQLite
     __tablename__ = 'cache_entries'
 
-    # Autoincrement PK because humans shouldn't pick cache row ids
     id = Column(Integer, primary_key=True, autoincrement=True)
-
-    # Unique key; 500 chars of "weather:bangkok:th"
     cache_key = Column(String(500), unique=True, nullable=False, index=True)
-
-    # Payload as text (JSON-ish, but we don't police it here)
     value = Column(Text, nullable=False)
-
-    # When this row becomes compost
     expires_at = Column(DateTime, nullable=False)
-
-    # Insert timestamp from the DB clock
     created_at = Column(DateTime, server_default=func.now())
 
 
@@ -89,21 +64,15 @@ class RateLimit(Base):
     __tablename__ = 'rate_limits'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-
     identifier = Column(
         String(100), nullable=False, index=True
     )  # User ID, IP, or guild ID
-
     resource = Column(
         String(100), nullable=False
     )  # The resource being limited (e.g., 'weather', 'translate')
-
     requests_count = Column(Integer, default=1)
-
     reset_at = Column(DateTime, nullable=False)
-
     created_at = Column(DateTime, server_default=func.now())
-
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
@@ -113,88 +82,30 @@ class VisaReminder(Base):
     __tablename__ = 'visa_reminders'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-
     user_discord_id = Column(String(32), unique=True, nullable=False, index=True)
-
     reminded_at = Column(DateTime, server_default=func.now())
-
     created_at = Column(DateTime, server_default=func.now())
 
 
-class WarningEntry(Base):
-    """Tracks moderator warnings for members per guild."""
+class JailedUser(Base):
+    """Tracks jailed users with role snapshots for restoration on unjail."""
 
-    __tablename__ = 'warning_entries'
+    __tablename__ = 'jailed_users'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-
-    guild_id = Column(String(32), nullable=False, index=True)
-
-    user_id = Column(String(32), nullable=False, index=True)
-
+    user_id = Column(String, unique=True, nullable=False, index=True)
     username = Column(String, nullable=False)
-
-    moderator_id = Column(String(32), nullable=False)
-
-    moderator_name = Column(String, nullable=False)
-
-    reason = Column(Text, nullable=True)
-
-    warning_number = Column(Integer, nullable=False)
-
-    triggered_kick = Column(Boolean, nullable=False, default=False)
-
-    is_active = Column(Boolean, nullable=False, default=True, index=True)
-
-    created_at = Column(DateTime, server_default=func.now())
+    jailed_at = Column(DateTime, server_default=func.now())
+    jailed_by = Column(String, nullable=False)
+    reason = Column(String, nullable=True)
+    roles_snapshot = Column(Text, nullable=False)
 
 
-# Engine and session factory live as module globals until init_db
+# Database session management
 _engine = None
-
 _SessionLocal = None
 
 
-# Naive UTC: SQLite columns aren't timezone-aware and we like sleep
-def _utcnow() -> datetime:
-    """Return a naive UTC timestamp for compatibility with existing DB columns."""
-    return datetime.now(UTC).replace(tzinfo=None)
-
-
-class _SessionHandle:
-    """Provide backward-compatible database session access patterns."""
-
-    def __init__(self, session_factory):
-        self._session_factory = session_factory
-
-        self._db = None
-
-        self._iterated = False
-
-    def __enter__(self):
-        self._db = self._session_factory()
-
-        return self._db
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self._db is not None:
-            self._db.close()
-
-            self._db = None
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if self._iterated:
-            raise StopIteration
-
-        self._iterated = True
-
-        return self._session_factory()
-
-
-# Create engine, sessions, tables, and poke SQLite so the file exists
 def init_db(database_url: Optional[str] = None) -> None:
     """
     Initialize the database connection.
@@ -225,14 +136,11 @@ def init_db(database_url: Optional[str] = None) -> None:
     try:
         with _engine.connect() as conn:
             from sqlalchemy import text
-
             conn.execute(text("SELECT 1"))
-
     except Exception as e:
         logging.getLogger(__name__).error(f"Failed to verify database creation: {e}")
 
 
-# Context-manager-ish session; blows up if nobody called init_db
 def get_db_session():
     """
     Get a database session.
@@ -243,10 +151,13 @@ def get_db_session():
     if _SessionLocal is None:
         raise RuntimeError("Database not initialized. Call init_db() first.")
 
-    return _SessionHandle(_SessionLocal)
+    db = _SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
-# Engine accessor for the rare soul who wants raw SQL
 def get_engine():
     """
     Get the database engine.
@@ -256,7 +167,6 @@ def get_engine():
     """
     if _engine is None:
         raise RuntimeError("Database not initialized. Call init_db() first.")
-
     return _engine
 
 
@@ -267,35 +177,27 @@ class DatabaseManager:
     def get_cache_entry(db, cache_key: str):
         """Get cache entry by key."""
         entry = db.query(CacheEntry).filter(CacheEntry.cache_key == cache_key).first()
-
-        if entry and entry.expires_at < _utcnow():
+        if entry and entry.expires_at < datetime.utcnow():
             # Entry has expired, delete it
             db.delete(entry)
-
             db.commit()
-
             return None
-
         return entry
 
     @staticmethod
     def set_cache_entry(db, cache_key: str, value: str, ttl_seconds: int = 3600):
         """Set cache entry with TTL."""
-        expires_at = _utcnow() + timedelta(seconds=ttl_seconds)
+        expires_at = datetime.utcnow() + timedelta(seconds=ttl_seconds)
 
         # Check if entry already exists
         existing = (
             db.query(CacheEntry).filter(CacheEntry.cache_key == cache_key).first()
         )
-
         if existing:
             existing.value = value
-
             existing.expires_at = expires_at
-
         else:
             entry = CacheEntry(cache_key=cache_key, value=value, expires_at=expires_at)
-
             db.add(entry)
 
         db.commit()
@@ -305,13 +207,11 @@ class DatabaseManager:
         """Asynchronously get cache entry by key, handling its own session execution."""
 
         def _get():
-            with get_db_session() as db:
+            with _SessionLocal() as db:
                 entry = DatabaseManager.get_cache_entry(db, cache_key)
-
                 if entry:
                     # Access the .value inside the session so it isn't detached
                     return entry.value
-
                 return None
 
         # Run the synchronous DB operations in a thread
@@ -322,7 +222,7 @@ class DatabaseManager:
         """Asynchronously set cache entry with TTL, handling its own session execution."""
 
         def _set():
-            with get_db_session() as db:
+            with _SessionLocal() as db:
                 DatabaseManager.set_cache_entry(db, cache_key, value, ttl_seconds)
 
         # Run the synchronous DB operations in a thread
@@ -332,75 +232,13 @@ class DatabaseManager:
     def has_been_reminded_about_visa(db, user_discord_id: str) -> bool:
         """Check if a user has been reminded about mentioning nationality in visa channel."""
         reminder = db.query(VisaReminder).filter(VisaReminder.user_discord_id == user_discord_id).first()
-
         return reminder is not None
 
     @staticmethod
     def mark_user_as_reminded_about_visa(db, user_discord_id: str):
         """Mark a user as reminded about mentioning nationality in visa channel."""
-        reminder = VisaReminder(user_discord_id=user_discord_id, reminded_at=_utcnow())
-
+        reminder = VisaReminder(user_discord_id=user_discord_id, reminded_at=datetime.utcnow())
         db.add(reminder)
-
-        db.commit()
-
-    @staticmethod
-    def get_active_warnings(db, guild_id: str, user_id: str) -> list[WarningEntry]:
-        """Return active warnings for a user in a guild, oldest first."""
-        return (
-            db.query(WarningEntry)
-            .filter(
-                WarningEntry.guild_id == guild_id,
-                WarningEntry.user_id == user_id,
-                WarningEntry.is_active.is_(True),
-            )
-            .order_by(WarningEntry.created_at.asc(), WarningEntry.id.asc())
-            .all()
-        )
-
-    @staticmethod
-    def create_warning_entry(
-        db,
-        guild_id: str,
-        user_id: str,
-        username: str,
-        moderator_id: str,
-        moderator_name: str,
-        reason: str | None,
-    ) -> WarningEntry:
-        """Create a warning entry and assign its warning number in the active cycle."""
-        active_warnings = DatabaseManager.get_active_warnings(db, guild_id, user_id)
-
-        warning_number = min(len(active_warnings) + 1, 3)
-
-        entry = WarningEntry(
-            guild_id=guild_id,
-            user_id=user_id,
-            username=username,
-            moderator_id=moderator_id,
-            moderator_name=moderator_name,
-            reason=reason,
-            warning_number=warning_number,
-            triggered_kick=warning_number >= 3,
-            is_active=True,
-        )
-
-        db.add(entry)
-
-        db.commit()
-
-        db.refresh(entry)
-
-        return entry
-
-    @staticmethod
-    def clear_active_warnings(db, guild_id: str, user_id: str) -> None:
-        """Archive active warnings for a user after a successful kick."""
-        active_warnings = DatabaseManager.get_active_warnings(db, guild_id, user_id)
-
-        for warning in active_warnings:
-            warning.is_active = False
-
         db.commit()
 
 

@@ -18,86 +18,74 @@
 #  Package:   cocobot Discord Bot
 
 
-# Timeouts and async HTTP errors share this namespace
+# Import asyncio for handling asynchronous operations
 import asyncio
 
-# Cache blobs are JSON strings, not pickled surprises
+# Import the datetime module for handling dates and times
 import json
 
-# Log API failures instead of silently blaming the user
+# Import the logging module for tracking bot activities and errors
 import logging
-
-# Parse the vendor's date_time string into something strftime can dress up
 from datetime import datetime
 
-# Non-blocking HTTP so one slow timezone API doesn't freeze the bot
+# Import the aiohttp library for asynchronous HTTP requests
 import aiohttp
 
-# Interaction type for the slash command
+# Import the discord library for interacting with the Discord API
 import discord
 
-# Slash command + describe decorators
+# Import the app_commands module from discord to create slash commands
 from discord import app_commands
 
-# Cog base
+# Import the commands module from discord.ext to create bot commands
 from discord.ext import commands
 
-# Cache bypass flag, coconut error line, and the geolocation API key
+# Import configuration constants from the config module
 from config.config import CACHE_BYPASS_PRIVILEGED, ERROR_MESSAGE, LOCALTIME_API_KEY
-
-# SQLite cache so Bangkok time isn't a paid API call every 12 seconds
 from utils.database import DatabaseManager
 
-# INFO-level default; discord.py will still shout if it wants
+# Configure basic logging settings to track bot activities
 logging.basicConfig(level=logging.INFO)
 
-# Named logger so time-cog errors aren't anonymous
+# Create a logger instance for discord-related logs
 logger = logging.getLogger('discord')
 
 
-# /time lives here: city in, clock out
+# Define a new Cog class for the time command functionality
 # noinspection PyUnresolvedReferences
 class TimeCog(commands.Cog):
-
-    # Hold the bot and one shared aiohttp session
+    # Initialize the Cog with the bot instance
     def __init__(self, bot: commands.Bot):
-
-        # Bot reference for cog lifecycle
+        # Store the bot reference for later use
         self.bot = bot
-
-        # Reuse one ClientSession; opening a session per command is how you DDoS yourself
+        # Create a single, reusable ClientSession for the lifetime of the cog.
+        # This is more efficient than creating a new one for every command call.
         self.session = aiohttp.ClientSession()
 
-    # discord.py calls this when the cog is unloaded or the bot shuts down
     async def cog_unload(self):
         """Clean up the aiohttp session when the cog is unloaded."""
-
-        # Close sockets so we don't leak connectors into the void
         await self.session.close()
 
-    # Slash command metadata Discord shows in the picker
+    # Define the /time command with description and parameters
     @app_commands.command(
         name="time", description='Get the current time at a certain city or country'
     )
-    # Parameter hint so people don't type "earth"
     @app_commands.describe(
         location='The city or country for which to get the current time (Default: Bangkok)',
     )
-    # Default Bangkok because this is a Thailand discord, not a UN clock
+    # Main command function with default parameter for location
     async def time_command(
         self, interaction: discord.Interaction, location: str = 'Bangkok'
     ):
-
-        # ipgeolocation timezone endpoint — not Google, not a sundial
+        # The base URL for the API endpoint
         api_url = 'https://api.ipgeolocation.io/timezone'
 
-        # Query params; aiohttp will URL-encode so "New York" doesn't become soup
+        # Pass parameters in a dictionary for safe, automatic URL-encoding
         params = {'apiKey': LOCALTIME_API_KEY, 'location': location}
 
-        # Cache key is case-folded so Bangkok and bangkok share a slot
         cache_key = f"time:{location.lower()}"
 
-        # Owners/admins/mods can skip stale cache when CACHE_BYPASS_PRIVILEGED is on
+        # Bypass the cache for privileged users (admins, owners, moderators) if configured
         user_is_privileged = (
             CACHE_BYPASS_PRIVILEGED
             and interaction.guild is not None
@@ -108,64 +96,51 @@ class TimeCog(commands.Cog):
             )
         )
 
-        # Network, cache, and JSON can all fail; one try covers the happy path
         try:
-
-            # Privileged users get a live fetch; everyone else may hit SQLite
             cached_data = None if user_is_privileged else await DatabaseManager.async_get_cache_entry(cache_key)
-
-            # Cache hit: skip the vendor and their invoice
             if cached_data:
-
-                # Deserialize what we stored 10 minutes ago
                 data = json.loads(cached_data)
-
-            # Cache miss or admin bypass
             else:
-
-                # 10s timeout so a hung API doesn't hold the slash ack forever
+                # Use the async session to make a non-blocking GET request
                 async with self.session.get(api_url, params=params, timeout=10) as response:
-
-                    # 4xx/5xx become ClientResponseError, caught below
+                    # Raise an exception if the HTTP response status is an error (4xx or 5xx)
                     response.raise_for_status()
 
-                    # Parse JSON body
+                    # Parse the JSON response asynchronously
                     data = await response.json()
 
-                # Remember this location for 600 seconds; clocks aren't that urgent
+                # Store the result in cache for 10 minutes (600 seconds)
                 await DatabaseManager.async_set_cache_entry(cache_key, json.dumps(data), 600)
 
-            # Country from the geo blob
+            # Extract country from the response data
             country = data['geo']['country']
 
-            # City may be empty for country-only queries; fall back to what the user typed
+            # Get city from response data, fallback to location if not available
             city = data['geo']['city'] or location
 
-            # Vendor format is 'YYYY-MM-DD HH:MM:SS' — not ISO, not helpful, but ours now
+            # Parse the date_time string into a datetime object
             time = datetime.strptime(data['date_time'], '%Y-%m-%d %H:%M:%S')
 
-            # Pretty line with weekday, month, day, 24h clock
+            # Format the output message with the extracted information
             output = f"🕓 In **{city}**, **{country}**, it's currently `{time.strftime('%A, %b %d, %H:%M')}`"
 
-            # First response must use interaction.response, not followup
+            # Send the response back to the interaction
             await interaction.response.send_message(output)
 
-        # HTTP errors, timeouts, or a JSON shape that forgot 'geo'
+        # Catch specific exceptions for better error handling and debugging
         except (aiohttp.ClientError, asyncio.TimeoutError, KeyError) as e:
+            # aiohttp.ClientError covers connection issues and bad HTTP responses
+            # asyncio.TimeoutError handles request timeouts
+            # KeyError handles cases where the API response is missing expected data
+            logger.error(f"Error fetching time for {location}: {e}")
 
-            # Log location + exception type; the user sees a joke, we see the crime
-            logger.error(
-                f"Time API failed for location={location!r}: {type(e).__name__}: {e}"
-            )
-
-            # August's sundial is the house joke; keep it
+            # Send an error message back to the interaction
             await interaction.response.send_message(
-                f"{ERROR_MESSAGE} `{location}` is not on August's sundial. Try a real place, not a hallucination."
+                f"{ERROR_MESSAGE} Couldn't find time for `{location}`. Maybe it's in a coconut timezone?"
             )
 
 
-# Load TimeCog when the extension is added
+# Async function to setup and register the Cog
 async def setup(bot: commands.Bot):
-
-    # Register the cog
+    # Add the TimeCog to the bot
     await bot.add_cog(TimeCog(bot))

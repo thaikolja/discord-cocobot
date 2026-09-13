@@ -26,56 +26,50 @@ It leverages the `dotenv` library to load these values from a `.env` file,
 promoting a clean separation of configuration from code.
 """
 
-# Pull the Discord token through the fancy config layer, not os.getenv in a trenchcoat
+# Import the new advanced configuration system
 from config.app_config import get_discord_token as _get_discord_token
-
-# One object to rule all the other knobs
 from config.app_config import get_global_config
 
-# Version string so we can tell which coconut is currently rotting in prod
+# Version of the cocobot application, used for tracking and updates
 COCOBOT_VERSION: str = get_global_config().version
 
-# The token Discord wants before it even pretends to listen
+# Discord bot authentication token
 DISCORD_BOT_TOKEN: str = _get_discord_token()
 
-# Which guild this bot is supposed to haunt
+# Target Discord server (guild) ID
 DISCORD_SERVER_ID: str = get_global_config().discord.server_id
 
-# Application ID, because Discord collects IDs like Pokémon
+# Discord bot application ID
 DISCORD_BOT_ID: str = get_global_config().discord.bot_id
 
-# WeatherAPI key — rain reports, not astrology
+# WeatherAPI service API key
 WEATHERAPI_API_KEY: str = get_global_config().api.weatherapi_key
 
-# LocalTime key so /time doesn't guess from a wall clock in Berlin
+# LocalTime service API key
 LOCALTIME_API_KEY: str = get_global_config().api.localtime_key
 
-# CurrencyAPI key for converting "how much is this beer in EUR"
+# CurrencyAPI service API key
 CURRENCYAPI_API_KEY: str = get_global_config().api.currencyapi_key
 
-# Groq key for the fast-talking LLM
+# Groq AI services API key and model
 GROQ_API_KEY: str = get_global_config().api.groq_api_key
-
-# Which Groq model we currently trust not to invent Thai grammar
 GROQ_MODEL: str = get_global_config().api.groq_model
 
-# Gemini key for the Google-flavored brain
+# Gemini API key and model
 GEMINI_API_KEY: str = get_global_config().api.gemini_api_key
-
-# Gemini model name, in case last week's model became sentient and left
 GEMINI_MODEL: str = get_global_config().api.gemini_model
 
-# AcqIn key — another vendor, another secret
+# AcqIn service API key
 ACQIN_API_KEY: str = get_global_config().api.acqin_api_key
 
-# DeepSeek key for when we want a different flavor of hallucination
+# DeepSeek service API key and model
 DEEPSEEK_API_KEY: str = get_global_config().api.deepseek_api_key
-
-# DeepSeek model identifier
 DEEPSEEK_MODEL: str = get_global_config().api.deepseek_model
 
-# User-facing oops line; keep it coconut-themed or the brand police will notice
+# Standard error message to display to users when something goes wrong
 ERROR_MESSAGE: str = "🥥 Oops, something's cracked, and it's **not** the coconut!"
 
-# Admins skip the 10-minute cache so they can debug without waiting like peasants
+# When True, server owners, administrators, and moderators (manage_guild permission)
+# will always receive a fresh API response, bypassing the 10-minute cache.
+# Set to False to cache responses for all users equally.
 CACHE_BYPASS_PRIVILEGED: bool = True

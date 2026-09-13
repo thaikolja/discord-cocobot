@@ -24,22 +24,12 @@ This module provides persistent rate limiting functionality to prevent abuse
 and manage API usage effectively across restarts.
 """
 
-# Logs for "someone is hammering /weather again"
 import logging
-
-# Lock so in-memory counters don't race themselves
 import threading
-
-# Unix time for the RAM limiter
 import time
-
-# Enum for user/guild/channel/global flavors
 from enum import Enum
-
-# Typing for the dict of dicts we call a limiter
 from typing import Dict, Optional, Tuple
 
-# SQLAlchemy model and session helper
 from .database import RateLimit, get_db_session
 
 
@@ -47,11 +37,8 @@ class RateLimitType(Enum):
     """Types of rate limits."""
 
     USER = "user"
-
     GUILD = "guild"
-
     CHANNEL = "channel"
-
     GLOBAL = "global"
 
 
@@ -60,9 +47,7 @@ class RateLimitExceeded(Exception):
 
     def __init__(self, message: str, retry_after: float, resource: str):
         super().__init__(message)
-
         self.retry_after = retry_after
-
         self.resource = resource
 
 
@@ -107,24 +92,18 @@ class DatabaseRateLimiter:
                     requests_count=1,
                     reset_at=datetime.utcnow() + timedelta(seconds=window_seconds),
                 )
-
                 db.add(rate_limit)
-
                 db.commit()
-
                 return True, 0.0
 
             # Check if the window has reset
             if datetime.utcnow() > rate_limit.reset_at:
                 # Reset the counter
                 rate_limit.requests_count = 1
-
                 rate_limit.reset_at = datetime.utcnow() + timedelta(
                     seconds=window_seconds
                 )
-
                 db.commit()
-
                 return True, 0.0
 
             # Check if limit is exceeded
@@ -133,20 +112,16 @@ class DatabaseRateLimiter:
                 time_since_reset = datetime.utcnow() - (
                     rate_limit.reset_at - timedelta(seconds=window_seconds)
                 )
-
                 elapsed = time_since_reset.total_seconds()
-
                 retry_after = max(0, window_seconds - elapsed)
 
                 self.logger.warning(
                     f"Rate limit exceeded for {identifier} on resource {resource}"
                 )
-
                 return False, retry_after
 
             # Increment request count
             rate_limit.requests_count += 1
-
             db.commit()
 
             return True, 0.0
@@ -164,7 +139,6 @@ class DatabaseRateLimiter:
 
             if rate_limit:
                 db.delete(rate_limit)
-
                 db.commit()
 
 
@@ -173,7 +147,6 @@ class InMemoryRateLimiter:
 
     def __init__(self):
         self.limits: Dict[str, Dict] = {}
-
         self._lock = threading.Lock()
 
     def is_allowed(
@@ -195,7 +168,6 @@ class InMemoryRateLimiter:
 
         with self._lock:
             now = time.time()
-
             window_start = now - window_seconds
 
             if key not in self.limits:
@@ -212,20 +184,16 @@ class InMemoryRateLimiter:
             if len(self.limits[key]['requests']) >= max_requests:
                 # Calculate when the next request will be allowed
                 oldest_request = self.limits[key]['requests'][0]
-
                 retry_after = oldest_request + window_seconds - now
-
                 return False, max(0, retry_after)
 
             # Add current request to the list
             self.limits[key]['requests'].append(now)
-
             return True, 0.0
 
     def reset_limit(self, identifier: str, resource: str):
         """Reset rate limit for a specific identifier and resource."""
         key = f"{identifier}:{resource}"
-
         with self._lock:
             if key in self.limits:
                 del self.limits[key]
@@ -236,9 +204,7 @@ class HybridRateLimiter:
 
     def __init__(self):
         self.in_memory_limiter = InMemoryRateLimiter()
-
         self.db_limiter = DatabaseRateLimiter()
-
         self.logger = logging.getLogger(__name__)
 
     def is_allowed(
@@ -275,7 +241,6 @@ class HybridRateLimiter:
             db_allowed, db_retry_after = self.db_limiter.is_allowed(
                 identifier, resource, max_requests, window_seconds
             )
-
             if not db_allowed:
                 return False, db_retry_after
 
@@ -284,7 +249,6 @@ class HybridRateLimiter:
     def reset_limit(self, identifier: str, resource: str, use_db: bool = True):
         """Reset rate limit for a specific identifier and resource."""
         self.in_memory_limiter.reset_limit(identifier, resource)
-
         if use_db:
             self.db_limiter.reset_limit(identifier, resource)
 
@@ -461,9 +425,7 @@ class CommandRateLimiter:
 
     def __init__(self, default_commands_per_minute: int = 10):
         self.default_commands_per_minute = default_commands_per_minute
-
         self.rate_limiter = _global_rate_limiter
-
         self.logger = logging.getLogger(__name__)
 
     def check_command_limit(

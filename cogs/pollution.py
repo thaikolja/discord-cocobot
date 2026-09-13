@@ -24,47 +24,44 @@ Parameters:
 bot (commands.Bot): The bot instance to which the cog will be added.
 """
 
-# Cache stores JSON blobs; we unpack them later
+# Import the datetime class from the datetime module for handling dates and times
 import json
-
-# Parse the station's ISO timestamp
 from datetime import datetime
-
-# Bangkok time so "ago" isn't UTC-lying to Thai users
 from zoneinfo import ZoneInfo
 
-# Async HTTP for WAQI
+# Import the aiohttp module for asynchronous HTTP requests
 import aiohttp
 
-# Discord interaction types
+# Import the Discord API library for interacting with the Discord API
 import discord
 
-# Slash commands
+# Import the app_commands module from discord to create slash commands
 from discord import app_commands
 
-# Cog base
+# Import the commands module from discord.ext to create bot commands
 from discord.ext import commands
 
-# Human-readable "3 minutes ago"
+# Import the naturaltime function from the humanize module to format time in a human-readable way
 from humanize import naturaltime
 
-# Token, cache bypass, error banner
+# Import configuration constants needed for making API requests
 from config.config import ACQIN_API_KEY, CACHE_BYPASS_PRIVILEGED, ERROR_MESSAGE
 
-# Cache get/set
+# Import database manager for caching
 from utils.database import DatabaseManager
 
-# City from channel name + URL hygiene
+# Import helper utilities
 from utils.helpers import resolve_channel_location, sanitize_url
 
 
-# AQI with coconut health advice; Bangkok if you omit the city
+# Define a new Discord cog for handling pollution data
 # noinspection PyUnresolvedReferences
 class PollutionCog(commands.Cog):
     """
     A Discord Cog for showing up-to-date pollution data and AQI in the entered city.
     """
 
+    # Initialize the cog with the bot instance
     def __init__(self, bot: commands.Bot):
         """
         Initializes the PollutionCog with the given bot instance.
@@ -72,15 +69,14 @@ class PollutionCog(commands.Cog):
         Parameters:
         bot (commands.Bot): The bot instance to which this cog is added.
         """
-        # Keep the bot around
+        # Assign the bot instance to the self.bot attribute
         self.bot = bot
 
-    # /pollution
+    # Define a slash command for fetching pollution data
     @app_commands.command(
         name="pollution",
         description='Shows up-to-date pollution data and AQI in the specified city',
     )
-    # Optional city; channel name is the fallback
     @app_commands.describe(
         city='The city to check the pollution data for (defaults to the channel\'s city, or Bangkok)'
     )
@@ -94,20 +90,17 @@ class PollutionCog(commands.Cog):
         interaction (discord.Interaction): The interaction object representing the command invocation.
         city (str | None): The city to check. If omitted, inferred from the channel name.
         """
-        # No city typed → guess from the channel, else Bangkok
         if city is None:
-            # Helper owns the mapping; don't duplicate it here
             city = resolve_channel_location(interaction)
 
-        # Token in the URL; sanitize so city names don't break the path
+        # Sanitize the city name for use in the URL and construct the API request URL
         api_url = sanitize_url(
             f'https://api.waqi.info/feed/{city}/?token={ACQIN_API_KEY}'
         )
 
-        # Lowercase city so "Bangkok" and "bangkok" share a cache slot
         cache_key = f"pollution:{city.lower()}"
 
-        # Same privilege bypass as exchangerate
+        # Bypass the cache for privileged users (admins, owners, moderators) if configured
         user_is_privileged = (
             CACHE_BYPASS_PRIVILEGED
             and interaction.guild is not None
@@ -118,128 +111,95 @@ class PollutionCog(commands.Cog):
             )
         )
 
-        # Cache or live fetch, then sermonize the AQI
         try:
-            # Privileged: skip cache
             cached_data = None if user_is_privileged else await DatabaseManager.async_get_cache_entry(cache_key)
-
-            # Cache hit
             if cached_data:
-                # Parse what we stored
                 data = json.loads(cached_data)
-
-            # Cache miss: hit WAQI
             else:
-                # Session + GET
+                # Make an async GET request to the pollution API
                 async with aiohttp.ClientSession() as session:
-                    # Fetch the feed
                     async with session.get(api_url) as response:
-                        # HTTP failure
+                        # Check if the response was successful
                         if response.status != 200:
-                            # Connection error copy, original string
+                            # Send an error message if the request failed
                             await interaction.response.send_message(
                                 f"{ERROR_MESSAGE} Looks like there's been some connection error. Give it another shot."
                             )
-
-                            # Don't parse a sad body
                             return
 
-                        # JSON body
+                        # Parse the JSON response from the API
                         data = await response.json()
 
-                # WAQI uses status "ok" even when HTTP is 200
+                # Check if the API returned a successful status
                 if data['status'] != 'ok':
-                    # Usually a typo in the city name
+                    # Send an error message if the city name is incorrect
                     await interaction.response.send_message(
                         f"{ERROR_MESSAGE} Check your spelling of \"{city}\" and give it another shot."
                     )
-
-                    # Don't cache failures
                     return
-
-                # Ten-minute cache of a good payload
+                # Store the successful data in cache for 10 minutes (600 seconds)
                 await DatabaseManager.async_set_cache_entry(cache_key, json.dumps(data), 600)
 
-            # Unwrap the inner data object
+            # Extract the main data from the response
             data = data['data']
 
-            # The number people actually want
+            # Get the AQI value from the data
             aqi = data['aqi']
 
-            # Official station name may differ from what they typed
+            # Get the city name from the data
             city = data['city']['name']
 
-            # Station clock
+            # Calculate how long ago the data was updated
             parsed_time = datetime.fromisoformat(data['time']['iso'])
-
-            # Compare in Bangkok, not UTC
             bangkok_now = datetime.now(ZoneInfo('Asia/Bangkok'))
-
-            # Timedelta for humanize
             time_diff = bangkok_now - parsed_time
 
-            # Stations in the future: take abs so we still say "ago"
+            # Force "ago" by using absolute value if time difference is negative
             updated_ago = naturaltime(abs(time_diff.total_seconds()))
 
-            # Base sentence with AQI
+            # Construct the base output message with AQI value
             pre_output = f"The PM2.5 level in **{city}** is at `{aqi}` **AQI**."
 
-            # Color-coded coconut commentary
+            # Determine the appropriate emoji and message based on AQI level
             if aqi <= 50:
-                # Green: Engelhardt would worship this air
                 emoji, message = (
                     "🟢",
                     "The air is so clean, it's like a vacuum sealed coconut fresh off the tree. August Engelhardt would be proud (and probably try to worship it, too).",
                 )
-
-            # Moderate
             elif aqi <= 100:
-                # Yellow: fine, not a lifestyle
                 emoji, message = (
                     "🟡",
                     "Decent air. Like a coconut: refreshing, but not life-changing.",
                 )
-
-            # Unhealthy for sensitive groups
             elif aqi <= 150:
-                # Orange: stay in
                 emoji, message = (
                     "🟠",
                     "Not great, not terrible. Stay in, unless you fancy a diet of delusions. Wear a mask.",
                 )
-
-            # Unhealthy
             elif aqi <= 200:
-                # Red: mask up, freedom arguments ignored
                 emoji, message = (
                     "🔴",
                     "Unhealthy. Breathing's like Engelhardt's coconut-only dreams. Wear a mask - and, no, it's not \"infringing on your freedom.\"",
                 )
-
-            # Hazardous
             else:
-                # Black: even coconuts can't save this
                 emoji, message = (
                     "⚫️",
                     "Apocalypse air! Even Engelhardt's coconuts couldn't save this. Mask up, or you'll be seeing coconuts soon.",
                 )
 
-            # Glue emoji, facts, sermon, timestamp
+            # Combine all elements into the final output message
             output = f"{emoji} {pre_output} {message} (Last checked: {updated_ago})"
 
-            # Reply
+            # Send the final message as a response to the interaction
             await interaction.response.send_message(output)
 
-        # Anything unexpected
         except Exception as e:
-            # Include str(e); original behavior, not a new format
+            # Handle any unexpected errors
             output = f"{ERROR_MESSAGE} An error occurred while fetching pollution data: {str(e)}"
-
-            # Still try to answer
             await interaction.response.send_message(output)
 
 
-# discord.py loader
+# Define the setup function to register the cog with the bot
 async def setup(bot: commands.Bot):
     """
     A setup function to add the PollutionCog to the bot.
@@ -247,5 +207,5 @@ async def setup(bot: commands.Bot):
     Parameters:
     bot (commands.Bot): The bot instance to which this cog is added.
     """
-    # Add PollutionCog
+    # Add the PollutionCog instance to the bot
     await bot.add_cog(PollutionCog(bot))

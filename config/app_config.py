@@ -21,29 +21,19 @@
 Application configuration management for CocoBot.
 """
 
-# Env vars: where secrets hide until someone commits a .env
 import os
-
-# Fail closed with sys.exit when config is a dumpster fire
 import sys
-
-# Dataclasses keep this from becoming a 400-line dict
 from dataclasses import dataclass
-
-# Optional fields: tokens that may be missing in tests
 from typing import Optional
 
-# Load .env before anyone reads os.getenv and panics
 from dotenv import load_dotenv
 
-# Typed config failures, not a naked ValueError
 from utils.exceptions import ConfigurationError
 
-# Pull .env into the process; no-op if the file is a myth
+# Load environment variables
 load_dotenv()
 
 
-# Database knobs from env, sqlite if you forgot Postgres
 @dataclass
 class DatabaseConfig:
     """
@@ -65,17 +55,11 @@ class DatabaseConfig:
             set, the flag is False.
     """
 
-    # Default local sqlite file; production should set DATABASE_URL
     url: str = os.getenv('DATABASE_URL', 'sqlite:///cocobot.db')
-
-    # Pool size as int; env is always a string, because of course it is
     pool_size: int = int(os.getenv('DB_POOL_SIZE', '5'))
-
-    # Echo SQL only if someone set DB_ECHO=true on purpose
     echo: bool = os.getenv('DB_ECHO', 'false').lower() == 'true'
 
 
-# Discord token and friends; token is required unless pytest is lying
 @dataclass
 class DiscordConfig:
     """
@@ -96,44 +80,28 @@ class DiscordConfig:
             (if sharding is enabled).
     """
 
-    # Required token; empty string is not a personality
     token: str
-
-    # Optional bot snowflake
     bot_id: Optional[str] = None
-
-    # Optional guild snowflake
     server_id: Optional[str] = None
-
-    # Prefix leftover from the slash-command future
     command_prefix: str = '!'
-
-    # Message cache size; 1000 is "enough until it isn't"
     max_messages: int = 1000
-
-    # Sharding: None means one process, one coconut
     shard_count: Optional[int] = None
 
-    # Validate token unless tests asked us to chill
     def __post_init__(self):
-        # Local import so tests can patch os.getenv after class load
+        # Check if we're in a testing environment to be more permissive
         import os
 
-        # pytest or ENVIRONMENT=testing: skip the token lecture
         if os.getenv('ENVIRONMENT') == 'testing' or os.getenv('PYTEST_CURRENT_TEST'):
-            # Tests don't owe Discord a token
+            # In testing mode, allow missing token
             return
 
-        # Empty token in real life: fail closed
         if not self.token:
-            # Point at DISCORD_BOT_TOKEN so Kolja knows which env var
             raise ConfigurationError(
                 "Discord bot token is required. Please set DISCORD_BOT_TOKEN in your environment.",
                 config_key="DISCORD_BOT_TOKEN",
             )
 
 
-# Third-party API keys; weather and currency are the actual requirements
 @dataclass
 class APIConfig:
     """
@@ -157,40 +125,19 @@ class APIConfig:
         deepseek_api_key: The API key for DeepSeek services, if applicable.
         deepseek_model: The model name for DeepSeek services.
     """
-    # WeatherAPI; required outside tests
     weatherapi_key: Optional[str] = None
-
-    # CurrencyAPI; also required outside tests
     currencyapi_key: Optional[str] = None
-
-    # Local time API if we bother
     localtime_key: Optional[str] = None
-
-    # Gemini
     gemini_api_key: Optional[str] = None
-
-    # Gemini model name; default filled in AppConfig
     gemini_model: str = None
-
-    # Geoapify (env typo GEOAPFIY is preserved, don't "fix" it)
     geoapify_api_key: Optional[str] = None
-
-    # Groq
     groq_api_key: Optional[str] = None
-
-    # Groq model
     groq_model: str = None
-
-    # Acqin
     acqin_api_key: Optional[str] = None
 
-    # DeepSeek key
     deepseek_api_key: Optional[str] = None
-
-    # DeepSeek model
     deepseek_model: str = None
 
-    # Require weather + currency unless testing
     def __post_init__(self):
         """
         Ensures that required API keys are present in the configuration unless the application is running
@@ -205,35 +152,25 @@ class APIConfig:
             ConfigurationError: If a required API key is missing in the environment and the application is not
                                 running in testing mode.
         """
-        # Patch-friendly os import
+        # Check if we're in a testing environment to be more permissive
         import os
 
-        # Tests skip required-key checks
         if os.getenv('ENVIRONMENT') == 'testing' or os.getenv('PYTEST_CURRENT_TEST'):
-            # No keys, no problem, in CI
+            # In testing mode, skip validation of required keys
             return
 
-        # The two APIs we actually refuse to boot without
+        # Validate required keys are present
         required_keys = ['weatherapi_key', 'currencyapi_key']
-
-        # Check each required attr
         for key in required_keys:
-            # Pull the attribute
             value = getattr(self, key)
-
-            # Missing: map field name to env var style
             if not value:
-                # weatherapi_key -> WEATHERAPI_API_KEY-ish via this replace
                 env_key = key.upper().replace('KEY', 'API_KEY')
-
-                # Fail with the env name humans should set
                 raise ConfigurationError(
                     f"Required API key {env_key} is missing. Please set it in your environment.",
                     config_key=env_key,
                 )
 
 
-# Rate limits so one user cannot /weather the process to death
 @dataclass
 class RateLimitConfig:
     """
@@ -255,20 +192,12 @@ class RateLimitConfig:
             a single guild.
     """
 
-    # Per-user default
     default_commands_per_minute: int = 10
-
-    # Global per user
     user_global_per_minute: int = 20
-
-    # Per channel
     channel_per_minute: int = 15
-
-    # Per guild
     guild_per_minute: int = 50
 
 
-# Logging: path, rotation, format from env
 @dataclass
 class LoggingConfig:
     """
@@ -291,109 +220,62 @@ class LoggingConfig:
             '%(asctime)s [%(levelname)s] %(name)s:%(lineno)d - %(message)s'.
     """
 
-    # Default WARNING; INFO is a lifestyle choice
     level: str = os.getenv('LOG_LEVEL', 'WARNING')
-
-    # File path
     file_path: str = os.getenv('LOG_FILE', 'logs/cocobot.log')
-
-    # Rotation size; comment in original said ~1MB, number is 1485760
     max_bytes: int = int(os.getenv('LOG_MAX_BYTES', '1485760'))  # ~1MB
-
-    # How many rotated files to keep
     backup_count: int = int(os.getenv('LOG_BACKUP_COUNT', '5'))
-
-    # Format string; lineno is how you find the coconut
     format: str = os.getenv(
         'LOG_FORMAT', '%(asctime)s [%(levelname)s] %(name)s:%(lineno)d - %(message)s'
     )
 
 
-# Cache: optional Redis, default TTL an hour
 @dataclass
 class CacheConfig:
     """Cache configuration settings."""
 
-    # Enabled unless CACHE_ENABLED is not true
     enabled: bool = os.getenv('CACHE_ENABLED', 'true').lower() == 'true'
-
-    # Redis URL or None for in-process whatever
     redis_url: Optional[str] = os.getenv('REDIS_URL')
-
-    # TTL seconds
     default_ttl: int = int(os.getenv('CACHE_TTL', '3600'))  # 1 hour
 
 
-# Content length, mentions, CORS (CORS on a Discord bot; sure)
 @dataclass
 class SecurityConfig:
     """Security configuration settings."""
 
-    # Max content length ~10KB
     max_content_length: int = int(os.getenv('MAX_CONTENT_LENGTH', '10000'))  # 10 KB
-
-    # Allowed mentions flag
     allowed_mentions: bool = os.getenv('ALLOWED_MENTIONS', 'true').lower() == 'true'
-
-    # CORS off by default
     enable_cors: bool = os.getenv('ENABLE_CORS', 'false').lower() == 'true'
 
 
-# Root config: version, env, nested component configs
 @dataclass
 class AppConfig:
     """Main application configuration."""
 
-    # Semver we advertise
-    version: str = "3.8.0"
-
-    # Process name
+    version: str = "3.5.3"
     name: str = "cocobot"
-
-    # One-liner for the Thailand Discord
     description: str = "A feature-rich Discord bot for the Thailand Discord server"
-
-    # production unless ENVIRONMENT says otherwise
     environment: str = os.getenv('ENVIRONMENT', 'production')
-
-    # Debug flag
     debug: bool = os.getenv('DEBUG', 'false').lower() == 'true'
 
-    # Nested Discord config, filled in post_init
+    # Component configurations
     discord: DiscordConfig = None
-
-    # Nested API keys
     api: APIConfig = None
-
-    # Nested DB
     database: DatabaseConfig = None
-
-    # Nested rate limits
     rate_limit: RateLimitConfig = None
-
-    # Nested logging
     logging: LoggingConfig = None
-
-    # Nested cache
     cache: CacheConfig = None
-
-    # Nested security
     security: SecurityConfig = None
 
-    # Fill any None nested configs from env
     def __post_init__(self):
-        # Discord block
+        # Initialize component configurations if not provided
         if self.discord is None:
-            # Token + optional IDs from env
             self.discord = DiscordConfig(
                 token=os.getenv('DISCORD_BOT_TOKEN'),
                 bot_id=os.getenv('DISCORD_BOT_ID'),
                 server_id=os.getenv('DISCORD_SERVER_ID'),
             )
 
-        # API keys block
         if self.api is None:
-            # Defaults for models live here, including the GEOAPFIY typo
             self.api = APIConfig(
                 weatherapi_key=os.getenv('WEATHERAPI_API_KEY'),
                 currencyapi_key=os.getenv('CURRENCYAPI_API_KEY'),
@@ -408,33 +290,22 @@ class AppConfig:
                 deepseek_model=os.getenv('DEEPSEEK_MODEL', 'deepseek-chat'),
             )
 
-        # Database defaults
         if self.database is None:
-            # Field defaults from env
             self.database = DatabaseConfig()
 
-        # Rate limits
         if self.rate_limit is None:
-            # Class defaults
             self.rate_limit = RateLimitConfig()
 
-        # Logging
         if self.logging is None:
-            # Env-backed logging
             self.logging = LoggingConfig()
 
-        # Cache
         if self.cache is None:
-            # Env-backed cache
             self.cache = CacheConfig()
 
-        # Security
         if self.security is None:
-            # Env-backed security
             self.security = SecurityConfig()
 
 
-# Build AppConfig; tests skip validate+exit
 def get_config() -> AppConfig:
     """
     Get the application configuration instance.
@@ -445,38 +316,23 @@ def get_config() -> AppConfig:
     Raises:
                     ConfigurationError: If required configuration is missing
     """
-    # Patch-friendly os
+    # Check if we're in a testing environment to be more permissive
     import os
 
-    # Testing: construct but don't sys.exit
     if os.getenv('ENVIRONMENT') == 'testing' or os.getenv('PYTEST_CURRENT_TEST'):
-        # Bare AppConfig
+        # In testing mode, create config but bypass validation that would cause sys.exit
         config = AppConfig()
-
-        # Return without validate_config
         return config
 
-    # Production path: validate or die
     try:
-        # Build from env
         config = AppConfig()
-
-        # Extra checks beyond dataclass post_init
         validate_config(config)
-
-        # Good enough to boot
         return config
-
-    # Any failure: print and exit 1
     except Exception as e:
-        # Human-readable line to stderr via print (yes, print)
         print(f"Configuration error: {e}")
-
-        # Don't start a bot with a hole in the hull
         sys.exit(1)
 
 
-# Extra validation: token, API keys, environment name
 def validate_config(config: AppConfig) -> bool:
     """
     Validate the application configuration.
@@ -490,47 +346,38 @@ def validate_config(config: AppConfig) -> bool:
     Raises:
                     ConfigurationError: If configuration validation fails
     """
-    # Discord token still required here
+    # Validate Discord configuration
     if not config.discord.token:
-        # Fail with key name
         raise ConfigurationError(
             "Discord token is required", config_key="DISCORD_BOT_TOKEN"
         )
 
-    # WeatherAPI
+    # Validate API keys
     if not config.api.weatherapi_key:
-        # Fail
         raise ConfigurationError(
             "WeatherAPI key is required", config_key="WEATHERAPI_API_KEY"
         )
 
-    # CurrencyAPI
     if not config.api.currencyapi_key:
-        # Fail
         raise ConfigurationError(
             "CurrencyAPI key is required", config_key="CURRENCYAPI_API_KEY"
         )
 
-    # Only development or production; "staging" is not invited
+    # Validate environment
     valid_environments = ['development', 'production']
-
-    # Reject unknown ENVIRONMENT values
     if config.environment not in valid_environments:
-        # Include the allowed list
         raise ConfigurationError(
             f"Invalid environment '{config.environment}'. Must be one of {valid_environments}",
             config_key="ENVIRONMENT",
         )
 
-    # Valid
     return True
 
 
-# Process-wide singleton, lazy
+# Global configuration instance
 _config: Optional[AppConfig] = None
 
 
-# Get or create the singleton
 def get_global_config() -> AppConfig:
     """
     Get the global application configuration instance.
@@ -538,55 +385,38 @@ def get_global_config() -> AppConfig:
     Returns:
                     AppConfig: The global application configuration
     """
-    # Mutate module singleton
     global _config
-
-    # First call builds it
     if _config is None:
-        # May sys.exit on failure
         _config = get_config()
-
-    # Subsequent calls reuse
     return _config
 
 
-# Tests call this so they don't inherit production secrets
 def reset_config():
     """Reset the global configuration (useful for testing)."""
-    # Clear the singleton
     global _config
-
-    # Next get_global_config rebuilds
     _config = None
 
 
-# Convenience: Discord token
+# Convenience functions for accessing configuration values
 def get_discord_token() -> str:
     """Get the Discord bot token."""
-    # Via singleton
     return get_global_config().discord.token
 
 
-# Convenience: environment name
 def get_environment() -> str:
     """Get the current environment."""
-    # Via singleton
     return get_global_config().environment
 
 
-# Convenience: debug flag
 def is_debug() -> bool:
     """Check if the application is running in debug mode."""
-    # Via singleton
     return get_global_config().debug
 
 
-# Convenience: version string
 def get_version() -> str:
     """Get the application version."""
-    # Via singleton
     return get_global_config().version
 
 
-# Shared error copy for cogs that import this
+# Predefined error message
 ERROR_MESSAGE: str = "🥥 Oops, something's cracked, and it's **not** the coconut!"

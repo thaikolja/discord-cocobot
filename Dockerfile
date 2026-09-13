@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
-# Match CI and local runtime (pydantic-core / discord.py audioop-lts)
-FROM python:3.13-slim
+# Use Python 3.11 slim image as base to support newer dependencies
+FROM python:3.11-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \

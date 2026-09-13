@@ -17,52 +17,39 @@
 #  Date:      2024-2026
 #  Package:   cocobot Discord Bot
 
-# Blocking Gemini again; thread it or the gateway sulks
-import asyncio
+# Import the logging module for error tracking and logging purposes
+import logging  # Import logging module for error tracking
 
-# Translation failures deserve logs, not just coconut poetry
-import logging
+# Import the discord module for interacting with the Discord API
+import discord  # For interacting with the Discord API
 
-# Interaction, NotFound, send_message
-import discord
+# Import the app_commands module from discord for defining slash commands
+from discord import app_commands  # For defining slash commands
 
-# Slash commands
-from discord import app_commands
+# Import the commands module from discord.ext for creating bot commands
+from discord.ext import commands  # For creating bot commands
 
-# Cog base
-from discord.ext import commands
-
-# Shared error banner
+# Import the ERROR_MESSAGE from the config module
 from config.config import (  # Import custom error message from configuration
     ERROR_MESSAGE
 )
 
-# Gemini wrapper
-from utils.helpers import UseAI
+# Import the UseAI helper utility from the utils.helpers module
+from utils.helpers import UseAI  # Import AI helper utility
 
-# Language prompt templates
-from utils.prompts import render_language_prompt
-
-# Module-level logger
+# Configure the logger for this module to track activities and errors
 logger = logging.getLogger(__name__)
 
 
 def _normalize_language(language: str | None) -> str | None:
     """Normalize a user-provided language name for comparisons and prompts."""
-    # None stays None; we infer later
     if language is None:
-        # Caller will detect Thai vs English
         return None
 
-    # Users type " thai " with feelings
     normalized = language.strip()
-
-    # Empty after strip is the same as omitted
     if not normalized:
-        # Treat as missing, not as language ""
         return None
 
-    # Title case so "english" and "English" compare the same-ish
     return normalized.title()
 
 
@@ -72,24 +59,22 @@ def _detect_source_language(text: str) -> str:
     If any character falls within the Thai Unicode block, treat the text as Thai.
     Otherwise default to English.
     """
-    # One Thai letter is enough; this is a bot, not a language ID paper
     return 'Thai' if any('\u0e00' <= character <= '\u0e7f' for character in text) else 'English'
 
 
 def _default_target_language(source_language: str) -> str:
     """Infer the default target language from the resolved source language."""
-    # Thai in → English out, everything else → Thai; that's the house rule
     return 'English' if source_language.casefold() != 'english' else 'Thai'
 
 
-# discord.py type checker vs runtime; ignore the red squiggles
 # noinspection PyUnresolvedReferences
-# Thai↔English by default, any named language if the user bothers
+# Define a new Cog class for translation functionality
 class TranslateCog(commands.Cog):
     """
     A Discord Cog for translating text from one language to another.
     """
 
+    # Constructor to initialize the TranslateCog class with the given bot instance
     def __init__(self, bot: commands.Bot):
         """
         Initializes the TranslateCog class with the given bot instance.
@@ -97,22 +82,20 @@ class TranslateCog(commands.Cog):
         Parameters:
         bot (commands.Bot): The bot instance to which this cog is added
         """
-        # Bot reference, same as every other cog
+        # Store the bot instance for later use
         self.bot = bot
 
-        # Gemini for translation; not the summarize provider
-        self.ai = UseAI(provider='gemini')
-
-    # /translate in the Discord UI
+    # Define a new slash command for translation
     @app_commands.command(
         name="translate", description='Translate text from one language to another'
     )
-    # Optional from/to; we guess if they skip both
+    # Provide descriptions for command parameters
     @app_commands.describe(
         text='The text to translate',
         from_language='Source language name (Default: Thai/English)',
         to_language='Target language name (Default: Opposite of `from_language`)'
     )
+    # Main function to handle the translation command
     async def translate_command(
         self,
         interaction: discord.Interaction,
@@ -130,118 +113,70 @@ class TranslateCog(commands.Cog):
         to_language (str | None): Target language name; inferred from the resolved source when omitted
         """
 
-        # Normalize source name (or keep None)
         from_language = _normalize_language(from_language)
-
-        # Same for target
         to_language = _normalize_language(to_language)
 
-        # Fill whatever they left blank
         if from_language is None or to_language is None:
-            # Heuristic: Thai block vs "probably English"
             detected_language = _detect_source_language(text)
 
-            # Source missing → use detection
             if from_language is None:
-                # Detected string is already Title Case
                 from_language = detected_language
-
-            # Target missing → opposite of source
             if to_language is None:
-                # English source → Thai, else English
                 to_language = _default_target_language(from_language)
 
-        # Same language both ways: August banned that industry
         if from_language.casefold() == to_language.casefold():
-            # Ephemeral so the channel doesn't mock them publicly
             await interaction.response.send_message(
-                '❌ Translating a language into itself is the kind of industry August banned on Kabakon. Pick a different shore.',
+                '❌ Source and target languages must be different.',
                 ephemeral=True,
             )
-
-            # No defer, no model
             return
 
-        # Defer before the slow prompt
         try:
-            # Acknowledge so Discord doesn't time us out
+            # Defer the response immediately to avoid timeout
             await interaction.response.defer()
-
-        # Interaction already expired
         except discord.errors.NotFound:
-            # Log user id; we can't reply anymore
-            logger.warning(
-                "Translate defer failed: interaction expired "
-                f"(user_id={interaction.user.id})."
-            )
-
-            # Stop
+            # Interaction has already expired, log and return
+            logger.warning(f"Interaction expired for translate command by {interaction.user}")
             return
-
-        # Other defer failures
         except Exception as e:
-            # Error log, then leave
-            logger.error(
-                f"Translate defer failed for user_id={interaction.user.id}: {e}"
-            )
-
-            # No followup without a defer
+            # Log other defer errors but continue
+            logger.error(f"Failed to defer interaction: {e}")
             return
 
-        # Render, call, send
         try:
-            # Inject text and language names into the template
-            prompt = render_language_prompt(
-                'translate',
-                text=text,
-                from_language=from_language,
-                to_language=to_language,
+            # Initialize the AI helper with the preferred provider
+            ai = UseAI(provider='gemini')
+            # Set AI response parameters
+            ai.temperature = 0.3
+            # Well, top_p, I guess
+            ai.top_p = 0.3
+            # Construct the prompt for the AI to process
+            prompt = (
+                f'Translate the text "{text}" from {from_language} to {to_language}. '
+                'Keep the tone and meaning of the original text. Stay accurate.'
             )
 
-            # Missing template
-            if not prompt:
-                # Generic error
-                await interaction.followup.send(ERROR_MESSAGE)
+            # Get the response from the AI
+            output = ai.prompt(prompt)
 
-                # Don't call Gemini with None
-                return
-
-            # Off-thread model call
-            output = await asyncio.to_thread(self.ai.prompt, prompt)
-
-            # Empty translation is a failure
+            # Check if the response is valid
             if not output:
-                # Same banner as other empty-model paths
+                # Send error message if response is empty
                 await interaction.followup.send(ERROR_MESSAGE)
-
-                # Don't send a blank book emoji
                 return
 
-            # Success: prefix and ship
+            # Send the translated text back to the user
             await interaction.followup.send(f"📚️ **Translation:** {output}")
-
-        # Explicit timeout from the helper
         except TimeoutError:
-            # Copra boats joke, keep the original string
-            await interaction.followup.send(
-                f"{ERROR_MESSAGE} The steamer to the other language timed out. Even copra boats are faster today."
-            )
-
-        # Provider or unexpected errors
+            # Handle API timeout errors
+            await interaction.followup.send("⏰ Request timed out after 10 seconds")
         except Exception as e:
-            # Length helps; don't dump the whole source text
-            logger.error(
-                f"Translate provider call failed (text_length={len(text)}): {e}",
-                exc_info=True,
-            )
-
-            # Dictionary slammed shut
-            await interaction.followup.send(
-                f"{ERROR_MESSAGE} The dictionary of Kabakon slammed shut. Try again after the next coconut falls."
-            )
+            # Handle other exceptions
+            logger.error(f"Translation error: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ Error: {str(e)}")
 
 
-# Extension setup
+# Define the asynchronous setup function to add the TranslateCog to the bot
 async def setup(bot: commands.Bot):
     """
     A setup function to add the TranslateCog to the bot.
@@ -249,5 +184,5 @@ async def setup(bot: commands.Bot):
     Parameters:
     bot (commands.Bot): The bot instance to which this cog is added
     """
-    # Register TranslateCog
+    # Add an instance of TranslateCog to the bot
     await bot.add_cog(TranslateCog(bot))

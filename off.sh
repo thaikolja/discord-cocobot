@@ -3,7 +3,7 @@
 
 # Change to the cocobot installation directory
 # Exit with error code 1 if directory doesn't exist
-cd "/opt/discord/cocobot" || exit 1
+cd "/opt/bots/cocobot" || exit 1
 
 # Display current working directory for verification
 echo "📂 Current directory: $(pwd)"
@@ -15,11 +15,11 @@ sudo systemctl stop cocobot.service
 
 # Check if docker-compose.yml exists in the installation directory
 # This indicates that the bot is running via Docker containers
-if [ -f "/opt/discord/cocobot/docker-compose.yml" ]; then
+if [ -f "/opt/bots/cocobot/docker-compose.yml" ]; then
     # Stop and remove all Docker containers defined in docker-compose.yml
     # --remove-orphans flag removes containers for services not defined in the compose file
     echo "🛑 Stopping existing containers..."
-    docker compose down --remove-orphans || echo "No containers to stop or already stopped."
+    docker-compose down --remove-orphans || echo "No containers to stop or already stopped."
 
     # Exit successfully after stopping containers
     exit 0

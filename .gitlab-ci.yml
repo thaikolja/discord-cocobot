@@ -37,16 +37,16 @@ test:
 
 deploy:
   stage: deploy
-  image: debian:bookworm-slim
+  image: alpine:latest
   before_script:
-    - apt-get update -qy
-    - apt-get install -y --no-install-recommends openssh-client
+    - apk add --no-cache openssh docker-cli docker-compose
     - eval $(ssh-agent -s)
-    - printf "%s\n" "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
+    - ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
   script:
-    - ssh -o StrictHostKeyChecking=accept-new $SSH_USER@$SSH_HOST "bash $REMOTE_SCRIPT_PATH"
+    - ssh $SSH_USER@$SSH_HOST "bash $REMOTE_SCRIPT_PATH"
   only:
     - main
   dependencies:
