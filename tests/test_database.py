@@ -31,6 +31,12 @@ def test_database_initialization(tmp_path):
         assert table in tables, f"Expected table '{table}' is missing from the database"
 
     # Ensure obsolete/unused tables are NOT created
-    obsolete_tables = ["users", "guilds", "command_usage", "bot_settings"]
+    obsolete_tables = [
+        "users",
+        "guilds",
+        "command_usage",
+        "bot_settings",
+        "jailed_users",
+    ]
     for table in obsolete_tables:
         assert table not in tables, f"Obsolete table '{table}' should not exist"

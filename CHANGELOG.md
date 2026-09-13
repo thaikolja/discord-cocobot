@@ -4,6 +4,19 @@ From time to time, a new coconut falls from the tree, and we need to update the 
 fixes, and improvements. Each entry is categorized by version number and includes a brief description of the chan-- man, you're all developers, otherwise you wouldn't be reading this; you
 know how this shit works.
 
+## Unreleased
+
+### Added
+
+- **Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts a random italic line from `assets/data/messages.json` (50 slightly sophisticated templates, `{name}` filled with the member's server display name) in the System Messages Channel. Copy is a little bitter coconut-cult comedy grounded in August Engelhardt / Kabakon / Sonnenorden lore, never insults the leaving member, always says they left, and bolds the display name in Discord (`{name}` in JSON becomes `**name**` at send time). Each template is used once before the pool reshuffles. Optional `LEAVE_NOTIFY_CHANNEL_ID` override.
+- **`/simulate-leave`**: Admin-only dry-run that posts the same random template for a chosen member without removing anyone.
+
+### Removed
+
+- **AI Jail**: Removed `/jail`, `/unjail`, the `JailCog`, `JailedUser` database model, and August Engelhardt internal-API integration (`JAIL_ROLE_ID`, `AUGUST_INTERNAL_HOST`, `AUGUST_INTERNAL_PORT`, `AUGUST_INTERNAL_SECRET`).
+
+---
+
 ## v3.5.3
 
 - **Merged:** Branch `chore/summarize` — model defaults and `/summarize` cap adjustment.

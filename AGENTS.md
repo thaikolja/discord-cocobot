@@ -13,8 +13,8 @@
 - 🌫️ **Air Quality** - AQI queries for global cities
 - 🔤 **Transliteration** - Thai to Latin script conversion via AI
 - 📝 **AI Summarize** - Summarize recent chat messages using AI
-- 🔒 **AI Jail** - Admin-only jail system with AI harassment
-- 🛡️ **Admin Commands** - Admin-only commands (reset visa reminders, jail/unjail)
+- 🛡️ **Admin Commands** - Admin-only commands (reset visa reminders)
+- 🚪 **Leave announcements** - Random italic notice from `assets/data/messages.json` when a member leaves, is kicked, or is banned (`/simulate-leave` dry-run)
 - ⚡ **API Caching** - Database-backed caching for API responses with privileged user bypass
 
 ## Tech Stack
@@ -53,7 +53,7 @@ cocobot/
 │   ├── __init__.py
 │   ├── admin.py          # Admin commands (reset visa reminders)
 │   ├── exchangerate.py   # Currency exchange
-│   ├── jail.py           # AI Jail system (admin-only)
+│   ├── leave.py          # Member leave announcements + /simulate-leave
 │   ├── learn.py          # Thai learning
 │   ├── pollution.py      # Air quality
 │   ├── summarize.py      # AI chat summarization
@@ -70,7 +70,7 @@ cocobot/
 ├── utils/                # Utility functions
 │   ├── __init__.py
 │   ├── cache.py          # CacheManager (Redis + in-memory, @cached decorators)
-│   ├── database.py       # Database ORM (CacheEntry, RateLimit, VisaReminder, JailedUser)
+│   ├── database.py       # Database ORM (CacheEntry, RateLimit, VisaReminder)
 │   ├── exceptions.py     # Custom exception hierarchy
 │   ├── helpers.py        # UseAI class, channel-to-location mapping
 │   ├── logger.py         # Logging configuration
@@ -84,7 +84,7 @@ cocobot/
 │   ├── test_database.py  # Database tests
 │   ├── test_exceptions.py
 │   ├── test_exchangerate.py
-│   ├── test_jail.py
+│   ├── test_leave.py
 │   ├── test_learn.py
 │   ├── test_pollution.py
 │   ├── test_security.py  # Security tests
@@ -102,6 +102,7 @@ cocobot/
 │
 ├── assets/               # Static assets
 │   ├── data/            # Data files
+│   │   ├── messages.json (50 static leave templates with {name})
 │   │   ├── thai-words.json (250 core Thai vocabulary)
 │   │   └── thai-vocabulary-level-1.json
 │   └── img/             # Image assets (avatars, banners)
@@ -193,12 +194,10 @@ ENVIRONMENT=production
 DEBUG=false
 
 # ============================================================================
-# JAIL SYSTEM CONFIGURATION
+# LEAVE ANNOUNCEMENTS
 # ============================================================================
-JAIL_ROLE_ID=1475877270898872501
-AUGUST_INTERNAL_HOST=127.0.0.1
-AUGUST_INTERNAL_PORT=17432
-AUGUST_INTERNAL_SECRET=
+# Optional override; default is the guild System Messages Channel
+# LEAVE_NOTIFY_CHANNEL_ID=
 ```
 
 **Note:** The configuration system (`config/app_config.py`) uses dataclasses for type-safe configuration loading from environment variables. Includes component-based configs for Discord, API, Database, Cache, RateLimits, Logging, and Security.
@@ -215,8 +214,7 @@ AUGUST_INTERNAL_SECRET=
 - `/pollution [city]` - Check air quality index for a city (default: channel's city or Bangkok)
 - `/learn` - Learn a random Thai vocabulary word
 - `/summarize [limit]` - Summarize recent messages (default: 20, max: 50)
-- `/jail <user> [reason]` - Jail a user (admin only)
-- `/unjail <user>` - Unjail a user and restore roles (admin only)
+- `/simulate-leave [user]` - Dry-run a random leave announcement for a member without removing them (admin only)
 
 ### Prefix Commands
 
@@ -228,6 +226,7 @@ AUGUST_INTERNAL_SECRET=
 - Messages containing "visa" in the `visa` channel - Auto-remind users to mention nationality (persistent via VisaReminder DB)
 - Messages containing "tate" - Display Bottom G GIF (3-minute per-user cooldown)
 - Mentioning `@Nal` - Display tribute image
+- Member leave / kick / ban - Post a random italic template from `assets/data/messages.json` with `{name}` replaced by the member's server display name. Each template is used once before the pool reshuffles (optional `LEAVE_NOTIFY_CHANNEL_ID` override; bots are skipped)
 
 ## Development Commands
 
@@ -347,7 +346,6 @@ async def setup(bot):
 - **CacheEntry**: Stores cached API responses with TTL expiration
 - **RateLimit**: Tracks rate limit usage per user/channel/guild
 - **VisaReminder**: Visa reminder status tracking (persistent across restarts)
-- **JailedUser**: AI Jail system - stores jailed user data including role snapshots
 
 ### Database Initialization
 ```bash
@@ -386,14 +384,6 @@ async def setup(bot):
 6. Write unit tests
 
 ## AI Features
-
-### AI Jail System (`cogs/jail.py`)
-- Admin-only `/jail` command to restrict users
-- Strips all roles and assigns a "Jailed" role
-- Integrates with August Engelhardt bot for harassment
-- `/unjail` restores original roles from DB snapshot
-- Automatic cleanup when jailed users leave the server
-- Stores role snapshots for restoration
 
 ### AI Summarization (`cogs/summarize.py`)
 - `/summarize [limit]` command (max 50 messages, default 20)
@@ -472,7 +462,6 @@ docker-compose logs -f redis
 ### Docker-Specific Configuration
 - Database URL: `postgresql://cocobot:password@db:5432/cocobot`
 - Redis URL: `redis://redis:6379/0`
-- August host: `host.docker.internal` (configured via extra_hosts for Linux support)
 
 ### Deployment Scripts
 - `deploy.sh` → `scripts/deploy-as-docker.sh`: Git pull, docker-compose rebuild, health check
@@ -499,8 +488,7 @@ Two-stage pipeline:
 3. **Commands not responding**: Check bot logs and Discord permissions
 4. **Database errors**: Check `DATABASE_URL` and `INIT_DB_ON_STARTUP` settings
 5. **Docker container won't start**: Check `.env` file and environment variables
-6. **AI Jail not working**: Check `JAIL_ROLE_ID` and August API configuration
-7. **Cache issues**: Check `CACHE_ENABLED` and `REDIS_URL` settings
+6. **Cache issues**: Check `CACHE_ENABLED` and `REDIS_URL` settings
 
 ### Monitoring Metrics
 - `BotMetrics`: Command usage counts, durations, API calls, errors
@@ -530,8 +518,8 @@ pytest tests/test_exchangerate.py -v
 # Test translation functionality
 pytest tests/test_translate.py -v
 
-# Test jail functionality
-pytest tests/test_jail.py -v
+# Test leave announcements
+pytest tests/test_leave.py -v
 
 # Test summarization functionality
 pytest tests/test_summarize.py -v
@@ -584,7 +572,6 @@ open htmlcov/index.html
 - Run Docker containers as non-root user (appuser)
 - Update dependencies regularly (use `scripts/dependency_audit.py`)
 - Monitor exception logs and errors
-- Keep `AUGUST_INTERNAL_SECRET` secure and unique
 - Validate all user inputs via `utils/security.py` (InputValidator, InputSanitizer, SecurityChecker)
 - Use parameterized queries to prevent SQL injection
 - Limit message content length (`MAX_CONTENT_LENGTH`)
