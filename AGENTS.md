@@ -15,7 +15,7 @@
 - 📝 **AI Summarize** - Summarize recent chat messages using AI
 - 🛡️ **Admin Commands** - Admin-only commands (reset visa reminders)
 - ⚠️ **Warning System** - Three-strike moderator warnings (`/warn`, `/resetwarnings`); kick on the third strike
-- 🚪 **Leave announcements** - `👋 **{name} has left the server.**` plus a random coda from `assets/data/messages.json`; professional `#logs` line; `/simulate-leave` is staff-only
+- 🚪 **Leave announcements** - Fun `👋 **{name} has left the server.**` coda in the member's last text channel; never-spoke members go to `#logs` only; `/simulate-leave` is staff-only in the invoking channel
 - ⚡ **API Caching** - Database-backed caching for API responses with privileged user bypass
 
 ## Tech Stack
@@ -203,8 +203,6 @@ WARNED_ROLE_ID=
 # ============================================================================
 # LEAVE ANNOUNCEMENTS
 # ============================================================================
-# Optional override; default is the guild System Messages Channel
-# LEAVE_NOTIFY_CHANNEL_ID=
 # Professional leave line (no emoji). Default: 1513856672966246410
 # LEAVE_LOG_CHANNEL_ID=1513856672966246410
 ```
@@ -225,7 +223,7 @@ WARNED_ROLE_ID=
 - `/summarize [limit]` - Summarize recent messages (default: 20, max: 50)
 - `/warn <user> [reason]` - Warn a member (moderator); third strike kicks
 - `/resetwarnings <user>` - Clear a member's active warnings (moderator)
-- `/simulate-leave [user]` - Dry-run a random leave announcement for a member without removing them (owner / admins / mods)
+- `/simulate-leave [user]` - Dry-run a leave announcement in the current channel (owner / admins / mods; does not post elsewhere)
 
 ### Prefix Commands
 
@@ -237,7 +235,7 @@ WARNED_ROLE_ID=
 - Messages containing "visa" in the `visa` channel - Auto-remind users to mention nationality (persistent via VisaReminder DB)
 - Messages containing "tate" - Display Bottom G GIF (3-minute per-user cooldown)
 - Mentioning `@Nal` - Display tribute image
-- Member leave / kick / ban - Post `👋 **{name} has left the server.**` plus a random coda from `assets/data/messages.json`. Also post a professional no-emoji line to `#logs` (`LEAVE_LOG_CHANNEL_ID`, default 1513856672966246410). Bots are skipped. `/simulate-leave` is staff-only and does not write to `#logs`.
+- Member leave / kick / ban - Fun line in the channel of their last message; professional `#logs` line always (`LEAVE_LOG_CHANNEL_ID`, default 1513856672966246410). If they never spoke, only `#logs`. Bots are skipped. `/simulate-leave` stays in the invoking channel.
 
 ## Development Commands
 

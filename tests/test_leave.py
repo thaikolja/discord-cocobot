@@ -76,14 +76,25 @@ def mock_log_channel():
 
 
 @pytest.fixture
-def mock_guild(mock_channel, mock_log_channel):
+def mock_last_channel():
+    channel = MagicMock(spec=discord.TextChannel)
+    channel.id = 777
+    channel.send = AsyncMock()
+    return channel
+
+
+@pytest.fixture
+def mock_guild(mock_channel, mock_log_channel, mock_last_channel):
     guild = MagicMock(spec=discord.Guild)
+    guild.id = 99
     guild.system_channel = mock_channel
     guild.owner_id = 1
 
     def get_channel(channel_id):
         if channel_id == DEFAULT_LEAVE_LOG_CHANNEL_ID:
             return mock_log_channel
+        if channel_id == mock_last_channel.id:
+            return mock_last_channel
         return None
 
     guild.get_channel = MagicMock(side_effect=get_channel)
@@ -230,14 +241,17 @@ def test_ordinary_member_is_not_staff(mock_member):
 # ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_on_member_remove_posts_fun_line_and_log(
-    leave_cog, mock_member, mock_channel, mock_log_channel
+async def test_on_member_remove_posts_fun_line_in_last_channel(
+    leave_cog, mock_member, mock_channel, mock_last_channel, mock_log_channel
 ):
+    leave_cog.remember_last_channel(mock_member.guild.id, mock_member.id, mock_last_channel.id)
+
     await leave_cog.on_member_remove(mock_member)
 
-    mock_channel.send.assert_awaited_once_with(
+    mock_last_channel.send.assert_awaited_once_with(
         '👋 **Kolja** has left the server. The palm declines to comment.'
     )
+    mock_channel.send.assert_not_called()
     mock_log_channel.send.assert_awaited_once_with('Kolja (12345) left the server.')
 
 
@@ -256,60 +270,49 @@ async def test_on_member_remove_skips_bots(
 
 
 @pytest.mark.asyncio
-async def test_on_member_remove_still_logs_when_no_fun_channel(
-    leave_cog, mock_member, mock_log_channel
+async def test_on_member_remove_logs_only_when_member_never_spoke(
+    leave_cog, mock_member, mock_channel, mock_last_channel, mock_log_channel
 ):
-    mock_member.guild.system_channel = None
-
     await leave_cog.on_member_remove(mock_member)
 
+    mock_channel.send.assert_not_called()
+    mock_last_channel.send.assert_not_called()
     mock_log_channel.send.assert_awaited_once_with('Kolja (12345) left the server.')
 
 
 @pytest.mark.asyncio
 async def test_log_failure_does_not_block_fun_announcement(
-    leave_cog, mock_member, mock_channel, mock_log_channel
+    leave_cog, mock_member, mock_last_channel, mock_log_channel
 ):
+    leave_cog.remember_last_channel(mock_member.guild.id, mock_member.id, mock_last_channel.id)
     mock_log_channel.send = AsyncMock(side_effect=_forbidden())
 
     await leave_cog.on_member_remove(mock_member)
 
-    mock_channel.send.assert_awaited_once()
+    mock_last_channel.send.assert_awaited_once()
 
 
 @pytest.mark.asyncio
-async def test_on_member_remove_uses_channel_override(mock_guild, mock_member):
-    override = MagicMock(spec=discord.TextChannel)
-    override.send = AsyncMock()
-    log_channel = MagicMock(spec=discord.TextChannel)
-    log_channel.send = AsyncMock()
+async def test_on_message_remembers_last_text_channel(
+    leave_cog, mock_member, mock_last_channel
+):
+    message = MagicMock(spec=discord.Message)
+    message.author = mock_member
+    message.author.bot = False
+    message.guild = mock_member.guild
+    message.channel = mock_last_channel
 
-    def get_channel(channel_id):
-        if channel_id == 42:
-            return override
-        if channel_id == DEFAULT_LEAVE_LOG_CHANNEL_ID:
-            return log_channel
-        return None
+    await leave_cog.on_message(message)
 
-    mock_guild.get_channel = MagicMock(side_effect=get_channel)
-
-    bot = MagicMock(spec=commands.Bot)
-    with patch.dict('os.environ', {'LEAVE_NOTIFY_CHANNEL_ID': '42'}, clear=False):
-        cog = LeaveCog(bot)
-    cog.use_templates([SAMPLE_CODA])
-
-    await cog.on_member_remove(mock_member)
-
-    override.send.assert_awaited_once_with(
-        '👋 **Kolja** has left the server. The palm declines to comment.'
-    )
-    mock_guild.system_channel.send.assert_not_called()
-    log_channel.send.assert_awaited_once()
+    assert leave_cog.pop_last_channel(mock_member.guild, mock_member.id) is mock_last_channel
 
 
 @pytest.mark.asyncio
-async def test_on_member_remove_swallows_forbidden(leave_cog, mock_member, mock_channel):
-    mock_channel.send = AsyncMock(side_effect=_forbidden())
+async def test_on_member_remove_swallows_forbidden(
+    leave_cog, mock_member, mock_last_channel
+):
+    leave_cog.remember_last_channel(mock_member.guild.id, mock_member.id, mock_last_channel.id)
+    mock_last_channel.send = AsyncMock(side_effect=_forbidden())
 
     await leave_cog.on_member_remove(mock_member)
 
@@ -319,19 +322,23 @@ async def test_on_member_remove_swallows_forbidden(leave_cog, mock_member, mock_
 # ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_simulate_leave_posts_announcement_for_staff(
-    leave_cog, mock_interaction, mock_log_channel
+async def test_simulate_leave_posts_only_in_invoking_channel(
+    leave_cog, mock_interaction, mock_channel, mock_last_channel, mock_log_channel
 ):
     mock_interaction.user.guild_permissions = _perms(moderate_members=True)
     other = MagicMock(spec=discord.Member)
+    other.id = 999
     other.display_name = 'Leaver'
     other.bot = False
+    leave_cog.remember_last_channel(mock_interaction.guild.id, other.id, mock_last_channel.id)
 
     await leave_cog.simulate_leave.callback(leave_cog, mock_interaction, other)
 
     mock_interaction.response.send_message.assert_awaited_once_with(
         '👋 **Leaver** has left the server. The palm declines to comment.'
     )
+    mock_channel.send.assert_not_called()
+    mock_last_channel.send.assert_not_called()
     mock_log_channel.send.assert_not_called()
 
 

@@ -48,8 +48,8 @@
   - `/warn <user> [reason]` *(member | string)*
   - `/resetwarnings <user>` *(member)*
 
-- **🚪 Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts `👋 **{name} has left the server.**` plus a random coda from `assets/data/messages.json` (10 templates for now). A professional line (no emoji) is also posted to `#logs`.
-  - `/simulate-leave [user]` *(member)* Staff dry-run (owner / admins / mods); nobody is removed; no `#logs` line
+- **🚪 Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts `👋 **{name} has left the server.**` plus a random coda in the channel of their last message. Members who never spoke are recorded only in `#logs` (professional line, no emoji).
+  - `/simulate-leave [user]` *(member)* Staff dry-run in the **current** channel (owner / admins / mods); nobody is removed; never posts to `#logs` or another channel
 
 ## 🥥 Examples
 
@@ -101,70 +101,15 @@
 /warn user: @Username reason: "Spamming in #general"
 ```
 
-**Returns (first warning):** An embed with the warning card, severity-colored (gold → orange → red). On the third warning, the member is automatically kicked.
+**Returns (first warning):** An embed with the warning card, severity-colored (gold → orange → red). On the third warning, the member is automatically kicked. Staff only (owner / admins / mods).
 
----
-
-## 🛠️ Installation
-
-### Prerequisites
-- A server with root access (Debian/Ubuntu recommended)
-- Git, Python 3.13+, and `pip` installed
-
-### As Service
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://gitlab.com/thailand-discord/bots/cocobot.git
-   cd cocobot
-   ```
-
-2. **Install dependencies:**
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-
-3. **Configure environment:**
-   ```bash
-   cp .env.example .env
-   ```
-   Edit `.env` with your API keys (see `.env.example` for required values)
-
-4. **Run as a service:**
-   - Create service file: `sudo nano /etc/systemd/system/cocobot.service`
-   - Copy and paste the [service configuration](https://gitlab.com/-/snippets/4800805)
-   - Start the service:
-     ```bash
-     sudo systemctl daemon-reload
-     sudo systemctl enable cocobot.service
-     sudo systemctl start cocobot.service
-     ```
-
-5. **Invite bot to server:**
-   - Create bot at [Discord Developer Portal](https://discord.com/developers/applications)
-   - Enable `Message Content Intent` and `Server Members Intent` in Privileged Gateway Intents
-   - Use OAuth2 URL with `bot` scope and required permissions
-   - Add bot to your server
-
-Your bot should now be online with slash commands available.
-
-### As Docker
-
-Image is `python:3.13-slim`. Compose starts PostgreSQL 15 and Redis 7 and waits until both are healthy before launching the bot. SQLite remains the default when you run the bot outside Compose. Postgres/Redis ports are bound to localhost only (`5433` / `6380`).
+### Dry-run a leave announcement
 
 ```bash
-git clone https://gitlab.com/thailand-discord/bots/cocobot.git
-cd cocobot
-cp .env.example .env
-# set DISCORD_* tokens and API keys; optional POSTGRES_PASSWORD (default: password)
-docker compose up -d
+/simulate-leave user: @Username
 ```
 
-Tables are created by SQLAlchemy on startup (no `init.sql`). Logs: `docker compose logs -f cocobot`. Production shortcut on the server: `./deploy.sh` → `scripts/deploy-as-docker.sh`.
-
-Same invite steps as above (`Message Content Intent` + `Server Members Intent`).
+**Returns:** `👋 **Username** has left the server.` plus a random Imperium-style coda, in the channel where you ran the command. Nobody is removed.
 
 ---
 
@@ -193,8 +138,8 @@ Same invite steps as above (`Message Content Intent` + `Server Members Intent`).
 - **Logging**: `LOG_LEVEL`, `LOG_FILE`, `LOG_MAX_BYTES`, `LOG_BACKUP_COUNT`
 - **Security**: `MAX_CONTENT_LENGTH`, `ALLOWED_MENTIONS`, `ENABLE_CORS`
 - **Environment**: `ENVIRONMENT` (development/production), `DEBUG`
-- **Moderation**: `WARNED_ROLE_ID` (optional). Role applied on `/warn`.
-- **Leave announcements**: `LEAVE_NOTIFY_CHANNEL_ID` (optional fun channel). `LEAVE_LOG_CHANNEL_ID` (optional; default `#logs`). Staff dry-run: `/simulate-leave`.
+- **Moderation**: `WARNED_ROLE_ID` (optional). Role applied on `/warn`. `/warn` and `/simulate-leave` are staff-only.
+- **Leave announcements**: `LEAVE_LOG_CHANNEL_ID` (optional; default `#logs` `1513856672966246410`). Fun leave lines go to the member's last text channel; silent members are logged only.
 
 ### API Response Caching
 
@@ -262,8 +207,5 @@ We welcome contributions via Git! Please follow these standard steps:
 
 ---
 
-[^1]: Using `.` works only if the current directory is completely empty. If not, leave don't use it and use `mv ./discord-bot/{*,.*} ../`
-[^2]: Keep your `.env` file secret and remember to add it to the `.gitignore` file.
-
-[^3]: Uses Google's Gemini 2.5 Flash Lite and can produce inaccuracies.
-[^4]: Since `v2.2.0`, this has been handled by *Gemini.* An API key is required, but usage of up to a million tokens is free.
+[^3]: Uses Google Gemini and can produce inaccuracies.
+[^4]: Translation and transliteration use Gemini. An API key is required.

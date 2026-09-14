@@ -147,12 +147,11 @@ class LeaveCog(commands.Cog):
 
     def __init__(self, bot: commands.Bot, messages_path: str = MESSAGES_PATH):
         self.bot = bot
-        raw_notify = os.getenv('LEAVE_NOTIFY_CHANNEL_ID', '').strip()
-        self.notify_channel_id = int(raw_notify) if raw_notify.isdigit() else None
         raw_log = os.getenv('LEAVE_LOG_CHANNEL_ID', str(DEFAULT_LEAVE_LOG_CHANNEL_ID)).strip()
         self.log_channel_id = (
             int(raw_log) if raw_log.isdigit() else DEFAULT_LEAVE_LOG_CHANNEL_ID
         )
+        self._last_channel_ids: dict[tuple[int, int], int] = {}
         try:
             templates = load_leave_messages(messages_path)
         except (OSError, json.JSONDecodeError) as exc:
@@ -165,13 +164,16 @@ class LeaveCog(commands.Cog):
         self.templates = list(templates)
         self.deck = LeaveMessageDeck(self.templates)
 
-    def resolve_notify_channel(self, guild: discord.Guild):
-        """Return the override channel if configured, else the system channel."""
-        if self.notify_channel_id is not None:
-            channel = guild.get_channel(self.notify_channel_id)
-            if channel is not None:
-                return channel
-        return guild.system_channel
+    def remember_last_channel(self, guild_id: int, user_id: int, channel_id: int) -> None:
+        """Remember the last text channel a member spoke in."""
+        self._last_channel_ids[(guild_id, user_id)] = channel_id
+
+    def pop_last_channel(self, guild: discord.Guild, user_id: int):
+        """Return the last text channel for this member, or None if they never spoke."""
+        channel_id = self._last_channel_ids.pop((guild.id, user_id), None)
+        if channel_id is None:
+            return None
+        return guild.get_channel(channel_id)
 
     def resolve_log_channel(self, guild: discord.Guild):
         """Return the professional logs channel, or None if it is missing."""
@@ -180,7 +182,7 @@ class LeaveCog(commands.Cog):
     async def announce_leave(self, member: discord.Member, channel) -> bool:
         """Post a random leave template. Returns True if the message was sent."""
         if channel is None:
-            logger.warning('Leave announcement skipped: no system/notify channel')
+            logger.warning('Leave announcement skipped: no last-message channel')
             return False
         try:
             await channel.send(pick_leave_message(member.display_name, self.deck))
@@ -205,11 +207,23 @@ class LeaveCog(commands.Cog):
             logger.error('Failed to send leave log: %s', exc)
 
     @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        """Track the last guild text channel each human spoke in."""
+        if message.author.bot or message.guild is None:
+            return
+        channel_id = getattr(message.channel, 'id', None)
+        if channel_id is None:
+            return
+        self.remember_last_channel(message.guild.id, message.author.id, channel_id)
+
+    @commands.Cog.listener()
     async def on_member_remove(self, member: discord.Member):
         """Post a leave announcement for humans who leave, are kicked, or banned."""
         if member.bot:
             return
-        await self.announce_leave(member, self.resolve_notify_channel(member.guild))
+        fun_channel = self.pop_last_channel(member.guild, member.id)
+        if fun_channel is not None:
+            await self.announce_leave(member, fun_channel)
         await self.log_leave(member)
 
     @app_commands.command(
