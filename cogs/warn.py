@@ -39,7 +39,7 @@ from discord.ext import commands
 from utils.database import DatabaseManager, get_db_session, init_db
 
 # Sanitize reasons; escape markdown so embeds don't explode
-from utils.security import InputSanitizer, escape_markdown
+from utils.security import InputSanitizer, escape_markdown, is_moderator_or_above
 
 # Module logger
 logger = logging.getLogger(__name__)
@@ -65,23 +65,11 @@ class WarnCog(commands.Cog):
         # 0 means "role not configured"; don't crash on missing env
         self.warned_role_id = int(os.getenv('WARNED_ROLE_ID', '0'))
 
-    # Mods and above: admin, timeout, kick, ban, or manage messages
+    # Mods and above: owner, admin, timeout, kick, ban, or manage messages
     @staticmethod
     def _is_moderator(member: discord.Member) -> bool:
         """Return whether the member has moderator-or-higher privileges."""
-        # Snapshot permissions once
-        permissions = member.guild_permissions
-
-        # Any of these bits counts as staff
-        return any(
-            (
-                permissions.administrator,
-                permissions.moderate_members,
-                permissions.kick_members,
-                permissions.ban_members,
-                permissions.manage_messages,
-            )
-        )
+        return is_moderator_or_above(member)
 
     def _validate_target(
         self,

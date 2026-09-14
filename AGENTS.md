@@ -15,7 +15,7 @@
 - 📝 **AI Summarize** - Summarize recent chat messages using AI
 - 🛡️ **Admin Commands** - Admin-only commands (reset visa reminders)
 - ⚠️ **Warning System** - Three-strike moderator warnings (`/warn`, `/resetwarnings`); kick on the third strike
-- 🚪 **Leave announcements** - Random notice from `assets/data/messages.json` when a member leaves, is kicked, or is banned (`/simulate-leave` dry-run; `{name}` is bolded)
+- 🚪 **Leave announcements** - `👋 **{name} has left the server.**` plus a random coda from `assets/data/messages.json`; professional `#logs` line; `/simulate-leave` is staff-only
 - ⚡ **API Caching** - Database-backed caching for API responses with privileged user bypass
 
 ## Tech Stack
@@ -204,6 +204,8 @@ WARNED_ROLE_ID=
 # ============================================================================
 # Optional override; default is the guild System Messages Channel
 # LEAVE_NOTIFY_CHANNEL_ID=
+# Professional leave line (no emoji). Default: 1513856672966246410
+# LEAVE_LOG_CHANNEL_ID=1513856672966246410
 ```
 
 **Note:** The configuration system (`config/app_config.py`) uses dataclasses for type-safe configuration loading from environment variables. Includes component-based configs for Discord, API, Database, Cache, RateLimits, Logging, and Security.
@@ -222,7 +224,7 @@ WARNED_ROLE_ID=
 - `/summarize [limit]` - Summarize recent messages (default: 20, max: 50)
 - `/warn <user> [reason]` - Warn a member (moderator); third strike kicks
 - `/resetwarnings <user>` - Clear a member's active warnings (moderator)
-- `/simulate-leave [user]` - Dry-run a random leave announcement for a member without removing them (admin only)
+- `/simulate-leave [user]` - Dry-run a random leave announcement for a member without removing them (owner / admins / mods)
 
 ### Prefix Commands
 
@@ -234,7 +236,7 @@ WARNED_ROLE_ID=
 - Messages containing "visa" in the `visa` channel - Auto-remind users to mention nationality (persistent via VisaReminder DB)
 - Messages containing "tate" - Display Bottom G GIF (3-minute per-user cooldown)
 - Mentioning `@Nal` - Display tribute image
-- Member leave / kick / ban - Post a random template from `assets/data/messages.json` with `{name}` replaced by the member's **bold** server display name. Each template is used once before the pool reshuffles (optional `LEAVE_NOTIFY_CHANNEL_ID` override; bots are skipped)
+- Member leave / kick / ban - Post `👋 **{name} has left the server.**` plus a random coda from `assets/data/messages.json`. Also post a professional no-emoji line to `#logs` (`LEAVE_LOG_CHANNEL_ID`, default 1513856672966246410). Bots are skipped. `/simulate-leave` is staff-only and does not write to `#logs`.
 
 ## Development Commands
 

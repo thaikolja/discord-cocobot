@@ -8,8 +8,8 @@ know how this shit works.
 
 ### Added
 
-- **Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts a random line from `assets/data/messages.json` (50 slightly sophisticated templates). `{name}` is filled with the member's **bold** server display name (`{name}` in JSON becomes `**name**` at send time). Copy is a little bitter coconut-cult comedy grounded in August Engelhardt / Kabakon / Sonnenorden lore; it never insults the leaving member and always says they left. Each template is used once before the pool reshuffles. Default channel is the guild System Messages Channel; optional `LEAVE_NOTIFY_CHANNEL_ID` override. Bots are skipped.
-- **`/simulate-leave`**: Admin-only dry-run that posts the same random template for a chosen member without removing anyone.
+- **Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts `👋 **{name} has left the server.**` plus a random coda from `assets/data/messages.json` (10 Imperium/Engelhardt-style templates for now; never insults the leaving member). The display name is bold. Each coda is used once before the pool reshuffles. Fun channel: System Messages Channel or `LEAVE_NOTIFY_CHANNEL_ID`. Professional `#logs` line (no emoji): `{name} ({id}) left the server.` on channel `LEAVE_LOG_CHANNEL_ID` (default 1513856672966246410). Bots are skipped.
+- **`/simulate-leave`**: Staff-only dry-run (owner / admins / mods) that posts the same fun line for a chosen member without removing anyone and without writing to `#logs`.
 
 ### Changed
 

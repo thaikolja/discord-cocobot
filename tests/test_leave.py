@@ -27,16 +27,19 @@ import pytest
 from discord.ext import commands
 
 from cogs.leave import (
+    DEFAULT_LEAVE_LOG_CHANNEL_ID,
     LeaveCog,
     LeaveMessageDeck,
     MESSAGES_PATH,
+    format_leave_log_message,
     format_leave_message,
     load_leave_messages,
     pick_leave_message,
     setup,
 )
+from utils.security import is_moderator_or_above
 
-SAMPLE_TEMPLATE = '{name} packed a coconut and left.'
+SAMPLE_CODA = 'The palm declines to comment.'
 
 
 def _forbidden():
@@ -45,13 +48,16 @@ def _forbidden():
     return discord.Forbidden(response, 'Missing Permissions')
 
 
-@pytest.fixture
-def leave_cog():
-    bot = MagicMock(spec=commands.Bot)
-    bot.tree = MagicMock()
-    cog = LeaveCog(bot)
-    cog.use_templates([SAMPLE_TEMPLATE])
-    return cog
+def _perms(**flags):
+    permissions = MagicMock(spec=discord.Permissions)
+    permissions.administrator = False
+    permissions.moderate_members = False
+    permissions.kick_members = False
+    permissions.ban_members = False
+    permissions.manage_messages = False
+    for name, value in flags.items():
+        setattr(permissions, name, value)
+    return permissions
 
 
 @pytest.fixture
@@ -62,10 +68,25 @@ def mock_channel():
 
 
 @pytest.fixture
-def mock_guild(mock_channel):
+def mock_log_channel():
+    channel = MagicMock(spec=discord.TextChannel)
+    channel.id = DEFAULT_LEAVE_LOG_CHANNEL_ID
+    channel.send = AsyncMock()
+    return channel
+
+
+@pytest.fixture
+def mock_guild(mock_channel, mock_log_channel):
     guild = MagicMock(spec=discord.Guild)
     guild.system_channel = mock_channel
-    guild.get_channel = MagicMock(return_value=None)
+    guild.owner_id = 1
+
+    def get_channel(channel_id):
+        if channel_id == DEFAULT_LEAVE_LOG_CHANNEL_ID:
+            return mock_log_channel
+        return None
+
+    guild.get_channel = MagicMock(side_effect=get_channel)
     return guild
 
 
@@ -76,7 +97,17 @@ def mock_member(mock_guild):
     member.bot = False
     member.display_name = 'Kolja'
     member.guild = mock_guild
+    member.guild_permissions = _perms()
     return member
+
+
+@pytest.fixture
+def leave_cog():
+    bot = MagicMock(spec=commands.Bot)
+    bot.tree = MagicMock()
+    cog = LeaveCog(bot)
+    cog.use_templates([SAMPLE_CODA])
+    return cog
 
 
 @pytest.fixture
@@ -94,43 +125,50 @@ def mock_interaction(mock_guild, mock_member, mock_channel):
 # messages.json (generated once, never rewritten at runtime)
 # ---------------------------------------------------------------------------
 
-def test_messages_json_has_exactly_50_unique_templates():
+def test_messages_json_has_exactly_10_unique_codas():
     with open(MESSAGES_PATH, encoding='utf-8') as fh:
         data = json.load(fh)
     assert isinstance(data, dict)
-    assert not isinstance(data, list)
     entries = list(data.values())
     assert all(isinstance(entry, dict) for entry in entries)
     messages = [entry['message'] for entry in entries]
-    assert len(messages) == 50
-    assert len(set(messages)) == 50
-    assert all('{name}' in message for message in messages)
-    assert all('**' not in message for message in messages)
+    assert len(messages) == 10
+    assert len(set(messages)) == 10
+    for message in messages:
+        assert '{name}' not in message
+        assert '{user}' not in message
+        assert '👋' not in message
+        assert '**' not in message
 
 
 def test_load_leave_messages_reads_the_static_file():
     messages = load_leave_messages()
-    assert len(messages) == 50
-    assert all('{name}' in message for message in messages)
+    assert len(messages) == 10
+    assert all(isinstance(message, str) and message.strip() for message in messages)
 
 
 # ---------------------------------------------------------------------------
 # formatting
 # ---------------------------------------------------------------------------
 
-def test_format_leave_message_replaces_placeholder():
-    assert format_leave_message('Kolja', SAMPLE_TEMPLATE) == (
-        '**Kolja** packed a coconut and left.'
+def test_format_leave_message_uses_prefix_and_coda():
+    assert format_leave_message('Kolja', SAMPLE_CODA) == (
+        '👋 **Kolja** has left the server. The palm declines to comment.'
     )
 
 
 def test_format_leave_message_escapes_markdown_in_name():
-    result = format_leave_message('foo*bar', '{name} left.')
-    assert result == r'**foo\*bar** left.'
+    result = format_leave_message('foo*bar', SAMPLE_CODA)
+    assert result == r'👋 **foo\*bar** has left the server. The palm declines to comment.'
+
+
+def test_format_leave_log_message_is_plain():
+    assert format_leave_log_message('Kolja', 12345) == 'Kolja (12345) left the server.'
+    assert '👋' not in format_leave_log_message('Kolja', 12345)
 
 
 def test_deck_draws_each_template_once_before_repeat():
-    templates = [f'*({{name}}) {i}*' for i in range(5)]
+    templates = [f'coda {i}' for i in range(5)]
     deck = LeaveMessageDeck(templates)
     drawn = [deck.draw() for _ in range(5)]
     assert len(drawn) == 5
@@ -138,7 +176,7 @@ def test_deck_draws_each_template_once_before_repeat():
 
 
 def test_deck_refills_after_the_pool_is_exhausted():
-    templates = ['*{name} a*', '*{name} b*', '*{name} c*']
+    templates = ['coda a', 'coda b', 'coda c']
     deck = LeaveMessageDeck(templates)
     first = [deck.draw() for _ in range(3)]
     second = [deck.draw() for _ in range(3)]
@@ -147,7 +185,7 @@ def test_deck_refills_after_the_pool_is_exhausted():
 
 
 def test_deck_never_repeats_the_same_template_twice_in_a_row():
-    templates = ['*{name} a*', '*{name} b*', '*{name} c*']
+    templates = ['coda a', 'coda b', 'coda c']
     deck = LeaveMessageDeck(templates)
     drawn = [deck.draw() for _ in range(30)]
     for previous, current in zip(drawn, drawn[1:]):
@@ -155,13 +193,15 @@ def test_deck_never_repeats_the_same_template_twice_in_a_row():
 
 
 def test_pick_leave_message_uses_the_deck():
-    deck = LeaveMessageDeck(['{name} two'])
-    assert pick_leave_message('Kolja', deck) == '**Kolja** two'
+    deck = LeaveMessageDeck(['The coconut court shall compose itself.'])
+    assert pick_leave_message('Kolja', deck) == (
+        '👋 **Kolja** has left the server. The coconut court shall compose itself.'
+    )
 
 
 def test_pick_leave_message_fallback_when_empty():
     assert pick_leave_message('Kolja', LeaveMessageDeck([])) == (
-        '**Kolja** has left the server'
+        '👋 **Kolja** has left the server.'
     )
 
 
@@ -171,59 +211,100 @@ def test_leave_module_does_not_import_useai():
     assert not hasattr(leave_mod, 'UseAI')
 
 
+def test_owner_counts_as_staff(mock_member, mock_guild):
+    mock_guild.owner_id = mock_member.id
+    assert is_moderator_or_above(mock_member) is True
+
+
+def test_moderator_permission_counts_as_staff(mock_member):
+    mock_member.guild_permissions = _perms(moderate_members=True)
+    assert is_moderator_or_above(mock_member) is True
+
+
+def test_ordinary_member_is_not_staff(mock_member):
+    assert is_moderator_or_above(mock_member) is False
+
+
 # ---------------------------------------------------------------------------
 # on_member_remove
 # ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_on_member_remove_posts_random_template(
-    leave_cog, mock_member, mock_channel
+async def test_on_member_remove_posts_fun_line_and_log(
+    leave_cog, mock_member, mock_channel, mock_log_channel
 ):
     await leave_cog.on_member_remove(mock_member)
 
     mock_channel.send.assert_awaited_once_with(
-        '**Kolja** packed a coconut and left.'
+        '👋 **Kolja** has left the server. The palm declines to comment.'
     )
+    mock_log_channel.send.assert_awaited_once_with('Kolja (12345) left the server.')
 
 
 @pytest.mark.asyncio
-async def test_on_member_remove_skips_bots(leave_cog, mock_member, mock_channel):
+async def test_on_member_remove_skips_bots(
+    leave_cog, mock_member, mock_channel, mock_log_channel
+):
     mock_member.bot = True
 
     with patch.object(leave_cog.deck, 'draw') as draw:
         await leave_cog.on_member_remove(mock_member)
 
     mock_channel.send.assert_not_called()
+    mock_log_channel.send.assert_not_called()
     draw.assert_not_called()
 
 
 @pytest.mark.asyncio
-async def test_on_member_remove_skips_when_no_channel(leave_cog, mock_member):
+async def test_on_member_remove_still_logs_when_no_fun_channel(
+    leave_cog, mock_member, mock_log_channel
+):
     mock_member.guild.system_channel = None
-    mock_member.guild.get_channel = MagicMock(return_value=None)
 
-    with patch.object(leave_cog.deck, 'draw') as draw:
-        await leave_cog.on_member_remove(mock_member)
+    await leave_cog.on_member_remove(mock_member)
 
-    draw.assert_not_called()
+    mock_log_channel.send.assert_awaited_once_with('Kolja (12345) left the server.')
+
+
+@pytest.mark.asyncio
+async def test_log_failure_does_not_block_fun_announcement(
+    leave_cog, mock_member, mock_channel, mock_log_channel
+):
+    mock_log_channel.send = AsyncMock(side_effect=_forbidden())
+
+    await leave_cog.on_member_remove(mock_member)
+
+    mock_channel.send.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_on_member_remove_uses_channel_override(mock_guild, mock_member):
     override = MagicMock(spec=discord.TextChannel)
     override.send = AsyncMock()
-    mock_guild.get_channel = MagicMock(return_value=override)
+    log_channel = MagicMock(spec=discord.TextChannel)
+    log_channel.send = AsyncMock()
+
+    def get_channel(channel_id):
+        if channel_id == 42:
+            return override
+        if channel_id == DEFAULT_LEAVE_LOG_CHANNEL_ID:
+            return log_channel
+        return None
+
+    mock_guild.get_channel = MagicMock(side_effect=get_channel)
 
     bot = MagicMock(spec=commands.Bot)
     with patch.dict('os.environ', {'LEAVE_NOTIFY_CHANNEL_ID': '42'}, clear=False):
         cog = LeaveCog(bot)
-    cog.use_templates([SAMPLE_TEMPLATE])
+    cog.use_templates([SAMPLE_CODA])
 
     await cog.on_member_remove(mock_member)
 
-    mock_guild.get_channel.assert_called_with(42)
-    override.send.assert_awaited_once_with('**Kolja** packed a coconut and left.')
+    override.send.assert_awaited_once_with(
+        '👋 **Kolja** has left the server. The palm declines to comment.'
+    )
     mock_guild.system_channel.send.assert_not_called()
+    log_channel.send.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -238,7 +319,10 @@ async def test_on_member_remove_swallows_forbidden(leave_cog, mock_member, mock_
 # ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_simulate_leave_posts_announcement(leave_cog, mock_interaction):
+async def test_simulate_leave_posts_announcement_for_staff(
+    leave_cog, mock_interaction, mock_log_channel
+):
+    mock_interaction.user.guild_permissions = _perms(moderate_members=True)
     other = MagicMock(spec=discord.Member)
     other.display_name = 'Leaver'
     other.bot = False
@@ -246,23 +330,37 @@ async def test_simulate_leave_posts_announcement(leave_cog, mock_interaction):
     await leave_cog.simulate_leave.callback(leave_cog, mock_interaction, other)
 
     mock_interaction.response.send_message.assert_awaited_once_with(
-        '**Leaver** packed a coconut and left.'
+        '👋 **Leaver** has left the server. The palm declines to comment.'
     )
+    mock_log_channel.send.assert_not_called()
 
 
 @pytest.mark.asyncio
 async def test_simulate_leave_defaults_to_invoker(leave_cog, mock_interaction):
+    mock_interaction.guild.owner_id = mock_interaction.user.id
+
     await leave_cog.simulate_leave.callback(leave_cog, mock_interaction, None)
 
     mock_interaction.response.send_message.assert_awaited_once_with(
-        '**Kolja** packed a coconut and left.'
+        '👋 **Kolja** has left the server. The palm declines to comment.'
     )
+
+
+@pytest.mark.asyncio
+async def test_simulate_leave_rejects_ordinary_members(leave_cog, mock_interaction):
+    await leave_cog.simulate_leave.callback(leave_cog, mock_interaction, None)
+
+    mock_interaction.response.send_message.assert_awaited_once()
+    args, kwargs = mock_interaction.response.send_message.call_args
+    assert 'Only moderators and above' in args[0]
+    assert kwargs.get('ephemeral') is True
 
 
 @pytest.mark.asyncio
 async def test_simulate_leave_swallows_forbidden(
     leave_cog, mock_interaction, mock_member
 ):
+    mock_interaction.guild.owner_id = mock_member.id
     mock_interaction.response.send_message = AsyncMock(side_effect=_forbidden())
 
     await leave_cog.simulate_leave.callback(leave_cog, mock_interaction, mock_member)
@@ -283,4 +381,4 @@ async def test_setup_registers_simulate_command():
     cog = bot.add_cog.call_args[0][0]
     assert isinstance(cog, LeaveCog)
     assert any(cmd.name == 'simulate-leave' for cmd in cog.get_app_commands())
-    assert len(cog.templates) == 50
+    assert len(cog.templates) == 10

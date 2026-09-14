@@ -29,6 +29,7 @@ from typing import List, Optional
 from urllib.parse import urlparse
 
 import bleach
+import discord
 
 from .exceptions import SecurityError, ValidationError
 
@@ -600,6 +601,23 @@ def validate_and_sanitize_input(
         input_value = InputSanitizer.sanitize_text(input_value, max_length)
 
     return input_value
+
+
+def is_moderator_or_above(member: discord.Member) -> bool:
+    """Return whether the member is the guild owner or has staff permissions."""
+    guild = getattr(member, 'guild', None)
+    if guild is not None and member.id == getattr(guild, 'owner_id', None):
+        return True
+    permissions = member.guild_permissions
+    return any(
+        (
+            permissions.administrator,
+            permissions.moderate_members,
+            permissions.kick_members,
+            permissions.ban_members,
+            permissions.manage_messages,
+        )
+    )
 
 
 def escape_markdown(text: str) -> str:

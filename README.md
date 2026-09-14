@@ -48,8 +48,8 @@
   - `/warn <user> [reason]` *(member | string)*
   - `/resetwarnings <user>` *(member)*
 
-- **🚪 Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts a random line from `assets/data/messages.json` with the member's **bold** server name
-  - `/simulate-leave [user]` *(member)* Admin dry-run; nobody is removed
+- **🚪 Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts `👋 **{name} has left the server.**` plus a random coda from `assets/data/messages.json` (10 templates for now). A professional line (no emoji) is also posted to `#logs`.
+  - `/simulate-leave [user]` *(member)* Staff dry-run (owner / admins / mods); nobody is removed; no `#logs` line
 
 ## 🥥 Examples
 
@@ -194,7 +194,7 @@ Same invite steps as above (`Message Content Intent` + `Server Members Intent`).
 - **Security**: `MAX_CONTENT_LENGTH`, `ALLOWED_MENTIONS`, `ENABLE_CORS`
 - **Environment**: `ENVIRONMENT` (development/production), `DEBUG`
 - **Moderation**: `WARNED_ROLE_ID` (optional). Role applied on `/warn`.
-- **Leave announcements**: `LEAVE_NOTIFY_CHANNEL_ID` (optional). Copy is a random template from `assets/data/messages.json`. Admin dry-run: `/simulate-leave`.
+- **Leave announcements**: `LEAVE_NOTIFY_CHANNEL_ID` (optional fun channel). `LEAVE_LOG_CHANNEL_ID` (optional; default `#logs`). Staff dry-run: `/simulate-leave`.
 
 ### API Response Caching
 
