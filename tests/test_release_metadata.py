@@ -54,6 +54,7 @@ def test_changelog_v3_9_0_uses_conventional_commits_with_hashes():
     section = CHANGELOG.split("## v3.9.0", 1)[1].split("## v3.8.0", 1)[0]
     assert "### What's Changed" in section
     assert "[`8aef0e2`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/8aef0e2397dccbdcbb1169a84ab2e69218a364a0)" in section
+    assert "[`a93d4c0`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/a93d4c05ce92f3f0752c25dd36cbf93a99f0be66)" in section
     assert "by @" not in section
 
 
