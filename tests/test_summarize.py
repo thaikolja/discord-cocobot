@@ -36,8 +36,13 @@ def interaction():
 
     # Mock followup and response
     interaction.response = AsyncMock()
-    interaction.response.defer = AsyncMock()
     interaction.response.is_done = MagicMock(return_value=False)
+
+    async def _defer(*args, **kwargs):
+        interaction.response.is_done.return_value = True
+
+    interaction.response.defer = AsyncMock(side_effect=_defer)
+    interaction.response.send_message = AsyncMock()
     interaction.followup = AsyncMock()
     interaction.followup.send = AsyncMock()
 
@@ -65,9 +70,29 @@ def interaction():
         return async_generator(msgs)
 
     channel.history = MagicMock(side_effect=mock_history)
+    channel.send = AsyncMock()
     interaction.channel = channel
+    interaction.user = MagicMock()
+    interaction.user.mention = '<@123>'
 
     return interaction
+
+
+def _not_found():
+    response = MagicMock()
+    response.status = 404
+    return discord.NotFound(response, 'Unknown interaction')
+
+
+def _sent_texts(*mocks):
+    texts = []
+    for mock in mocks:
+        for call in mock.call_args_list:
+            if call.args:
+                texts.append(call.args[0])
+            elif 'content' in call.kwargs:
+                texts.append(call.kwargs['content'])
+    return texts
 
 
 async def test_setup(bot):
@@ -141,3 +166,33 @@ async def test_summarize_command_history_forbidden(cog, interaction):
     interaction.followup.send.assert_called_once()
     args = interaction.followup.send.call_args[0][0]
     assert "permission to read the message history" in args
+
+
+async def test_summarize_success_does_not_send_timeout_mention(cog, interaction):
+    """A successful summary must not @mention the invoker about a timeout."""
+    cog.ai = MagicMock()
+    cog.ai.prompt.return_value = "This is a summary of the messages."
+
+    await cog.summarize_command.callback(cog, interaction, limit=2)
+
+    texts = _sent_texts(interaction.followup.send, interaction.channel.send)
+    assert "This is a summary of the messages." in texts
+    assert all('took too long' not in text for text in texts)
+    assert all(interaction.user.mention not in text for text in texts)
+
+
+async def test_summarize_still_delivers_when_defer_expires(cog, interaction):
+    """If Discord already expired the ACK window, still post the summary, never a timeout ping."""
+    interaction.response.defer = AsyncMock(side_effect=_not_found())
+    cog.ai = MagicMock()
+    cog.ai.prompt.return_value = "Late but useful summary."
+
+    await cog.summarize_command.callback(cog, interaction, limit=2)
+
+    texts = _sent_texts(
+        interaction.followup.send,
+        interaction.response.send_message,
+        interaction.channel.send,
+    )
+    assert "Late but useful summary." in texts
+    assert all('took too long' not in text for text in texts)

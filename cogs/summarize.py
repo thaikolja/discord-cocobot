@@ -39,6 +39,29 @@ from utils.helpers import UseAI
 logger = logging.getLogger('discord')
 
 
+async def _send_summarize_result(interaction: discord.Interaction, content: str) -> None:
+    """Deliver a summarize reply without pinging the invoker.
+
+    Prefer the interaction webhook (defer/followup). If Discord already expired
+    the token, post to the channel instead. Never send a timeout @mention after
+    a successful summary.
+    """
+    if interaction.response.is_done():
+        try:
+            await interaction.followup.send(content)
+            return
+        except (discord.HTTPException, discord.NotFound):
+            logger.warning('Summarize followup failed; falling back to channel send')
+    else:
+        try:
+            await interaction.response.send_message(content)
+            return
+        except (discord.HTTPException, discord.NotFound, discord.InteractionResponded):
+            logger.warning('Summarize response failed; falling back to channel send')
+
+    await interaction.channel.send(content)
+
+
 class SummarizeCog(commands.Cog):
     """
     A Discord Cog that provides message summarization using AI.
@@ -81,21 +104,19 @@ class SummarizeCog(commands.Cog):
             Exception: Raised when an unexpected error occurs during message fetching or summarization.
 
         """
-        # Acknowledge the interaction immediately since LLM processing takes time
+        # ACK within Discord's 3s window so the client does not show a failed command
         try:
             if not interaction.response.is_done():
-                await interaction.response.defer()
+                await interaction.response.defer(thinking=True)
         except discord.NotFound:
-            # Interaction expired - try to notify the channel
-            try:
-                await interaction.channel.send(
-                    f"🥥 {interaction.user.mention} The command took too long to process. Please try again!"
-                )
-            except Exception:
-                pass
-            return
-        except Exception:
-            return
+            logger.warning(
+                'Summarize interaction expired before defer for %s; will post to the channel',
+                interaction.user,
+            )
+        except discord.InteractionResponded:
+            pass
+        except discord.HTTPException as exc:
+            logger.warning('Summarize defer failed: %s', exc)
 
         try:
             # Pull recent messages from the channel
@@ -103,8 +124,10 @@ class SummarizeCog(commands.Cog):
 
             # If the channel is empty, short-circuit with a friendly reply
             if not messages:
-                await interaction.followup.send("Nothing to summarize here. Is the channel as deserted as August's Kabakon?")
-
+                await _send_summarize_result(
+                    interaction,
+                    "Nothing to summarize here. Is the channel as deserted as August's Kabakon?",
+                )
                 return
 
             # channel.history returns messages newest to oldest, so let's flip it
@@ -121,8 +144,10 @@ class SummarizeCog(commands.Cog):
 
             # If we end up with nothing to summarize after cleaning, let the user know
             if not transcript_lines:
-                await interaction.followup.send("Could not find any text content to summarize.")
-
+                await _send_summarize_result(
+                    interaction,
+                    "Could not find any text content to summarize.",
+                )
                 return
 
             # Combine everything into one big string for the AI
@@ -142,8 +167,10 @@ class SummarizeCog(commands.Cog):
 
             # If the AI flakes out, show an error
             if not summary:
-                await interaction.followup.send(f"{ERROR_MESSAGE} The AI failed to generate a summary.")
-
+                await _send_summarize_result(
+                    interaction,
+                    f"{ERROR_MESSAGE} The AI failed to generate a summary.",
+                )
                 return
 
             # Let's not create a wall of text, please
@@ -151,18 +178,22 @@ class SummarizeCog(commands.Cog):
                 summary = summary[:800] + "..."
 
             # Send the final summary back to the channel
-            await interaction.followup.send(summary)
+            await _send_summarize_result(interaction, summary)
 
         # Handling cases where the bot isn't allowed to see history
         except discord.errors.Forbidden:
             logger.error("Error: Missing permissions to read message history.")
-
-            await interaction.followup.send(f"{ERROR_MESSAGE} I don't have permission to read the message history here.")
+            await _send_summarize_result(
+                interaction,
+                f"{ERROR_MESSAGE} I don't have permission to read the message history here.",
+            )
         # Catch-all for when things go south
         except Exception as e:
             logger.error(f"Error fetching/summarizing messages: {e}", exc_info=True)
-
-            await interaction.followup.send(f"{ERROR_MESSAGE} Couldn't summarize the chat. Is my coconut battery dead?")
+            await _send_summarize_result(
+                interaction,
+                f"{ERROR_MESSAGE} Couldn't summarize the chat. Is my coconut battery dead?",
+            )
 
 
 async def setup(bot: commands.Bot):
