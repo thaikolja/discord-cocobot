@@ -10,6 +10,7 @@ know how this shit works.
 
 ### What's Changed
 
+* fix(leave): default LEAVE_PUBLIC_ANNOUNCEMENTS to False [78049f6](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/78049f69a05c7878e457e11ae451ed7fcd68fbb2)
 * feat(leave): toggle public leave lines with LEAVE_PUBLIC_ANNOUNCEMENTS [82f4817](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/82f4817f55f9c68d65cb5ac002e0ec6fe91f8d5c)
 * fix(deploy): reset origin/main on the host so dirty .env.example cannot block pull [91520e9](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/91520e98bbf9a724330af3944e65628fb7f556e1)
 * chore(release): document v3.9.0 GitLab main → deploy.sh Docker path [12602ab](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/12602ab255335bae333f266003cea945019da488)
