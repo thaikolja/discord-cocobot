@@ -46,6 +46,11 @@ DEFAULT_LEAVE_LOG_CHANNEL_ID = 1513856672966246410
 FORBIDDEN_CODA_MARKERS = ('{name}', '{user}', LEAVE_PREFIX_EMOJI, '**')
 
 
+def public_leave_announcements_enabled() -> bool:
+    """Return True unless LEAVE_PUBLIC_ANNOUNCEMENTS is a case-insensitive False."""
+    return os.getenv('LEAVE_PUBLIC_ANNOUNCEMENTS', 'True').strip().lower() == 'true'
+
+
 def _coda_from_entry(entry) -> str | None:
     """Return a leave coda from a Chrome-locale-style {message: '...'} object."""
     if isinstance(entry, str):
@@ -151,6 +156,7 @@ class LeaveCog(commands.Cog):
         self.log_channel_id = (
             int(raw_log) if raw_log.isdigit() else DEFAULT_LEAVE_LOG_CHANNEL_ID
         )
+        self.public_announcements = public_leave_announcements_enabled()
         self._last_channel_ids: dict[tuple[int, int], int] = {}
         try:
             templates = load_leave_messages(messages_path)
@@ -222,7 +228,7 @@ class LeaveCog(commands.Cog):
         if member.bot:
             return
         fun_channel = self.pop_last_channel(member.guild, member.id)
-        if fun_channel is not None:
+        if fun_channel is not None and self.public_announcements:
             await self.announce_leave(member, fun_channel)
         await self.log_leave(member)
 

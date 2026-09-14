@@ -158,7 +158,7 @@ Merge or push to **`main`** on GitLab. Pipeline:
 - **Security**: `MAX_CONTENT_LENGTH`, `ALLOWED_MENTIONS`, `ENABLE_CORS`
 - **Environment**: `ENVIRONMENT` (development/production), `DEBUG`
 - **Moderation**: `WARNED_ROLE_ID` (optional). Role applied on `/warn`. `/warn`, `/unwarn`, and `/simulate-leave` are staff-only.
-- **Leave announcements**: `LEAVE_LOG_CHANNEL_ID` (optional; default `#logs` `1513856672966246410`). Fun leave lines go to the member's last text channel; silent members are logged only.
+- **Leave announcements**: `LEAVE_PUBLIC_ANNOUNCEMENTS` (`True`/`False`, default `True`) toggles the fun line in the member's last text channel. `#logs` is unchanged (`LEAVE_LOG_CHANNEL_ID`, optional; default `1513856672966246410`). Silent members are logged only.
 
 ### API Response Caching
 

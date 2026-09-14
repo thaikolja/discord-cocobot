@@ -20,6 +20,7 @@
 """Tests for the leave-announcement cog (cogs/leave.py)."""
 
 import json
+import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import discord
@@ -315,6 +316,75 @@ async def test_on_member_remove_swallows_forbidden(
     mock_last_channel.send = AsyncMock(side_effect=_forbidden())
 
     await leave_cog.on_member_remove(mock_member)
+
+
+# ---------------------------------------------------------------------------
+# LEAVE_PUBLIC_ANNOUNCEMENTS
+# ---------------------------------------------------------------------------
+
+@pytest.mark.parametrize(
+    ('value', 'expected'),
+    [
+        ('True', True),
+        ('true', True),
+        ('TRUE', True),
+        ('False', False),
+        ('false', False),
+        ('', False),
+        ('0', False),
+    ],
+)
+def test_public_leave_announcements_enabled_parses_true_false(value, expected):
+    with patch.dict(os.environ, {'LEAVE_PUBLIC_ANNOUNCEMENTS': value}, clear=False):
+        from cogs.leave import public_leave_announcements_enabled
+
+        assert public_leave_announcements_enabled() is expected
+
+
+def test_public_leave_announcements_enabled_defaults_true():
+    env = {k: v for k, v in os.environ.items() if k != 'LEAVE_PUBLIC_ANNOUNCEMENTS'}
+    with patch.dict(os.environ, env, clear=True):
+        from cogs.leave import public_leave_announcements_enabled
+
+        assert public_leave_announcements_enabled() is True
+
+
+@pytest.mark.asyncio
+async def test_on_member_remove_skips_public_when_flag_false(
+    mock_member, mock_last_channel, mock_log_channel
+):
+    with patch.dict(os.environ, {'LEAVE_PUBLIC_ANNOUNCEMENTS': 'False'}):
+        cog = LeaveCog(MagicMock(spec=commands.Bot))
+    cog.use_templates([SAMPLE_CODA])
+    cog.remember_last_channel(
+        mock_member.guild.id, mock_member.id, mock_last_channel.id
+    )
+
+    with patch.object(cog.deck, 'draw') as draw:
+        await cog.on_member_remove(mock_member)
+
+    mock_last_channel.send.assert_not_called()
+    mock_log_channel.send.assert_awaited_once_with('Kolja (12345) left the server.')
+    draw.assert_not_called()
+    assert cog.pop_last_channel(mock_member.guild, mock_member.id) is None
+
+
+@pytest.mark.asyncio
+async def test_simulate_leave_still_posts_when_public_flag_false(
+    mock_interaction, mock_channel, mock_log_channel
+):
+    mock_interaction.user.guild_permissions = _perms(moderate_members=True)
+    with patch.dict(os.environ, {'LEAVE_PUBLIC_ANNOUNCEMENTS': 'False'}):
+        cog = LeaveCog(MagicMock(spec=commands.Bot))
+    cog.use_templates([SAMPLE_CODA])
+
+    await cog.simulate_leave.callback(cog, mock_interaction, mock_interaction.user)
+
+    mock_interaction.response.send_message.assert_awaited_once_with(
+        '👋 **Kolja** has left the server. The palm declines to comment.'
+    )
+    mock_channel.send.assert_not_called()
+    mock_log_channel.send.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
