@@ -599,5 +599,5 @@ MIT License - See LICENSE file for details
 
 ---
 
-*Last updated: September 14, 2026*
-*Version: 3.5.3*
+*Last updated: September 15, 2026*
+*Version: 3.9.0*
