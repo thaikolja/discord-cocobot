@@ -40,11 +40,12 @@ def test_database_initialization(tmp_path):
     tables = [row[0] for row in cursor.fetchall()]
     conn.close()
 
-    # Only the 3 tables that are actively used by the bot should be created
+    # Tables the live bot still creates
     expected_tables = [
         "cache_entries",
         "rate_limits",
         "visa_reminders",
+        "warning_entries",
     ]
     for table in expected_tables:
         assert table in tables, f"Expected table '{table}' is missing from the database"

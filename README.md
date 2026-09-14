@@ -44,6 +44,10 @@
 - **📝 Summarize**: Summarize recent messages in the current channel using AI
   - `/summarize [limit]` *(number)* **Default:** `20`, **Max:** `50`
 
+- **⚠️ Warning System**: Moderator warning system with three-strike auto-kick
+  - `/warn <user> [reason]` *(member | string)*
+  - `/resetwarnings <user>` *(member)*
+
 - **🚪 Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts a random line from `assets/data/messages.json` with the member's **bold** server name
   - `/simulate-leave [user]` *(member)* Admin dry-run; nobody is removed
 
@@ -90,6 +94,14 @@
 ```
 
 **Returns:** "🇺🇸 hâwng-nám yùu-tìi-nǎi"[^4]
+
+### Warn a member who breaks the rules
+
+```bash
+/warn user: @Username reason: "Spamming in #general"
+```
+
+**Returns (first warning):** An embed with the warning card, severity-colored (gold → orange → red). On the third warning, the member is automatically kicked.
 
 ---
 
@@ -181,6 +193,7 @@ Same invite steps as above (`Message Content Intent` + `Server Members Intent`).
 - **Logging**: `LOG_LEVEL`, `LOG_FILE`, `LOG_MAX_BYTES`, `LOG_BACKUP_COUNT`
 - **Security**: `MAX_CONTENT_LENGTH`, `ALLOWED_MENTIONS`, `ENABLE_CORS`
 - **Environment**: `ENVIRONMENT` (development/production), `DEBUG`
+- **Moderation**: `WARNED_ROLE_ID` (optional). Role applied on `/warn`.
 - **Leave announcements**: `LEAVE_NOTIFY_CHANNEL_ID` (optional). Copy is a random template from `assets/data/messages.json`. Admin dry-run: `/simulate-leave`.
 
 ### API Response Caching

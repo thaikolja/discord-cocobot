@@ -78,6 +78,8 @@ INITIAL_EXTENSIONS = [
     'cogs.learn',
     # Administrative commands cog
     'cogs.admin',
+    # Warnings: three-strike kick
+    'cogs.warn',
     # Chat summarize command cog
     'cogs.summarize',
     # Member leave announcements

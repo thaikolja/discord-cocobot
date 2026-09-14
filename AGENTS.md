@@ -14,6 +14,7 @@
 - 🔤 **Transliteration** - Thai to Latin script conversion via AI
 - 📝 **AI Summarize** - Summarize recent chat messages using AI
 - 🛡️ **Admin Commands** - Admin-only commands (reset visa reminders)
+- ⚠️ **Warning System** - Three-strike moderator warnings (`/warn`, `/resetwarnings`); kick on the third strike
 - 🚪 **Leave announcements** - Random notice from `assets/data/messages.json` when a member leaves, is kicked, or is banned (`/simulate-leave` dry-run; `{name}` is bolded)
 - ⚡ **API Caching** - Database-backed caching for API responses with privileged user bypass
 
@@ -60,6 +61,7 @@ cocobot/
 │   ├── time.py           # Time queries
 │   ├── translate.py      # Translation services (auto-detect Thai/English)
 │   ├── transliterate.py  # AI-based Thai transliteration
+│   ├── warn.py           # Moderator warnings + three-strike kick
 │   └── weather.py        # Weather queries with °C/°F toggle
 │
 ├── config/               # Configuration management
@@ -70,7 +72,7 @@ cocobot/
 ├── utils/                # Utility functions
 │   ├── __init__.py
 │   ├── cache.py          # CacheManager (Redis + in-memory, @cached decorators)
-│   ├── database.py       # Database ORM (CacheEntry, RateLimit, VisaReminder)
+│   ├── database.py       # Database ORM (CacheEntry, RateLimit, VisaReminder, WarningEntry)
 │   ├── exceptions.py     # Custom exception hierarchy
 │   ├── helpers.py        # UseAI class, channel-to-location mapping
 │   ├── logger.py         # Logging configuration
@@ -85,11 +87,13 @@ cocobot/
 │   ├── test_leave.py
 │   ├── test_learn.py
 │   ├── test_pollution.py
+│   ├── test_release_metadata.py
 │   ├── test_security.py  # Security tests
 │   ├── test_summarize.py
 │   ├── test_time.py
 │   ├── test_translate.py
 │   ├── test_transliterate.py
+│   ├── test_warn.py
 │   └── test_weather.py
 │
 ├── scripts/              # Script tools
@@ -190,6 +194,12 @@ ENVIRONMENT=production
 DEBUG=false
 
 # ============================================================================
+# MODERATION
+# ============================================================================
+# Role applied when a member is warned (optional; empty disables)
+WARNED_ROLE_ID=
+
+# ============================================================================
 # LEAVE ANNOUNCEMENTS
 # ============================================================================
 # Optional override; default is the guild System Messages Channel
@@ -210,6 +220,8 @@ DEBUG=false
 - `/pollution [city]` - Check air quality index for a city (default: channel's city or Bangkok)
 - `/learn` - Learn a random Thai vocabulary word
 - `/summarize [limit]` - Summarize recent messages (default: 20, max: 50)
+- `/warn <user> [reason]` - Warn a member (moderator); third strike kicks
+- `/resetwarnings <user>` - Clear a member's active warnings (moderator)
 - `/simulate-leave [user]` - Dry-run a random leave announcement for a member without removing them (admin only)
 
 ### Prefix Commands
@@ -342,6 +354,7 @@ async def setup(bot):
 - **CacheEntry**: Stores cached API responses with TTL expiration
 - **RateLimit**: Tracks rate limit usage per user/channel/guild
 - **VisaReminder**: Visa reminder status tracking (persistent across restarts)
+- **WarningEntry**: Per-guild moderator warnings (`is_active` cycle, kick on third strike)
 
 ### Database Initialization
 ```bash
@@ -512,6 +525,9 @@ pytest tests/test_translate.py -v
 
 # Test leave announcements
 pytest tests/test_leave.py -v
+
+# Test warning system
+pytest tests/test_warn.py -v
 
 # Test summarization functionality
 pytest tests/test_summarize.py -v

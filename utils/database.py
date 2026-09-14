@@ -32,6 +32,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from sqlalchemy import (
+    Boolean,
     Column,
     DateTime,
     Integer,
@@ -87,6 +88,24 @@ class VisaReminder(Base):
     created_at = Column(DateTime, server_default=func.now())
 
 
+class WarningEntry(Base):
+    """Tracks moderator warnings for members per guild."""
+
+    __tablename__ = 'warning_entries'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    guild_id = Column(String(32), nullable=False, index=True)
+    user_id = Column(String(32), nullable=False, index=True)
+    username = Column(String, nullable=False)
+    moderator_id = Column(String(32), nullable=False)
+    moderator_name = Column(String, nullable=False)
+    reason = Column(Text, nullable=True)
+    warning_number = Column(Integer, nullable=False)
+    triggered_kick = Column(Boolean, nullable=False, default=False)
+    is_active = Column(Boolean, nullable=False, default=True, index=True)
+    created_at = Column(DateTime, server_default=func.now())
+
+
 # Database session management
 _engine = None
 _SessionLocal = None
@@ -127,21 +146,44 @@ def init_db(database_url: Optional[str] = None) -> None:
         logging.getLogger(__name__).error(f"Failed to verify database creation: {e}")
 
 
+class _SessionHandle:
+    """Context manager and one-shot iterator for database sessions."""
+
+    def __init__(self, session_factory):
+        self._session_factory = session_factory
+        self._db = None
+        self._iterated = False
+
+    def __enter__(self):
+        self._db = self._session_factory()
+        return self._db
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self._db is not None:
+            self._db.close()
+            self._db = None
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self._iterated:
+            raise StopIteration
+        self._iterated = True
+        return self._session_factory()
+
+
 def get_db_session():
     """
     Get a database session.
 
-    Yields:
-        Database session
+    Returns a handle that supports both `with get_db_session() as db`
+    and `with next(get_db_session()) as db`.
     """
     if _SessionLocal is None:
         raise RuntimeError("Database not initialized. Call init_db() first.")
 
-    db = _SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    return _SessionHandle(_SessionLocal)
 
 
 def get_engine():
@@ -225,6 +267,57 @@ class DatabaseManager:
         """Mark a user as reminded about mentioning nationality in visa channel."""
         reminder = VisaReminder(user_discord_id=user_discord_id, reminded_at=datetime.utcnow())
         db.add(reminder)
+        db.commit()
+
+    @staticmethod
+    def get_active_warnings(db, guild_id: str, user_id: str) -> list[WarningEntry]:
+        """Return active warnings for a user in a guild, oldest first."""
+        return (
+            db.query(WarningEntry)
+            .filter(
+                WarningEntry.guild_id == guild_id,
+                WarningEntry.user_id == user_id,
+                WarningEntry.is_active.is_(True),
+            )
+            .order_by(WarningEntry.created_at.asc(), WarningEntry.id.asc())
+            .all()
+        )
+
+    @staticmethod
+    def create_warning_entry(
+        db,
+        guild_id: str,
+        user_id: str,
+        username: str,
+        moderator_id: str,
+        moderator_name: str,
+        reason: str | None,
+    ) -> WarningEntry:
+        """Create a warning entry and assign its warning number in the active cycle."""
+        active_warnings = DatabaseManager.get_active_warnings(db, guild_id, user_id)
+        warning_number = min(len(active_warnings) + 1, 3)
+        entry = WarningEntry(
+            guild_id=guild_id,
+            user_id=user_id,
+            username=username,
+            moderator_id=moderator_id,
+            moderator_name=moderator_name,
+            reason=reason,
+            warning_number=warning_number,
+            triggered_kick=warning_number >= 3,
+            is_active=True,
+        )
+        db.add(entry)
+        db.commit()
+        db.refresh(entry)
+        return entry
+
+    @staticmethod
+    def clear_active_warnings(db, guild_id: str, user_id: str) -> None:
+        """Archive active warnings for a user after a successful kick."""
+        active_warnings = DatabaseManager.get_active_warnings(db, guild_id, user_id)
+        for warning in active_warnings:
+            warning.is_active = False
         db.commit()
 
 
