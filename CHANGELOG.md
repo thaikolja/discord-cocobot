@@ -8,6 +8,7 @@ know how this shit works.
 
 ### What's Changed
 
+* fix(commands): ignore prefix text and debounce the @cocobot info card [`21e0917`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/21e091720b3709d9a27a176e699b29693104ed44)
 * fix(commands): drop all prefix commands and send the @cocobot card once [`2cbe20b`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/2cbe20b3059f630c7f424c81a915f698e9fa1fc3)
 * feat(leave): post fun leave lines in the member's last text channel [`856854a`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/856854a10f8dc8bf2c6116816af2215774ebe0e1)
 * fix(permissions): send permission denials as ephemeral replies only [`a93d4c0`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/a93d4c05ce92f3f0752c25dd36cbf93a99f0be66)
