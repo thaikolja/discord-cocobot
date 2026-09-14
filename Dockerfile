@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
-# Use Python 3.11 slim image as base to support newer dependencies
-FROM python:3.11-slim
+# Match local/CI runtime (audioop-lts and discord.py need 3.13+)
+FROM python:3.13-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -34,9 +34,6 @@ COPY . .
 RUN adduser --disabled-password --gecos '' appuser \
     && chown -R appuser:appuser /app
 USER appuser
-
-# Expose port (if needed for webhooks)
-EXPOSE 8000
 
 # Run the bot
 CMD ["python", "bot.py"]

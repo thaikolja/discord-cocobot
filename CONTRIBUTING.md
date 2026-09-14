@@ -17,7 +17,7 @@ We welcome contributions to the **cocobot Discord bot**! This way-too-long guide
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.13 or higher
 - Git
 - A Discord account and developer application
 - Basic knowledge of Python and Discord bots

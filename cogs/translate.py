@@ -18,6 +18,7 @@
 #  Package:   cocobot Discord Bot
 
 # Import the logging module for error tracking and logging purposes
+import asyncio
 import logging  # Import logging module for error tracking
 
 # Import the discord module for interacting with the Discord API
@@ -156,8 +157,8 @@ class TranslateCog(commands.Cog):
                 'Keep the tone and meaning of the original text. Stay accurate.'
             )
 
-            # Get the response from the AI
-            output = ai.prompt(prompt)
+            # Get the response from the AI off the event loop
+            output = await asyncio.to_thread(ai.prompt, prompt)
 
             # Check if the response is valid
             if not output:

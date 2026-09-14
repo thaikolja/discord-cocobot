@@ -16,6 +16,7 @@ logs/*.log
 !LICENSE
 !CHANGELOG.md
 !CONTRIBUTING.md
+!AGENTS.md
 .vscode/
 cocobot.db
 docs/

@@ -41,6 +41,12 @@
     - `[from_language]` *(string)* **Default:** auto (Thai/English detection)
     - `[to_language]` *(string)* **Default:** auto (opposite of source)
 
+- **📝 Summarize**: Summarize recent messages in the current channel using AI
+  - `/summarize [limit]` *(number)* **Default:** `20`, **Max:** `50`
+
+- **🚪 Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts a random line from `assets/data/messages.json` with the member's **bold** server name
+  - `/simulate-leave [user]` *(member)* Admin dry-run; nobody is removed
+
 ## 🥥 Examples
 
 **cocobot** uses [slash commands](https://support-apps.discord.com/hc/en-us/articles/26501837786775-Slash-Commands-FAQ). Here are some examples. The parameter with the colon (`:`) at the end are the parameters you can choose as described in the **Features** section.
@@ -126,11 +132,27 @@
 
 5. **Invite bot to server:**
    - Create bot at [Discord Developer Portal](https://discord.com/developers/applications)
-   - Enable `Message Content Intent` in Privileged Gateway Intents
+   - Enable `Message Content Intent` and `Server Members Intent` in Privileged Gateway Intents
    - Use OAuth2 URL with `bot` scope and required permissions
    - Add bot to your server
 
 Your bot should now be online with slash commands available.
+
+### As Docker
+
+Image is `python:3.13-slim`. Compose also starts PostgreSQL 15 and Redis 7. SQLite remains the default when you run the bot outside Compose.
+
+```bash
+git clone https://gitlab.com/thailand-discord/bots/cocobot.git
+cd cocobot
+cp .env.example .env
+# set DISCORD_* tokens and API keys; optional POSTGRES_PASSWORD (default: password)
+docker-compose up -d
+```
+
+Tables are created by SQLAlchemy on startup (no `init.sql`). Logs: `docker-compose logs -f cocobot`.
+
+Same invite steps as above (`Message Content Intent` + `Server Members Intent`).
 
 ---
 

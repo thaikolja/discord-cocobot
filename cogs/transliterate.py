@@ -19,6 +19,7 @@
 
 
 # Import the logging module for logging purposes
+import asyncio
 import logging
 
 # Import discord from the discord library
@@ -119,8 +120,8 @@ class Transliterate(commands.Cog):
                 "Provide only the transliterated text as the result."
             )
 
-            # Send the constructed prompt to the AI and get a response
-            answer = ai.prompt(prompt)
+            # Send the constructed prompt to the AI off the event loop
+            answer = await asyncio.to_thread(ai.prompt, prompt)
 
             # Check if the AI responded with content
             if not answer or answer.isspace():

@@ -11,9 +11,15 @@ know how this shit works.
 - **Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts a random italic line from `assets/data/messages.json` (50 slightly sophisticated templates, `{name}` filled with the member's server display name) in the System Messages Channel. Copy is a little bitter coconut-cult comedy grounded in August Engelhardt / Kabakon / Sonnenorden lore, never insults the leaving member, always says they left, and bolds the display name in Discord (`{name}` in JSON becomes `**name**` at send time). Each template is used once before the pool reshuffles. Optional `LEAVE_NOTIFY_CHANNEL_ID` override.
 - **`/simulate-leave`**: Admin-only dry-run that posts the same random template for a chosen member without removing anyone.
 
+### Changed
+
+- **Docker**: Image is now `python:3.13-slim` (matches local/CI). Restored `.dockerignore`. Postgres password comes from `POSTGRES_PASSWORD`. Removed the missing `init.sql` bind mount.
+- **`/translate` and `/transliterate`**: Gemini calls run in `asyncio.to_thread` so they no longer block the Discord event loop.
+
 ### Removed
 
 - **AI Jail**: Removed `/jail`, `/unjail`, the `JailCog`, `JailedUser` database model, and August Engelhardt internal-API integration (`JAIL_ROLE_ID`, `AUGUST_INTERNAL_HOST`, `AUGUST_INTERNAL_PORT`, `AUGUST_INTERNAL_SECRET`).
+- **Unused code**: Dropped `utils/monitoring.py`, `utils/rate_limit.py`, `tests/test_utils.py`, and `assets/data/thai-vocabulary-level-1.json`.
 
 ---
 

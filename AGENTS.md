@@ -14,12 +14,12 @@
 - 🔤 **Transliteration** - Thai to Latin script conversion via AI
 - 📝 **AI Summarize** - Summarize recent chat messages using AI
 - 🛡️ **Admin Commands** - Admin-only commands (reset visa reminders)
-- 🚪 **Leave announcements** - Random italic notice from `assets/data/messages.json` when a member leaves, is kicked, or is banned (`/simulate-leave` dry-run)
+- 🚪 **Leave announcements** - Random notice from `assets/data/messages.json` when a member leaves, is kicked, or is banned (`/simulate-leave` dry-run; `{name}` is bolded)
 - ⚡ **API Caching** - Database-backed caching for API responses with privileged user bypass
 
 ## Tech Stack
 
-- **Language**: Python 3.13+ (Docker: Python 3.11)
+- **Language**: Python 3.13+ (Docker: Python 3.13)
 - **Framework**: discord.py 2.6
 - **Database**: SQLAlchemy 2.0 (SQLite/PostgreSQL)
 - **Cache**: Database-backed cache with Redis support (Docker deployment)
@@ -74,9 +74,7 @@ cocobot/
 │   ├── exceptions.py     # Custom exception hierarchy
 │   ├── helpers.py        # UseAI class, channel-to-location mapping
 │   ├── logger.py         # Logging configuration
-│   ├── rate_limit.py     # Rate limiters (in-memory, DB-backed, hybrid)
-│   ├── security.py       # InputValidator, InputSanitizer, SecurityChecker
-│   └── monitoring.py     # MetricsCollector, HealthChecker, BotMetrics
+│   └── security.py       # InputValidator, InputSanitizer, SecurityChecker
 │
 ├── tests/                # Test suite
 │   ├── __init__.py
@@ -92,7 +90,6 @@ cocobot/
 │   ├── test_time.py
 │   ├── test_translate.py
 │   ├── test_transliterate.py
-│   ├── test_utils.py     # Cache tests
 │   └── test_weather.py
 │
 ├── scripts/              # Script tools
@@ -102,9 +99,8 @@ cocobot/
 │
 ├── assets/               # Static assets
 │   ├── data/            # Data files
-│   │   ├── messages.json (50 static leave templates with {name})
-│   │   ├── thai-words.json (250 core Thai vocabulary)
-│   │   └── thai-vocabulary-level-1.json
+│   │   ├── messages.json (50 Chrome-locale objects: `"1": {"message": "...{name}..."}`)
+│   │   └── thai-words.json (250 core Thai vocabulary)
 │   └── img/             # Image assets (avatars, banners)
 │
 ├── logs/                # Log directory (gitignored)
@@ -226,7 +222,7 @@ DEBUG=false
 - Messages containing "visa" in the `visa` channel - Auto-remind users to mention nationality (persistent via VisaReminder DB)
 - Messages containing "tate" - Display Bottom G GIF (3-minute per-user cooldown)
 - Mentioning `@Nal` - Display tribute image
-- Member leave / kick / ban - Post a random italic template from `assets/data/messages.json` with `{name}` replaced by the member's server display name. Each template is used once before the pool reshuffles (optional `LEAVE_NOTIFY_CHANNEL_ID` override; bots are skipped)
+- Member leave / kick / ban - Post a random template from `assets/data/messages.json` with `{name}` replaced by the member's **bold** server display name. Each template is used once before the pool reshuffles (optional `LEAVE_NOTIFY_CHANNEL_ID` override; bots are skipped)
 
 ## Development Commands
 
@@ -455,13 +451,14 @@ docker-compose logs -f redis
 ```
 
 ### Docker Service Architecture
-- **cocobot**: Main application container (Python 3.11-slim)
+- **cocobot**: Main application container (Python 3.13-slim)
 - **db**: PostgreSQL 15 Alpine database
 - **redis**: Redis 7 Alpine cache and session storage
 
 ### Docker-Specific Configuration
-- Database URL: `postgresql://cocobot:password@db:5432/cocobot`
+- Database URL: `postgresql://cocobot:${POSTGRES_PASSWORD:-password}@db:5432/cocobot`
 - Redis URL: `redis://redis:6379/0`
+- Schema is created by SQLAlchemy `create_all` (no `init.sql`)
 
 ### Deployment Scripts
 - `deploy.sh` → `scripts/deploy-as-docker.sh`: Git pull, docker-compose rebuild, health check
@@ -490,12 +487,7 @@ Two-stage pipeline:
 5. **Docker container won't start**: Check `.env` file and environment variables
 6. **Cache issues**: Check `CACHE_ENABLED` and `REDIS_URL` settings
 
-### Monitoring Metrics
-- `BotMetrics`: Command usage counts, durations, API calls, errors
-- `PerformanceMonitor`: CPU, memory, disk, process metrics via psutil
-- `HealthChecker`: Registered health checks for DB, APIs
-- `MetricsCollector`: Prometheus-compatible counters, gauges, histograms
-- Export to Prometheus format or JSON file
+Operational signal is rotating logs (`LOG_FILE`, `LOG_LEVEL`). There is no Prometheus exporter in this tree.
 
 ## Testing
 
@@ -529,9 +521,6 @@ pytest tests/test_database.py -v
 
 # Test security functionality
 pytest tests/test_security.py -v
-
-# Test cache and utilities
-pytest tests/test_utils.py -v
 ```
 
 ### Test Coverage
@@ -610,5 +599,5 @@ MIT License - See LICENSE file for details
 
 ---
 
-*Last updated: May 13, 2026*
+*Last updated: September 14, 2026*
 *Version: 3.5.3*
