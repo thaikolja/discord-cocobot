@@ -54,7 +54,7 @@
 
 ## 🥥 Examples
 
-**cocobot** uses [slash commands](https://support-apps.discord.com/hc/en-us/articles/26501837786775-Slash-Commands-FAQ) only (no `!` prefix commands). Mention `@cocobot` by itself for the info card (once per mention). Examples:
+**cocobot** uses [slash commands](https://support-apps.discord.com/hc/en-us/articles/26501837786775-Slash-Commands-FAQ) only. Prefix text such as `!test` is ignored and gets no bot reply. Mention `@cocobot` by itself for a single info card. Examples:
 
 ### Get the current weather in Bangkok
 

@@ -226,7 +226,7 @@ WARNED_ROLE_ID=
 - `/simulate-leave [user]` - Dry-run a leave announcement in the current channel (owner / admins / mods; does not post elsewhere)
 - `/reset-reminder [user]` - Reset visa-channel reminder status (staff only, ephemeral)
 
-There are no prefix (`!`) commands. Visa reminder reset is `/reset-reminder` (staff only, ephemeral).
+There are no prefix (`!`) commands. Messages like `!test` are ignored (no bot reply). Visa reminder reset is `/reset-reminder` (staff only, ephemeral).
 
 ### Special Triggers
 

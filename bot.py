@@ -32,6 +32,7 @@ Raises:
 
 # Import the regular expression module for pattern matching in text
 import re
+import time
 
 # Import datetime for current time operations
 from datetime import datetime, timedelta
@@ -196,16 +197,26 @@ class Cocobot(commands.Bot):
         # The actual logic now uses database, but this is kept for tests
         self.reminded_users = set()
         self._info_card_message_ids: set[int] = set()
+        self._info_card_last_at: dict[tuple[int, int], float] = {}
 
-    def _claim_info_card(self, message_id: int) -> bool:
-        """Return True once per message id so the info card cannot send twice."""
+    def _claim_info_card(self, message) -> bool:
+        """Return True once per mention so the info card cannot send twice."""
+        message_id = getattr(message, 'id', None)
         if message_id in self._info_card_message_ids:
             return False
-        self._info_card_message_ids.add(message_id)
-        if len(self._info_card_message_ids) > _INFO_CARD_SEEN_MAX:
-            self._info_card_message_ids = set(
-                list(self._info_card_message_ids)[-_INFO_CARD_SEEN_MAX // 2 :]
-            )
+        channel_id = getattr(getattr(message, 'channel', None), 'id', 0) or 0
+        author_id = getattr(getattr(message, 'author', None), 'id', 0) or 0
+        now = time.monotonic()
+        last = self._info_card_last_at.get((channel_id, author_id))
+        if last is not None and now - last < 2.0:
+            return False
+        if message_id is not None:
+            self._info_card_message_ids.add(message_id)
+            if len(self._info_card_message_ids) > _INFO_CARD_SEEN_MAX:
+                self._info_card_message_ids = set(
+                    list(self._info_card_message_ids)[-_INFO_CARD_SEEN_MAX // 2 :]
+                )
+        self._info_card_last_at[(channel_id, author_id)] = now
         return True
 
     # Setup hook to load extensions and sync commands
@@ -353,7 +364,7 @@ class Cocobot(commands.Bot):
         if (
             not message.author.bot
             and is_bare_bot_mention(message.content, message.mentions, self.user.id)
-            and self._claim_info_card(message.id)
+            and self._claim_info_card(message)
         ):
             # Import version again to get the mocked value during tests
             from config.config import COCOBOT_VERSION as CURRENT_VERSION
@@ -428,62 +439,23 @@ class Cocobot(commands.Bot):
             # Send the embed to the channel
             await message.channel.send(embed=embed)
 
-    # Global error handler for commands
     async def on_command_error(self, ctx, error):
-        """
-        Handles errors triggered by command execution in the bot.
-
-        This handler processes various types of errors encountered during the execution of
-        commands and provides user-friendly feedback. Additionally, it logs significant
-        information regarding the error events for further analysis.
-
-        Args:
-            ctx (commands.Context): The context in which the command was invoked.
-            error (commands.CommandError): The error object containing details about the
-                encountered issue.
-
-        """
-        if isinstance(error, commands.CommandNotFound):
+        """Prefix commands do not exist. Never reply to the channel."""
+        if isinstance(
+            error,
+            (
+                commands.CommandNotFound,
+                commands.MissingRequiredArgument,
+                commands.BadArgument,
+                commands.CommandOnCooldown,
+                commands.MissingPermissions,
+                commands.CheckFailure,
+            ),
+        ):
             return
-
-        # Handle missing required arguments
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"❌ Missing required argument: {error.param.name}")
-            command_logger.warning(
-                f"Missing required argument in {ctx.command}: {error.param.name}"
-            )
-            return
-
-        # Handle bad argument errors
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send(f"❌ Invalid argument provided: {error}")
-            command_logger.warning(f"Bad argument in {ctx.command}: {error}")
-            return
-
-        # Handle command on cooldown errors
-        elif isinstance(error, commands.CommandOnCooldown):
-            await ctx.send(
-                f"⏳ This command is on cooldown. Try again in {error.retry_after:.2f}s"
-            )
-            command_logger.info(f"Command on cooldown: {ctx.command} by {ctx.author}")
-            return
-
-        elif isinstance(error, (commands.MissingPermissions, commands.CheckFailure)):
-            await _send_prefix_permission_denied(ctx)
-            command_logger.warning(
-                f"Permission denied for prefix command {ctx.command} by {ctx.author}"
-            )
-            return
-
-        # Log other errors
-        else:
-            await ctx.send(
-                "🥥 Oops, something's cracked, and it's **not** the coconut! The "
-                "developers have been notified."
-            )
-            error_logger.error(
-                f"Error in command {ctx.command}: {error}", exc_info=True
-            )
+        error_logger.error(
+            f"Error in prefix command {ctx.command}: {error}", exc_info=True
+        )
 
     # Global error handler for application commands (slash commands)
     async def on_app_command_error(
