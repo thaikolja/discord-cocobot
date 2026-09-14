@@ -259,8 +259,8 @@ A clear description of what actually happened.
 
 **Environment**
 - OS: [e.g. Windows 10, macOS 11.0, Ubuntu 20.04]
-- Python version: [e.g. 3.9.0]
-- Bot version: [e.g. 2.3.0]
+- Python version: [e.g. 3.13]
+- Bot version: [e.g. 3.9.0]
 
 **Additional Context**
 Add any other context about the problem here.

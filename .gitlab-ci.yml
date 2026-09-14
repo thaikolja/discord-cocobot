@@ -33,6 +33,7 @@ test:
     - export DEEPSEEK_API_KEY=test_key
     - export DEEPSEEK_MODEL=deepseek-test-model
     - export ENVIRONMENT=testing
+    - export TESTING=1
     - pytest tests/ -v
 
 deploy:

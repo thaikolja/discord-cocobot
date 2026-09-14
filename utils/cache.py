@@ -30,8 +30,6 @@ import logging
 import time
 from typing import Any, Optional
 
-from redis.asyncio import Redis
-
 from utils.logger import get_logger
 
 
@@ -45,6 +43,8 @@ class CacheManager:
         # Initialize Redis connection if URL is provided
         if redis_url:
             try:
+                from redis.asyncio import Redis
+
                 self.redis_client = Redis.from_url(redis_url, decode_responses=True)
                 self.use_redis = True
                 self.logger.info("Redis cache initialized successfully")

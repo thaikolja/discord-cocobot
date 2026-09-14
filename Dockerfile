@@ -30,8 +30,9 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy project
 COPY . .
 
-# Create non-root user for security
+# Create non-root user for security and a logs dir the bot can write
 RUN adduser --disabled-password --gecos '' appuser \
+    && mkdir -p /app/logs \
     && chown -R appuser:appuser /app
 USER appuser
 

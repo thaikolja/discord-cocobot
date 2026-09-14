@@ -1,6 +1,6 @@
-# 🥥 cocobot
+# 🥥 cocobot `v3.9.0`
 
-![GitLab Release](https://img.shields.io/gitlab/v/release/thaikolja%2Fdiscord-cocobot?style=flat&label=version&color=%23d87630&link=https%3A%2F%2Fgitlab.com%2Fthaikolja%2Fdiscord-cocobot) [![pipeline status](https://gitlab.com/thailand-discord/bots/cocobot/badges/main/pipeline.svg)](https://gitlab.com/thailand-discord/bots/cocobot/-/commits/main) ![GitLab License](https://img.shields.io/gitlab/license/thailand-discord%2Fbots%2Fcocobot?style=flat) [![Python Version](https://img.shields.io/badge/Python-3.13%2B-blue.svg)](https://www.python.org/downloads/)
+![GitLab Release](https://img.shields.io/gitlab/v/release/thailand-discord%2Fbots%2Fcocobot?style=flat&label=version&color=%23d87630&link=https%3A%2F%2Fgitlab.com%2Fthailand-discord%2Fbots%2Fcocobot/-/releases) [![pipeline status](https://gitlab.com/thailand-discord/bots/cocobot/badges/main/pipeline.svg)](https://gitlab.com/thailand-discord/bots/cocobot/-/commits/main) ![GitLab License](https://img.shields.io/gitlab/license/thailand-discord%2Fbots%2Fcocobot?style=flat) [![Python Version](https://img.shields.io/badge/Python-3.13%2B-blue.svg)](https://www.python.org/downloads/)
 
 **@cocobot** is your friendly, feature-rich **Discord bot** designed for the [**Discord Thailand Server**](https://discord.gg/6JXCqVdmTZ), bringing a tropical wind to your server with useful utilities and fun interactions. Built with **Python** and the `discord.py` library, cocobot offers **a variety of commands** for practical tasks like weather checking, translation, and currency conversion, all wrapped in a coconut-themed package.
 
@@ -152,17 +152,17 @@ Your bot should now be online with slash commands available.
 
 ### As Docker
 
-Image is `python:3.13-slim`. Compose also starts PostgreSQL 15 and Redis 7. SQLite remains the default when you run the bot outside Compose.
+Image is `python:3.13-slim`. Compose starts PostgreSQL 15 and Redis 7 and waits until both are healthy before launching the bot. SQLite remains the default when you run the bot outside Compose. Postgres/Redis ports are bound to localhost only (`5433` / `6380`).
 
 ```bash
 git clone https://gitlab.com/thailand-discord/bots/cocobot.git
 cd cocobot
 cp .env.example .env
 # set DISCORD_* tokens and API keys; optional POSTGRES_PASSWORD (default: password)
-docker-compose up -d
+docker compose up -d
 ```
 
-Tables are created by SQLAlchemy on startup (no `init.sql`). Logs: `docker-compose logs -f cocobot`.
+Tables are created by SQLAlchemy on startup (no `init.sql`). Logs: `docker compose logs -f cocobot`. Production shortcut on the server: `./deploy.sh` → `scripts/deploy-as-docker.sh`.
 
 Same invite steps as above (`Message Content Intent` + `Server Members Intent`).
 

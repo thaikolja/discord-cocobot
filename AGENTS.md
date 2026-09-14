@@ -288,10 +288,10 @@ python bot.py
 sudo systemctl start cocobot
 
 # Docker mode
-docker-compose up -d
+docker compose up -d
 
 # View Docker logs
-docker-compose logs -f cocobot
+docker compose logs -f cocobot
 ```
 
 ## Code Style Guidelines
@@ -447,20 +447,20 @@ sudo systemctl restart cocobot
 
 ### Docker Deployment (Recommended)
 ```bash
-# Start all services
-docker-compose up -d
+# Start all services (bot waits until Postgres and Redis are healthy)
+docker compose up -d
 
 # View logs
-docker-compose logs -f cocobot
+docker compose logs -f cocobot
 
 # Stop services
-docker-compose down
+docker compose down
 
 # View database logs
-docker-compose logs -f db
+docker compose logs -f db
 
 # View Redis logs
-docker-compose logs -f redis
+docker compose logs -f redis
 ```
 
 ### Docker Service Architecture
@@ -474,8 +474,8 @@ docker-compose logs -f redis
 - Schema is created by SQLAlchemy `create_all` (no `init.sql`)
 
 ### Deployment Scripts
-- `deploy.sh` → `scripts/deploy-as-docker.sh`: Git pull, docker-compose rebuild, health check
-- `scripts/deploy-as-service.sh`: systemctl stop, git pull, pip install, systemctl start
+- `deploy.sh` → `scripts/deploy-as-docker.sh`: `git pull --ff-only`, `docker compose` rebuild, running-service check
+- `scripts/deploy-as-service.sh`: systemctl stop, `git pull --ff-only`, pip install, systemctl start
 - `on.sh` / `off.sh`: systemctl start/stop shortcuts
 
 ## CI/CD (`.gitlab-ci.yml`)

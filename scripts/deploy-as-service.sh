@@ -20,7 +20,7 @@ source ./venv/bin/activate
 
 # Pull the latest changes
 echo "📥 Pulling latest changes from GitLab..."
-git pull origin main || { echo "❌ Failed to pull changes"; exit 1; }
+git pull --ff-only origin main || { echo "❌ Failed to pull changes"; exit 1; }
 
 # Install dependencies
 echo "📦 Installing/updating dependencies..."

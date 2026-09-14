@@ -54,3 +54,19 @@ def test_changelog_leave_copy_is_not_italic():
 def test_bot_loads_leave_and_warn():
     assert "'cogs.leave'" in BOT_PY
     assert "'cogs.warn'" in BOT_PY
+
+
+def test_user_docs_mention_v3_9_0():
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    contributing = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
+    assert "v3.9.0" in readme
+    assert "*Version: 3.9.0*" in agents
+    assert "3.9.0" in contributing
+
+
+def test_deploy_sh_invokes_existing_docker_script():
+    deploy = (ROOT / "deploy.sh").read_text(encoding="utf-8")
+    script = ROOT / "scripts" / "deploy-as-docker.sh"
+    assert "scripts/deploy-as-docker.sh" in deploy
+    assert script.is_file()

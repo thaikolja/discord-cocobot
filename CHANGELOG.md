@@ -15,7 +15,8 @@ know how this shit works.
 
 - **Version**: `3.8.0` → `3.9.0`
 - **Gemini prompts**: `/translate` and `/transliterate` keep their prompts inline in the cogs (the 3.8.0 `assets/data/language-prompt-definition.md` + `utils/prompts.py` path is not used on this branch).
-- **Deploy helpers**: Restored `on.sh` and `scripts/deploy-as-docker.sh` / `scripts/deploy-as-service.sh`.
+- **Deploy helpers**: Restored `on.sh` and `scripts/deploy-as-docker.sh` / `scripts/deploy-as-service.sh`. `deploy.sh` calls `scripts/deploy-as-docker.sh` (the old `./script/` path does not exist). Docker deploys use `git pull --ff-only` and wait for a running `cocobot` service.
+- **Docker**: Compose waits for healthy Postgres and Redis before starting the bot. Postgres/Redis ports bind to `127.0.0.1` only. Dropped the unused `metrics` volume. Image creates `/app/logs` for the non-root `appuser`.
 
 ### Removed
 
