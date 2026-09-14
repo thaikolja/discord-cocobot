@@ -4,7 +4,7 @@
 
 set -e
 
-COCOBOT_DIR="/opt/bots/cocobot"
+COCOBOT_DIR="/opt/discord/cocobot"
 
 echo "🥥 Starting Cocobot Docker deployment..."
 
@@ -31,8 +31,9 @@ fi
 
 echo "📂 Current directory: $(pwd)"
 
-echo "📥 Pulling latest changes from GitLab..."
-git pull --ff-only origin main
+echo "📥 Resetting checkout to origin/main (keeps untracked .env)..."
+git fetch origin
+git reset --hard origin/main
 
 echo "🛑 Stopping existing containers (if any)..."
 $COMPOSE down --remove-orphans || echo "No containers to stop or already stopped"

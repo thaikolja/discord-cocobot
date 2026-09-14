@@ -472,7 +472,7 @@ docker compose logs -f redis
 - Schema is created by SQLAlchemy `create_all` (no `init.sql`)
 
 ### Deployment Scripts
-- `deploy.sh` → `scripts/deploy-as-docker.sh`: `git pull --ff-only origin main`, `docker compose` rebuild, running-service check. This is what GitLab CI invokes on the server.
+- `deploy.sh` → `scripts/deploy-as-docker.sh`: `git fetch` + `git reset --hard origin/main` (keeps `.env`), `docker compose` rebuild. GitLab CI does the same reset before running this script so a dirty `.env.example` cannot block deploy.
 - `scripts/deploy-as-service.sh`: systemctl stop, `git pull --ff-only`, pip install, systemctl start (non-Docker hosts)
 - `on.sh` / `off.sh`: start/stop Compose if `docker-compose.yml` exists, otherwise systemd
 
@@ -480,7 +480,7 @@ docker compose logs -f redis
 
 Two-stage pipeline:
 - **test**: Python 3.13-slim, pip install, `TESTING=1 pytest tests/`
-- **deploy** (`main` only, needs test): SSH to the host and run `REMOTE_SCRIPT_PATH` (typically `/opt/bots/cocobot/deploy.sh` → `scripts/deploy-as-docker.sh`: `git pull --ff-only origin main`, Compose rebuild)
+- **deploy** (`main` only, needs test): SSH to `/opt/discord/cocobot`, `git reset --hard origin/main` (untracked `.env` kept), then `REMOTE_SCRIPT_PATH` (typically `/opt/discord/cocobot/deploy.sh` → Compose rebuild)
 
 ## Debugging and Monitoring
 

@@ -126,7 +126,7 @@
 Merge or push to **`main`** on GitLab. Pipeline:
 
 1. **test** — Python 3.13, `TESTING=1 pytest tests/`
-2. **deploy** (main only) — SSH to the host and run `REMOTE_SCRIPT_PATH` (set this CI variable to `/opt/bots/cocobot/deploy.sh`)
+2. **deploy** (main only) — SSH to `/opt/discord/cocobot`, `git reset --hard origin/main` (keeps `.env`), then run `REMOTE_SCRIPT_PATH` (typically `/opt/discord/cocobot/deploy.sh`)
 
 `deploy.sh` → `scripts/deploy-as-docker.sh`: `git pull --ff-only origin main`, rebuild Compose (bot `python:3.13-slim` as `appuser`, Postgres 15, Redis 7, healthchecks). Privileged Discord intents: **Message Content** and **Server Members**. Run **one** bot process for the production token.
 

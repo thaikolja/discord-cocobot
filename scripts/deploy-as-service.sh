@@ -12,7 +12,7 @@ systemctl stop cocobot.service || echo "Service was not running"
 
 # Change into the bot directory
 echo "📁 Changing to bot directory..."
-cd /opt/bots/cocobot || { echo "❌ Failed to change directory"; exit 1; }
+cd /opt/discord/cocobot || { echo "❌ Failed to change directory"; exit 1; }
 
 # Activate Python environment
 echo "🐍 Activating virtual environment..."
@@ -20,7 +20,8 @@ source ./venv/bin/activate
 
 # Pull the latest changes
 echo "📥 Pulling latest changes from GitLab..."
-git pull --ff-only origin main || { echo "❌ Failed to pull changes"; exit 1; }
+git fetch origin || { echo "❌ Failed to fetch"; exit 1; }
+git reset --hard origin/main || { echo "❌ Failed to reset to origin/main"; exit 1; }
 
 # Install dependencies
 echo "📦 Installing/updating dependencies..."

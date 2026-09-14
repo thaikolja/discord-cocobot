@@ -3,7 +3,7 @@
 
 set -e
 
-COCOBOT_DIR="/opt/bots/cocobot"
+COCOBOT_DIR="/opt/discord/cocobot"
 
 cd "$COCOBOT_DIR" || { echo "❌ cocobot directory not found: $COCOBOT_DIR"; exit 1; }
 

@@ -3,7 +3,7 @@
 
 set -e
 
-COCOBOT_DIR="/opt/bots/cocobot"
+COCOBOT_DIR="/opt/discord/cocobot"
 
 if [ -f "$COCOBOT_DIR/docker-compose.yml" ]; then
     cd "$COCOBOT_DIR" || { echo "❌ cocobot directory not found: $COCOBOT_DIR"; exit 1; }
