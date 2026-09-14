@@ -144,22 +144,37 @@ git checkout -b fix/issue-description
 
 ### 3. Commit Your Changes
 
+This project follows the **[Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification** exactly. Every commit subject MUST match:
+
+```
+<type>[optional scope][optional !]: <description>
+```
+
+Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`, `build`, `revert`.
+
 ```bash
 # Stage your changes
 git add .
 
-# Commit with a clear message
-git commit -m "feat: add new weather command feature"
-
-# Use conventional commit messages:
-# feat: new feature
-# fix: bug fix
-# docs: documentation changes
-# style: formatting changes
-# refactor: code refactoring
-# test: test changes
-# chore: maintenance tasks
+# Commit with a Conventional Commits subject
+git commit -m "feat(weather): add unit toggle for imperial temperatures"
 ```
+
+Examples:
+
+```
+feat(leave): announce members with a waving-hand prefix
+fix(summarize): stop pinging the invoker after a successful summary
+docs(changelog): record v3.9.0 as Conventional Commits with commit links
+```
+
+Breaking changes use `!` after the type/scope (`feat(api)!: ...`) and a `BREAKING CHANGE:` footer. Changelog entries for a release list each commit as:
+
+```
+* <conventional subject> [`<shortsha>`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/<fullsha>)
+```
+
+Do not attribute changelog lines to a GitHub/GitLab username.
 
 ### 4. Push and Create Merge Request
 

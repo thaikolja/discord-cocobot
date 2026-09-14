@@ -6,21 +6,18 @@ know how this shit works.
 
 ## v3.9.0
 
-### Added
+### What's Changed
 
-- **Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts `👋 **{name} has left the server.**` plus a random coda from `assets/data/messages.json` (10 Imperium/Engelhardt-style templates for now; never insults the leaving member). The display name is bold. Each coda is used once before the pool reshuffles. Fun channel: System Messages Channel or `LEAVE_NOTIFY_CHANNEL_ID`. Professional `#logs` line (no emoji): `{name} ({id}) left the server.` on channel `LEAVE_LOG_CHANNEL_ID` (default 1513856672966246410). Bots are skipped.
-- **`/simulate-leave`**: Staff-only dry-run (owner / admins / mods) that posts the same fun line for a chosen member without removing anyone and without writing to `#logs`.
-
-### Changed
-
-- **Version**: `3.8.0` → `3.9.0`
-- **Gemini prompts**: `/translate` and `/transliterate` keep their prompts inline in the cogs (the 3.8.0 `assets/data/language-prompt-definition.md` + `utils/prompts.py` path is not used on this branch).
-- **Deploy helpers**: Restored `on.sh` and `scripts/deploy-as-docker.sh` / `scripts/deploy-as-service.sh`. `deploy.sh` calls `scripts/deploy-as-docker.sh` (the old `./script/` path does not exist). Docker deploys use `git pull --ff-only` and wait for a running `cocobot` service.
-- **Docker**: Compose waits for healthy Postgres and Redis before starting the bot. Postgres/Redis ports bind to `127.0.0.1` only. Dropped the unused `metrics` volume. Image creates `/app/logs` for the non-root `appuser`.
-
-### Removed
-
-- **Unused code**: Dropped `utils/monitoring.py`, `utils/rate_limit.py`, `tests/test_utils.py`, and `assets/data/thai-vocabulary-level-1.json`.
+* feat(leave): prefix leave lines, 10 Imperium codas, staff simulate, #logs [`8aef0e2`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/8aef0e2397dccbdcbb1169a84ab2e69218a364a0)
+* fix(summarize): stop @mentioning the user after a successful summary [`eeb49d1`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/eeb49d1ad10d4cb291455abd4f7901a48519c92d)
+* fix(release): make v3.9.0 production-ready for Docker and docs [`da78505`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/da78505513eb25fe5fd32af018ce592419c1e9f5)
+* docs(changelog): ship leave announcements as v3.9.0 and restore 3.6–3.8 history [`99b2bc2`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/99b2bc29b03a53e0e84e62ff6dff1d01c431d94c)
+* fix(warn): restore /warn and /resetwarnings from main [`68d1cb2`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/68d1cb2e2b07c791328f3cc872481cf41ff371bb)
+* chore(release): bump version 3.5.3 → 3.9.0 [`5e283b3`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/5e283b33403d3dfbe42922f6e5f75782f6bf948d)
+* test(release): add failing v3.9.0 ship-metadata guards [`c15dec0`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/c15dec066f1283ecabb405a2e8e10dbcb97e74cf)
+* feat(leave-notification): remove `monitoring.py` and `rate_limit.py` as unused legacy utilities [`a7ec8ef`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/a7ec8ef97f8a3e0f5f33830913e35ad953af5f0f)
+* chore: implement leave announcements and remove AI jail functionality [`ee5f173`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/ee5f1732695f7bfaa0c18e72b2f6965d9cf1a808)
+* chore: remove unused files and cleanup `.dockerignore` [`2148d46`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/2148d4649ac953268feaba9bb7bfc49be174bae7)
 
 ---
 

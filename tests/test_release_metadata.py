@@ -46,9 +46,21 @@ def test_changelog_ships_as_v3_9_0_with_restored_history():
 def test_changelog_leave_copy_is_not_italic():
     assert "italic line" not in CHANGELOG
     section = CHANGELOG.split("## v3.9.0", 1)[1].split("## v3.8.0", 1)[0]
-    assert "Leave announcements" in section
-    assert "/simulate-leave" in section
-    assert "bold" in section.lower()
+    assert "feat(leave)" in section
+    assert "simulate" in section.lower()
+
+
+def test_changelog_v3_9_0_uses_conventional_commits_with_hashes():
+    section = CHANGELOG.split("## v3.9.0", 1)[1].split("## v3.8.0", 1)[0]
+    assert "### What's Changed" in section
+    assert "[`8aef0e2`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/8aef0e2397dccbdcbb1169a84ab2e69218a364a0)" in section
+    assert "by @" not in section
+
+
+def test_contributing_requires_conventional_commits():
+    contributing = (ROOT / "CONTRIBUTING.md").read_text(encoding="utf-8")
+    assert "https://www.conventionalcommits.org/en/v1.0.0/" in contributing
+    assert "<type>[optional scope][optional !]: <description>" in contributing
 
 
 def test_bot_loads_leave_and_warn():

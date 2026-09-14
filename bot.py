@@ -60,6 +60,33 @@ from utils.logger import bot_logger, command_logger, error_logger, setup_logging
 # Configure advanced logging settings
 setup_logging(log_level="INFO")
 
+PERMISSION_DENIED_MESSAGE = "❌ You don't have permission to use this command."
+
+
+async def send_ephemeral(interaction: discord.Interaction, content: str) -> None:
+    """Reply so only the invoking user can see the message."""
+    try:
+        if interaction.response.is_done():
+            await interaction.followup.send(content, ephemeral=True)
+        else:
+            await interaction.response.send_message(content, ephemeral=True)
+    except (discord.HTTPException, discord.InteractionResponded, discord.NotFound):
+        error_logger.warning('Failed to send ephemeral interaction reply')
+
+
+async def _send_prefix_permission_denied(ctx: commands.Context) -> None:
+    """Permission denials must not be posted publicly in the channel."""
+    try:
+        if getattr(ctx, 'interaction', None) is not None:
+            await ctx.send(PERMISSION_DENIED_MESSAGE, ephemeral=True)
+            return
+    except TypeError:
+        pass
+    try:
+        await ctx.author.send(PERMISSION_DENIED_MESSAGE)
+    except (discord.Forbidden, discord.HTTPException):
+        pass
+
 # List of initial extensions (cogs) to load on startup
 INITIAL_EXTENSIONS = [
     # Time-related commands cog
@@ -177,6 +204,9 @@ class Cocobot(commands.Bot):
                     f'Failed to load extension {extension}. {type(e).__name__}: {e}',
                     exc_info=True
                 )
+
+        # Permission denials and other slash-command errors must stay ephemeral
+        self.tree.error(self.on_app_command_error)
 
         # Create a discord.Object representing the target guild using its ID
         guild = discord.Object(id=DISCORD_SERVER_ID)
@@ -434,6 +464,13 @@ class Cocobot(commands.Bot):
             command_logger.info(f"Command on cooldown: {ctx.command} by {ctx.author}")
             return
 
+        elif isinstance(error, (commands.MissingPermissions, commands.CheckFailure)):
+            await _send_prefix_permission_denied(ctx)
+            command_logger.warning(
+                f"Permission denied for prefix command {ctx.command} by {ctx.author}"
+            )
+            return
+
         # Log other errors
         else:
             await ctx.send(
@@ -445,44 +482,27 @@ class Cocobot(commands.Bot):
             )
 
     # Global error handler for application commands (slash commands)
-    @staticmethod
-    async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    async def on_app_command_error(
+        self, interaction: discord.Interaction, error: app_commands.AppCommandError
+    ):
         """
-        Handles and logs errors encountered during application command execution.
-
-        This method attempts to handle and respond to errors raised while processing
-        application commands. If the response to the interaction has already been sent,
-        a follow-up message will be sent instead. If no response has been sent yet,
-        an error message will be sent as the initial response. Any issues with sending
-        the error message due to Discord API limitations are logged for debugging.
-
-        Parameters:
-            interaction (discord.Interaction): The interaction object representing the command's context.
-            error (app_commands.AppCommandError): The exception raised during command execution.
-
-        Raises:
-            discord.HTTPException: If there is an HTTP issue when interacting with the Discord API.
-            discord.NotFound: If the interaction or channel is no longer available.
-            discord.InteractionResponded: If an attempt is made to respond to an already-responded interaction.
+        Handles slash-command errors. Permission denials are ephemeral-only.
         """
+        if isinstance(error, app_commands.CheckFailure):
+            await send_ephemeral(interaction, PERMISSION_DENIED_MESSAGE)
+            command_logger.warning(
+                f"Permission denied for /{getattr(interaction.command, 'name', '?')} "
+                f"by {interaction.user}"
+            )
+            return
+
         try:
-            if interaction.response.is_done():
-                # If response is already done, follow up instead
-                await interaction.followup.send(
-                    "🥥 Oops, something's cracked, and it's **not** the coconut! The "
-                    "developers have been notified. Just kidding, nobody cares.",
-                    ephemeral=True,
-                )
-            else:
-                # If no response yet, send response
-                await interaction.response.send_message(
-                    "🥥 Oops, something's cracked, and it's **not** the coconut! The "
-                    "developers have been notified. Just kidding, nobody cares.",
-                    ephemeral=True,
-                )
+            await send_ephemeral(
+                interaction,
+                "🥥 Oops, something's cracked, and it's **not** the coconut! The "
+                "developers have been notified. Just kidding, nobody cares.",
+            )
         except (discord.HTTPException, discord.InteractionResponded, discord.NotFound) as followup_error:
-            # If we can't send an error message to the user due to Discord API issues,
-            # log it for debugging but don't crash the error handler
             error_logger.error(
                 f"Failed to send error message to user: {followup_error}", exc_info=True
             )

@@ -81,6 +81,7 @@ cocobot/
 ├── tests/                # Test suite
 │   ├── __init__.py
 │   ├── conftest.py       # pytest fixtures and configuration
+│   ├── test_bot_errors.py
 │   ├── test_database.py  # Database tests
 │   ├── test_exceptions.py
 │   ├── test_exchangerate.py
@@ -551,6 +552,8 @@ open htmlcov/index.html
 ```
 
 ## Contributing Guidelines
+
+Commits MUST follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification exactly (`feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`, `build`, `revert`). Changelog release notes use that subject plus a GitLab commit link; do not include usernames.
 
 1. Fork the project and create a feature branch
 2. Follow existing code style and conventions
