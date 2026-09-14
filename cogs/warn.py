@@ -44,6 +44,8 @@ from utils.security import InputSanitizer, escape_markdown, is_moderator_or_abov
 # Module logger
 logger = logging.getLogger(__name__)
 
+MISSING_USER_MESSAGE = '❌ You must specify a user.'
+
 
 # Three strikes, then a kick — coconut justice
 class WarnCog(commands.Cog):
@@ -354,16 +356,20 @@ class WarnCog(commands.Cog):
     @app_commands.default_permissions(moderate_members=True)
     # Parameter help
     @app_commands.describe(
-        user='The member to warn',
+        user='Required. The member to warn',
         reason='Reason for the warning (optional)',
     )
     async def warn_command(
         self,
         interaction: discord.Interaction,
-        user: discord.Member,
+        user: discord.Member | None = None,
         reason: str | None = None,
     ):
         """Warn a member and kick them automatically on the third warning."""
+        if user is None:
+            await interaction.response.send_message(MISSING_USER_MESSAGE, ephemeral=True)
+            return
+
         # Need a guild and a Member invoker
         if interaction.guild is None or not isinstance(interaction.user, discord.Member):
             # Ephemeral
@@ -512,86 +518,80 @@ class WarnCog(commands.Cog):
         # Public-ish followup with the embed
         await interaction.followup.send(content=followup_message, embed=embed)
 
-    # /resetwarnings
     @app_commands.command(
-        name='resetwarnings',
-        description='Reset a member’s active warning count.',
+        name='unwarn',
+        description='Remove a member’s active warnings, or wipe the warning database.',
     )
-    # Guild only
     @app_commands.guild_only()
-    # Same default perm hint
     @app_commands.default_permissions(moderate_members=True)
-    # Who to reset
-    @app_commands.describe(user='The member whose warnings should be reset')
-    async def resetwarnings_command(
+    @app_commands.describe(
+        user='Required. The member whose warnings should be removed',
+        clear_all='If true, delete every warning in the database (all members)',
+    )
+    @app_commands.rename(clear_all='all')
+    async def unwarn_command(
         self,
         interaction: discord.Interaction,
-        user: discord.Member,
+        user: discord.Member | None = None,
+        clear_all: bool = False,
     ):
-        """Reset the active warning cycle for a member without deleting history."""
-        # Guild + Member invoker
+        """Remove one member's active warnings, or every warning row if all=True."""
+        if user is None:
+            await interaction.response.send_message(MISSING_USER_MESSAGE, ephemeral=True)
+            return
+
         if interaction.guild is None or not isinstance(interaction.user, discord.Member):
-            # Ephemeral
             await interaction.response.send_message(
                 '❌ This command can only be used by moderators inside a server.',
                 ephemeral=True,
             )
-
-            # Stop
             return
 
-        # Staff check
         if not self._is_moderator(interaction.user):
-            # Ephemeral
             await interaction.response.send_message(
-                '❌ Only moderators and above can use `/resetwarnings`.',
+                '❌ Only moderators and above can use `/unwarn`.',
                 ephemeral=True,
             )
-
-            # Stop
             return
 
-        # Tables
         init_db()
 
-        # Guild id string
-        guild_id = str(interaction.guild.id)
+        if clear_all:
+            with get_db_session() as db:
+                deleted_count = DatabaseManager.clear_all_warnings(db)
+            role_note = await self._sync_warned_role(
+                guild=interaction.guild,
+                member=user,
+                should_have_role=False,
+            )
+            await interaction.response.send_message(
+                f'✅ Cleared {deleted_count} warning(s) from the database.'
+                + (f' {role_note}' if role_note else ''),
+                ephemeral=True,
+            )
+            return
 
-        # User id string
+        guild_id = str(interaction.guild.id)
         user_id = str(user.id)
 
-        # Session for count + clear
         with get_db_session() as db:
-            # Active only
             active_warnings = DatabaseManager.get_active_warnings(db, guild_id, user_id)
-
-            # How many we'd clear
             cleared_count = len(active_warnings)
-
-            # Nothing to do
             if cleared_count == 0:
-                # Ephemeral info
                 await interaction.response.send_message(
-                    f'ℹ️ {user.mention} has no active warnings to reset.',
+                    f'ℹ️ {user.mention} has no active warnings to remove.',
                     ephemeral=True,
                 )
-
-                # Stop
                 return
-
-            # Clear the cycle
             DatabaseManager.clear_active_warnings(db, guild_id, user_id)
 
-        # Drop the warned role
         role_note = await self._sync_warned_role(
             guild=interaction.guild,
             member=user,
             should_have_role=False,
         )
-
-        # Confirm, append role note if any
         await interaction.response.send_message(
-            f'✅ Reset {cleared_count} active warning(s) for {user.mention}.'
+            f'✅ Removed {cleared_count} active warning(s) for {user.mention}.'
             + (f' {role_note}' if role_note else ''),
             ephemeral=True,
         )

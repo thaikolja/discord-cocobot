@@ -25,7 +25,7 @@ import discord
 import pytest
 from discord.ext import commands
 
-from cogs.warn import WarnCog
+from cogs.warn import MISSING_USER_MESSAGE, WarnCog
 from utils.database import DatabaseManager, WarningEntry, get_db_session, init_db
 from utils.security import escape_markdown
 
@@ -292,12 +292,31 @@ async def test_warn_uses_default_reason_when_omitted(
 
 
 @pytest.mark.asyncio
-async def test_resetwarnings_clears_active_warning_cycle(
+async def test_warn_requires_user(warn_cog, mock_interaction):
+    await warn_cog.warn_command.callback(warn_cog, mock_interaction, None, None)
+
+    mock_interaction.response.send_message.assert_awaited_once_with(
+        MISSING_USER_MESSAGE, ephemeral=True
+    )
+    mock_interaction.response.defer.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_unwarn_requires_user(warn_cog, mock_interaction):
+    await warn_cog.unwarn_command.callback(warn_cog, mock_interaction, None, False)
+
+    mock_interaction.response.send_message.assert_awaited_once_with(
+        MISSING_USER_MESSAGE, ephemeral=True
+    )
+
+
+@pytest.mark.asyncio
+async def test_unwarn_clears_active_warning_cycle(
     warn_cog,
     mock_interaction,
     mock_member,
 ):
-    """Resetting warnings should archive active warnings without deleting history."""
+    """Unwarning a member archives their active warnings without deleting history."""
     mock_member.roles = [mock_interaction.guild.get_role(1509612090489442396)]
 
     with get_db_session() as db:
@@ -328,14 +347,15 @@ async def test_resetwarnings_clears_active_warning_cycle(
         db.commit()
 
     with patch('cogs.warn.init_db'):
-        await warn_cog.resetwarnings_command.callback(
+        await warn_cog.unwarn_command.callback(
             warn_cog,
             mock_interaction,
             mock_member,
+            False,
         )
 
     mock_interaction.response.send_message.assert_awaited_once()
-    assert 'Reset 2 active warning(s)' in mock_interaction.response.send_message.call_args.args[0]
+    assert 'Removed 2 active warning(s)' in mock_interaction.response.send_message.call_args.args[0]
     mock_member.remove_roles.assert_awaited_once()
 
     with get_db_session() as db:
@@ -350,3 +370,52 @@ async def test_resetwarnings_clears_active_warning_cycle(
         ).all()
         assert len(historical_warnings) == 2
         assert all(warning.is_active is False for warning in historical_warnings)
+
+
+@pytest.mark.asyncio
+async def test_unwarn_all_deletes_every_warning_row(
+    warn_cog,
+    mock_interaction,
+    mock_member,
+):
+    """all=True wipes the warning table, not only the given member."""
+    with get_db_session() as db:
+        db.add(
+            WarningEntry(
+                guild_id=str(mock_interaction.guild.id),
+                user_id=str(mock_member.id),
+                username=mock_member.display_name,
+                moderator_id='555',
+                moderator_name='Moderator',
+                reason='Keep me?',
+                warning_number=1,
+                is_active=True,
+            )
+        )
+        db.add(
+            WarningEntry(
+                guild_id='other-guild',
+                user_id='999',
+                username='Other',
+                moderator_id='555',
+                moderator_name='Moderator',
+                reason='Other server',
+                warning_number=1,
+                is_active=True,
+            )
+        )
+        db.commit()
+
+    with patch('cogs.warn.init_db'):
+        await warn_cog.unwarn_command.callback(
+            warn_cog,
+            mock_interaction,
+            mock_member,
+            True,
+        )
+
+    mock_interaction.response.send_message.assert_awaited_once()
+    assert 'Cleared 2 warning(s) from the database' in mock_interaction.response.send_message.call_args.args[0]
+
+    with get_db_session() as db:
+        assert db.query(WarningEntry).count() == 0

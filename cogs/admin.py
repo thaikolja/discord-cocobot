@@ -17,56 +17,16 @@
 #  Date:      2024-2026
 #  Package:   cocobot Discord Bot
 
-"""Staff slash commands for Cocobot."""
+"""Admin cog placeholder. Staff visa-reminder reset was removed."""
 
-import discord
-from discord import app_commands
 from discord.ext import commands
-
-from utils.security import is_moderator_or_above
 
 
 class AdminCog(commands.Cog):
-    """Administrative slash commands for server staff."""
+    """Loaded for compatibility; no slash commands."""
 
     def __init__(self, bot):
         self.bot = bot
-
-    @app_commands.command(
-        name='reset-reminder',
-        description='Reset a member visa-channel reminder (staff only)',
-    )
-    @app_commands.describe(user='The member whose visa reminder should be reset')
-    @app_commands.guild_only()
-    @app_commands.default_permissions(moderate_members=True)
-    async def reset_reminder(
-        self,
-        interaction: discord.Interaction,
-        user: discord.Member = None,
-    ):
-        """Reset visa reminder status. Ephemeral; staff only."""
-        if not isinstance(interaction.user, discord.Member) or not is_moderator_or_above(
-            interaction.user
-        ):
-            await interaction.response.send_message(
-                '❌ Only moderators and above can use `/reset-reminder`.',
-                ephemeral=True,
-            )
-            return
-
-        member = user or interaction.user
-        success = await self.bot.reset_visa_reminder_for_user(str(member.id))
-        if success:
-            response = (
-                f"✅ Visa reminder status reset for {member.mention}. "
-                "They will be reminded again on their next visa-channel message."
-            )
-        else:
-            response = (
-                f"⚠️ {member.mention} was not found in the visa reminder database "
-                "or was never reminded before."
-            )
-        await interaction.response.send_message(response, ephemeral=True)
 
 
 async def setup(bot):

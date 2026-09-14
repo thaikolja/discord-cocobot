@@ -14,7 +14,7 @@
 - 🔤 **Transliteration** - Thai to Latin script conversion via AI
 - 📝 **AI Summarize** - Summarize recent chat messages using AI
 - 🛡️ **Admin Commands** - Admin-only commands (reset visa reminders)
-- ⚠️ **Warning System** - Three-strike moderator warnings (`/warn`, `/resetwarnings`); kick on the third strike
+- ⚠️ **Warning System** - Three-strike moderator warnings (`/warn`, `/unwarn`); kick on the third strike
 - 🚪 **Leave announcements** - Fun `👋 **{name} has left the server.**` coda in the member's last text channel; never-spoke members go to `#logs` only; `/simulate-leave` is staff-only in the invoking channel
 - ⚡ **API Caching** - Database-backed caching for API responses with privileged user bypass
 
@@ -221,12 +221,11 @@ WARNED_ROLE_ID=
 - `/pollution [city]` - Check air quality index for a city (default: channel's city or Bangkok)
 - `/learn` - Learn a random Thai vocabulary word
 - `/summarize [limit]` - Summarize recent messages (default: 20, max: 50)
-- `/warn <user> [reason]` - Warn a member (moderator); third strike kicks
-- `/resetwarnings <user>` - Clear a member's active warnings (moderator)
+- `/warn <user> [reason]` - Warn a member (staff; user required); third strike kicks
+- `/unwarn <user> [all]` - Remove a member's active warnings, or wipe the warning database if `all` is true (staff; user required)
 - `/simulate-leave [user]` - Dry-run a leave announcement in the current channel (owner / admins / mods; does not post elsewhere)
-- `/reset-reminder [user]` - Reset visa-channel reminder status (staff only, ephemeral)
 
-There are no prefix (`!`) commands. Messages like `!test` are ignored (no bot reply). Visa reminder reset is `/reset-reminder` (staff only, ephemeral).
+There are no prefix (`!`) commands. Messages like `!test` are ignored (no bot reply).
 
 ### Special Triggers
 

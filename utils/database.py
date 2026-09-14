@@ -320,6 +320,13 @@ class DatabaseManager:
             warning.is_active = False
         db.commit()
 
+    @staticmethod
+    def clear_all_warnings(db) -> int:
+        """Delete every warning row in the database. Returns how many rows were removed."""
+        deleted = db.query(WarningEntry).delete()
+        db.commit()
+        return deleted
+
 
 # Initialize database if this module is imported
 if os.getenv('INIT_DB_ON_STARTUP', 'true').lower() == 'true':

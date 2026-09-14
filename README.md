@@ -45,9 +45,8 @@
   - `/summarize [limit]` *(number)* **Default:** `20`, **Max:** `50`
 
 - **⚠️ Warning System**: Moderator warning system with three-strike auto-kick (staff only)
-  - `/warn <user> [reason]` *(member | string)*
-  - `/resetwarnings <user>` *(member)*
-  - `/reset-reminder [user]` *(member)* Reset visa-channel nationality reminder (staff, ephemeral)
+  - `/warn <user> [reason]` *(user required)*
+  - `/unwarn <user> [all]` *(user required; `all` default false wipes the whole warning database when true)*
 
 - **🚪 Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts `👋 **{name} has left the server.**` plus a random coda in the channel of their last message. Members who never spoke are recorded only in `#logs` (professional line, no emoji).
   - `/simulate-leave [user]` *(member)* Staff dry-run in the **current** channel (owner / admins / mods); nobody is removed; never posts to `#logs` or another channel
