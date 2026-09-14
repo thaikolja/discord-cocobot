@@ -8,6 +8,7 @@ know how this shit works.
 
 ### What's Changed
 
+* feat(leave): post fun leave lines in the member's last text channel [`856854a`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/856854a10f8dc8bf2c6116816af2215774ebe0e1)
 * fix(permissions): send permission denials as ephemeral replies only [`a93d4c0`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/a93d4c05ce92f3f0752c25dd36cbf93a99f0be66)
 * feat(leave): prefix leave lines, 10 Imperium codas, staff simulate, #logs [`8aef0e2`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/8aef0e2397dccbdcbb1169a84ab2e69218a364a0)
 * fix(summarize): stop @mentioning the user after a successful summary [`eeb49d1`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/eeb49d1ad10d4cb291455abd4f7901a48519c92d)
