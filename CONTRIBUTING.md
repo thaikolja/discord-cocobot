@@ -182,8 +182,8 @@ Do not attribute changelog lines to a GitHub/GitLab username.
 # Push to your fork
 git push origin feature/your-feature-name
 
-# Create a merge request on GitLab
-# Target the main branch from the original repository
+# Create a merge request on GitLab targeting main.
+# Merging to main runs pytest, then SSHs to production and runs deploy.sh.
 ```
 
 ## Testing

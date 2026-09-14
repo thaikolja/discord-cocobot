@@ -83,3 +83,15 @@ def test_deploy_sh_invokes_existing_docker_script():
     script = ROOT / "scripts" / "deploy-as-docker.sh"
     assert "scripts/deploy-as-docker.sh" in deploy
     assert script.is_file()
+    docker = script.read_text(encoding="utf-8")
+    assert "git pull --ff-only origin main" in docker
+
+
+def test_gitlab_ci_deploys_main_over_ssh():
+    ci = (ROOT / ".gitlab-ci.yml").read_text(encoding="utf-8")
+    assert "TESTING=1" in ci
+    assert "pytest tests/" in ci
+    assert 'if: $CI_COMMIT_BRANCH == "main"' in ci
+    assert "bash '$REMOTE_SCRIPT_PATH'" in ci
+    assert "StrictHostKeyChecking=yes" in ci
+    assert "/opt/bots/cocobot/deploy.sh" in ci

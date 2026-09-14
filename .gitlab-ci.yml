@@ -1,3 +1,11 @@
+# Production: push/merge to `main` → pytest → SSH → $REMOTE_SCRIPT_PATH
+# GitLab CI/CD variables (masked/protected as appropriate):
+#   SSH_PRIVATE_KEY   private key that can log in as SSH_USER
+#   SSH_HOST          production hostname
+#   SSH_USER          remote user
+#   REMOTE_SCRIPT_PATH  absolute path, normally /opt/bots/cocobot/deploy.sh
+# deploy.sh on the host fast-forwards origin/main and rebuilds Docker Compose.
+
 stages:
   - test
   - deploy
@@ -39,16 +47,20 @@ test:
 deploy:
   stage: deploy
   image: alpine:latest
+  needs:
+    - test
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
   before_script:
-    - apk add --no-cache openssh docker-cli docker-compose
+    - apk add --no-cache openssh-client
+    - test -n "$SSH_PRIVATE_KEY"
+    - test -n "$SSH_HOST"
+    - test -n "$SSH_USER"
+    - test -n "$REMOTE_SCRIPT_PATH"
     - eval $(ssh-agent -s)
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
-    - ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
+    - ssh-keyscan "$SSH_HOST" >> ~/.ssh/known_hosts
   script:
-    - ssh $SSH_USER@$SSH_HOST "bash $REMOTE_SCRIPT_PATH"
-  only:
-    - main
-  dependencies:
-    - test
+    - ssh -o BatchMode=yes -o StrictHostKeyChecking=yes "$SSH_USER@$SSH_HOST" "bash '$REMOTE_SCRIPT_PATH'"

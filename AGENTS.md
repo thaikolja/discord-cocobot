@@ -13,7 +13,6 @@
 - 🌫️ **Air Quality** - AQI queries for global cities
 - 🔤 **Transliteration** - Thai to Latin script conversion via AI
 - 📝 **AI Summarize** - Summarize recent chat messages using AI
-- 🛡️ **Admin Commands** - Admin-only commands (reset visa reminders)
 - ⚠️ **Warning System** - Three-strike moderator warnings (`/warn`, `/unwarn`); kick on the third strike
 - 🚪 **Leave announcements** - Fun `👋 **{name} has left the server.**` coda in the member's last text channel; never-spoke members go to `#logs` only; `/simulate-leave` is staff-only in the invoking channel
 - ⚡ **API Caching** - Database-backed caching for API responses with privileged user bypass
@@ -473,15 +472,15 @@ docker compose logs -f redis
 - Schema is created by SQLAlchemy `create_all` (no `init.sql`)
 
 ### Deployment Scripts
-- `deploy.sh` → `scripts/deploy-as-docker.sh`: `git pull --ff-only`, `docker compose` rebuild, running-service check
-- `scripts/deploy-as-service.sh`: systemctl stop, `git pull --ff-only`, pip install, systemctl start
-- `on.sh` / `off.sh`: systemctl start/stop shortcuts
+- `deploy.sh` → `scripts/deploy-as-docker.sh`: `git pull --ff-only origin main`, `docker compose` rebuild, running-service check. This is what GitLab CI invokes on the server.
+- `scripts/deploy-as-service.sh`: systemctl stop, `git pull --ff-only`, pip install, systemctl start (non-Docker hosts)
+- `on.sh` / `off.sh`: start/stop Compose if `docker-compose.yml` exists, otherwise systemd
 
 ## CI/CD (`.gitlab-ci.yml`)
 
 Two-stage pipeline:
-- **test**: Python 3.13-slim, pip install, pytest with TESTING environment
-- **deploy**: SSH to host, run remote deploy script (main branch only, depends on test pass)
+- **test**: Python 3.13-slim, pip install, `TESTING=1 pytest tests/`
+- **deploy** (`main` only, needs test): SSH to the host and run `REMOTE_SCRIPT_PATH` (typically `/opt/bots/cocobot/deploy.sh` → `scripts/deploy-as-docker.sh`: `git pull --ff-only origin main`, Compose rebuild)
 
 ## Debugging and Monitoring
 

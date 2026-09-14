@@ -44,9 +44,9 @@
 - **📝 Summarize**: Summarize recent messages in the current channel using AI
   - `/summarize [limit]` *(number)* **Default:** `20`, **Max:** `50`
 
-- **⚠️ Warning System**: Moderator warning system with three-strike auto-kick (staff only)
-  - `/warn <user> [reason]` *(user required)*
-  - `/unwarn <user> [all]` *(user required; `all` default false wipes the whole warning database when true)*
+- **⚠️ Warning System**: Three-strike moderator warnings (staff only: owner / admins / mods)
+  - `/warn <user> [reason]` *(user required; ephemeral if missing)*
+  - `/unwarn <user> [all]` *(user required; `all` default false; `all=true` deletes every warning row)*
 
 - **🚪 Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts `👋 **{name} has left the server.**` plus a random coda in the channel of their last message. Members who never spoke are recorded only in `#logs` (professional line, no emoji).
   - `/simulate-leave [user]` *(member)* Staff dry-run in the **current** channel (owner / admins / mods); nobody is removed; never posts to `#logs` or another channel
@@ -111,6 +111,25 @@
 
 **Returns:** `👋 **Username** has left the server.` plus a random Imperium-style coda, in the channel where you ran the command. Nobody is removed.
 
+### Remove a member's warnings
+
+```bash
+/unwarn user: @Username
+```
+
+**Returns (ephemeral):** confirmation that that member's active warnings were archived. Pass `all: True` to wipe the entire warning table.
+
+---
+
+## 🚢 Production
+
+Merge or push to **`main`** on GitLab. Pipeline:
+
+1. **test** — Python 3.13, `TESTING=1 pytest tests/`
+2. **deploy** (main only) — SSH to the host and run `REMOTE_SCRIPT_PATH` (set this CI variable to `/opt/bots/cocobot/deploy.sh`)
+
+`deploy.sh` → `scripts/deploy-as-docker.sh`: `git pull --ff-only origin main`, rebuild Compose (bot `python:3.13-slim` as `appuser`, Postgres 15, Redis 7, healthchecks). Privileged Discord intents: **Message Content** and **Server Members**. Run **one** bot process for the production token.
+
 ---
 
 ## ⚙️ Configuration
@@ -138,7 +157,7 @@
 - **Logging**: `LOG_LEVEL`, `LOG_FILE`, `LOG_MAX_BYTES`, `LOG_BACKUP_COUNT`
 - **Security**: `MAX_CONTENT_LENGTH`, `ALLOWED_MENTIONS`, `ENABLE_CORS`
 - **Environment**: `ENVIRONMENT` (development/production), `DEBUG`
-- **Moderation**: `WARNED_ROLE_ID` (optional). Role applied on `/warn`. `/warn` and `/simulate-leave` are staff-only.
+- **Moderation**: `WARNED_ROLE_ID` (optional). Role applied on `/warn`. `/warn`, `/unwarn`, and `/simulate-leave` are staff-only.
 - **Leave announcements**: `LEAVE_LOG_CHANNEL_ID` (optional; default `#logs` `1513856672966246410`). Fun leave lines go to the member's last text channel; silent members are logged only.
 
 ### API Response Caching
