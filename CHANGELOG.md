@@ -8,6 +8,7 @@ know how this shit works.
 
 ### What's Changed
 
+* fix(deploy): reset origin/main on the host so dirty .env.example cannot block pull [`91520e9`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/91520e98bbf9a724330af3944e65628fb7f556e1)
 * chore(release): document v3.9.0 GitLab main → deploy.sh Docker path [`12602ab`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/12602ab255335bae333f266003cea945019da488)
 * feat(warn): replace resetwarnings with /unwarn and drop /reset-reminder [`b487f3d`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/b487f3d47b8a1d813494ae879e0d923fdaca93a6)
 * fix(commands): ignore prefix text and debounce the @cocobot info card [`21e0917`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/21e091720b3709d9a27a176e699b29693104ed44)
