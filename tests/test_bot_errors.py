@@ -27,6 +27,7 @@ from discord import app_commands
 from bot import (
     PERMISSION_DENIED_MESSAGE,
     _send_prefix_permission_denied,
+    is_bare_bot_mention,
     send_ephemeral,
 )
 
@@ -94,3 +95,28 @@ async def test_prefix_permission_denied_never_posts_to_channel():
 
     ctx.send.assert_not_called()
     ctx.author.send.assert_awaited_once_with(PERMISSION_DENIED_MESSAGE)
+
+
+def test_bare_bot_mention_is_true_for_mention_only():
+    bot = MagicMock()
+    bot.id = 42
+    assert is_bare_bot_mention('<@42>', [bot], 42) is True
+    assert is_bare_bot_mention('<@!42>', [bot], 42) is True
+
+
+def test_bare_bot_mention_is_false_with_extra_text_or_bang_command():
+    bot = MagicMock()
+    bot.id = 42
+    assert is_bare_bot_mention('<@42> hello', [bot], 42) is False
+    assert is_bare_bot_mention('!cocobot', [bot], 42) is False
+    assert is_bare_bot_mention('!cocobot', [], 42) is False
+
+
+def test_info_card_claim_is_once_per_message():
+    from bot import Cocobot
+
+    bot = Cocobot.__new__(Cocobot)
+    bot._info_card_message_ids = set()
+    assert bot._claim_info_card(1) is True
+    assert bot._claim_info_card(1) is False
+    assert bot._claim_info_card(2) is True

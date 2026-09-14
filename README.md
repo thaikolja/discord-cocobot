@@ -44,16 +44,17 @@
 - **📝 Summarize**: Summarize recent messages in the current channel using AI
   - `/summarize [limit]` *(number)* **Default:** `20`, **Max:** `50`
 
-- **⚠️ Warning System**: Moderator warning system with three-strike auto-kick
+- **⚠️ Warning System**: Moderator warning system with three-strike auto-kick (staff only)
   - `/warn <user> [reason]` *(member | string)*
   - `/resetwarnings <user>` *(member)*
+  - `/reset-reminder [user]` *(member)* Reset visa-channel nationality reminder (staff, ephemeral)
 
 - **🚪 Leave announcements**: When a member leaves, is kicked, or is banned, Cocobot posts `👋 **{name} has left the server.**` plus a random coda in the channel of their last message. Members who never spoke are recorded only in `#logs` (professional line, no emoji).
   - `/simulate-leave [user]` *(member)* Staff dry-run in the **current** channel (owner / admins / mods); nobody is removed; never posts to `#logs` or another channel
 
 ## 🥥 Examples
 
-**cocobot** uses [slash commands](https://support-apps.discord.com/hc/en-us/articles/26501837786775-Slash-Commands-FAQ). Here are some examples. The parameter with the colon (`:`) at the end are the parameters you can choose as described in the **Features** section.
+**cocobot** uses [slash commands](https://support-apps.discord.com/hc/en-us/articles/26501837786775-Slash-Commands-FAQ) only (no `!` prefix commands). Mention `@cocobot` by itself for the info card (once per mention). Examples:
 
 ### Get the current weather in Bangkok
 

@@ -61,6 +61,25 @@ from utils.logger import bot_logger, command_logger, error_logger, setup_logging
 setup_logging(log_level="INFO")
 
 PERMISSION_DENIED_MESSAGE = "❌ You don't have permission to use this command."
+_INFO_CARD_SEEN_MAX = 256
+
+
+def _no_prefix(_bot, _message) -> list[str]:
+    """Slash-only bot: never parse prefix commands."""
+    return []
+
+
+def is_bare_bot_mention(content: str, mentions, bot_user_id: int) -> bool:
+    """True when the message is only a mention of this bot (no other text)."""
+    if not any(getattr(mention, 'id', None) == bot_user_id for mention in mentions):
+        return False
+    text = content.strip()
+    for mention in mentions:
+        mention_id = getattr(mention, 'id', None)
+        if mention_id is None:
+            continue
+        text = text.replace(f'<@{mention_id}>', '').replace(f'<@!{mention_id}>', '')
+    return text.strip() == ''
 
 
 async def send_ephemeral(interaction: discord.Interaction, content: str) -> None:
@@ -163,8 +182,12 @@ class Cocobot(commands.Bot):
         # Enable message content intent to read message content
         intents.message_content = True
 
-        # Call the parent class constructor with command prefix and intents
-        super().__init__(command_prefix='!', intents=intents)
+        # Slash-only: no prefix commands, no default !help
+        super().__init__(
+            command_prefix=_no_prefix,
+            help_command=None,
+            intents=intents,
+        )
 
         # Dictionary to track cooldowns for the 'tate' command per user
         self.tate_cooldowns = {}
@@ -172,6 +195,18 @@ class Cocobot(commands.Bot):
         # Set to track users reminded in the visa channel (for backward compatibility)
         # The actual logic now uses database, but this is kept for tests
         self.reminded_users = set()
+        self._info_card_message_ids: set[int] = set()
+
+    def _claim_info_card(self, message_id: int) -> bool:
+        """Return True once per message id so the info card cannot send twice."""
+        if message_id in self._info_card_message_ids:
+            return False
+        self._info_card_message_ids.add(message_id)
+        if len(self._info_card_message_ids) > _INFO_CARD_SEEN_MAX:
+            self._info_card_message_ids = set(
+                list(self._info_card_message_ids)[-_INFO_CARD_SEEN_MAX // 2 :]
+            )
+        return True
 
     # Setup hook to load extensions and sync commands
     async def setup_hook(self):
@@ -314,33 +349,12 @@ class Cocobot(commands.Bot):
                 # Prevent further processing for this message
                 return
 
-        # Flag for sending Cocobot info embed
-        send_cocobot_info_embed = False
-
-        # Strip whitespace from message content
-        normalized_message_content_stripped = message.content.strip()
-
-        # Check if message is exactly '!cocobot'
-        is_cocobot_command = normalized_message_content_stripped.lower() == '!cocobot'
-
-        # Check if Cocobot is mentioned alone (no other text)
-        # The message should only contain the mention and nothing else (except whitespace)
-        is_cocobot_mention_alone = False
-        if any(mention.id == self.user.id for mention in message.mentions):
-            # Remove all mentions from the message to check if there's any other text
-            text_without_mentions = normalized_message_content_stripped
-            for mention in message.mentions:
-                text_without_mentions = text_without_mentions.replace(f'<@{mention.id}>', '').replace(f'<@!{mention.id}>', '')
-            # Check if only whitespace remains after removing mentions
-            if text_without_mentions.strip() == '':
-                is_cocobot_mention_alone = True
-
-        # Set flag if command or mention alone detected, and author is not a bot
-        if not message.author.bot and (is_cocobot_command or is_cocobot_mention_alone):
-            send_cocobot_info_embed = True
-
-        # Send Cocobot info embed if flag is set
-        if send_cocobot_info_embed:
+        # One info card per mention message (never !cocobot; never twice)
+        if (
+            not message.author.bot
+            and is_bare_bot_mention(message.content, message.mentions, self.user.id)
+            and self._claim_info_card(message.id)
+        ):
             # Import version again to get the mocked value during tests
             from config.config import COCOBOT_VERSION as CURRENT_VERSION
 
@@ -350,7 +364,7 @@ class Cocobot(commands.Bot):
                 title="🥥 Cocobot at your service!",
                 description=f"Hi, I'm **@cocobot** `v{CURRENT_VERSION}`, the *actual* "
                             f"useful brother of our dearest August Engelhardt. Type "
-                            f"`/cocobot` to see what I can do for you. I "
+                            f"slash commands to see what I can do for you. I "
                             f"promise on the holy coconut, I'm here to help. "
                             f"Cocovores are invited to [contribute](https://gitlab.com/thailand-discord/bots/cocobot) to my code.",
                 color=discord.Color.green(),
@@ -362,7 +376,6 @@ class Cocobot(commands.Bot):
             embed.set_footer(text="© Coconut wisdom since 1875")
             # Send the embed to the channel
             await message.channel.send(embed=embed)
-            # Prevent further processing for this message
             return
 
         # Regular expression pattern to detect the word 'tate'
@@ -415,9 +428,6 @@ class Cocobot(commands.Bot):
             # Send the embed to the channel
             await message.channel.send(embed=embed)
 
-        # Process any commands contained in the message
-        await self.process_commands(message)
-
     # Global error handler for commands
     async def on_command_error(self, ctx, error):
         """
@@ -433,13 +443,7 @@ class Cocobot(commands.Bot):
                 encountered issue.
 
         """
-        # Handle command not found errors
         if isinstance(error, commands.CommandNotFound):
-            await ctx.send(
-                f"❌ Command '{ctx.command}' not found. Use `/help` to see available "
-                f"commands."
-            )
-            command_logger.warning(f"Command not found: {ctx.command} by {ctx.author}")
             return
 
         # Handle missing required arguments

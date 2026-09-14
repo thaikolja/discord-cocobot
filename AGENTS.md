@@ -224,14 +224,13 @@ WARNED_ROLE_ID=
 - `/warn <user> [reason]` - Warn a member (moderator); third strike kicks
 - `/resetwarnings <user>` - Clear a member's active warnings (moderator)
 - `/simulate-leave [user]` - Dry-run a leave announcement in the current channel (owner / admins / mods; does not post elsewhere)
+- `/reset-reminder [user]` - Reset visa-channel reminder status (staff only, ephemeral)
 
-### Prefix Commands
-
-- `!reset_reminder [@user]` - Reset user's visa reminder status (admin only)
+There are no prefix (`!`) commands. Visa reminder reset is `/reset-reminder` (staff only, ephemeral).
 
 ### Special Triggers
 
-- `@cocobot` or `!cocobot` - Display bot info (version, avatar, contributor link)
+- `@cocobot` alone - Display bot info once (version, avatar, contributor link)
 - Messages containing "visa" in the `visa` channel - Auto-remind users to mention nationality (persistent via VisaReminder DB)
 - Messages containing "tate" - Display Bottom G GIF (3-minute per-user cooldown)
 - Mentioning `@Nal` - Display tribute image
