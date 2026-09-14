@@ -8,6 +8,7 @@ know how this shit works.
 
 ### What's Changed
 
+* feat(warn): replace resetwarnings with /unwarn and drop /reset-reminder [`b487f3d`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/b487f3d47b8a1d813494ae879e0d923fdaca93a6)
 * fix(commands): ignore prefix text and debounce the @cocobot info card [`21e0917`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/21e091720b3709d9a27a176e699b29693104ed44)
 * fix(commands): drop all prefix commands and send the @cocobot card once [`2cbe20b`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/2cbe20b3059f630c7f424c81a915f698e9fa1fc3)
 * feat(leave): post fun leave lines in the member's last text channel [`856854a`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/856854a10f8dc8bf2c6116816af2215774ebe0e1)
