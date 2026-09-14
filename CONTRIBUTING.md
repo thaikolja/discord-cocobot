@@ -171,8 +171,10 @@ docs(changelog): record v3.9.0 as Conventional Commits with commit links
 Breaking changes use `!` after the type/scope (`feat(api)!: ...`) and a `BREAKING CHANGE:` footer. Changelog entries for a release list each commit as:
 
 ```
-* <conventional subject> [`<shortsha>`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/<fullsha>)
+* <conventional subject> [<shortsha>](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/<fullsha>)
 ```
+
+The commit hash is the link text — do not wrap it in backticks or other formatting, since nested inline markup inside a link label renders as plain text on GitHub.
 
 Do not attribute changelog lines to a GitHub/GitLab username.
 

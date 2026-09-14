@@ -6,25 +6,27 @@ know how this shit works.
 
 ## v3.9.0
 
+
+
 ### What's Changed
 
-* fix(deploy): reset origin/main on the host so dirty .env.example cannot block pull [`91520e9`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/91520e98bbf9a724330af3944e65628fb7f556e1)
-* chore(release): document v3.9.0 GitLab main → deploy.sh Docker path [`12602ab`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/12602ab255335bae333f266003cea945019da488)
-* feat(warn): replace resetwarnings with /unwarn and drop /reset-reminder [`b487f3d`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/b487f3d47b8a1d813494ae879e0d923fdaca93a6)
-* fix(commands): ignore prefix text and debounce the @cocobot info card [`21e0917`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/21e091720b3709d9a27a176e699b29693104ed44)
-* fix(commands): drop all prefix commands and send the @cocobot card once [`2cbe20b`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/2cbe20b3059f630c7f424c81a915f698e9fa1fc3)
-* feat(leave): post fun leave lines in the member's last text channel [`856854a`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/856854a10f8dc8bf2c6116816af2215774ebe0e1)
-* fix(permissions): send permission denials as ephemeral replies only [`a93d4c0`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/a93d4c05ce92f3f0752c25dd36cbf93a99f0be66)
-* feat(leave): prefix leave lines, 10 Imperium codas, staff simulate, #logs [`8aef0e2`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/8aef0e2397dccbdcbb1169a84ab2e69218a364a0)
-* fix(summarize): stop @mentioning the user after a successful summary [`eeb49d1`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/eeb49d1ad10d4cb291455abd4f7901a48519c92d)
-* fix(release): make v3.9.0 production-ready for Docker and docs [`da78505`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/da78505513eb25fe5fd32af018ce592419c1e9f5)
-* docs(changelog): ship leave announcements as v3.9.0 and restore 3.6–3.8 history [`99b2bc2`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/99b2bc29b03a53e0e84e62ff6dff1d01c431d94c)
-* fix(warn): restore /warn and /resetwarnings from main [`68d1cb2`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/68d1cb2e2b07c791328f3cc872481cf41ff371bb)
-* chore(release): bump version 3.5.3 → 3.9.0 [`5e283b3`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/5e283b33403d3dfbe42922f6e5f75782f6bf948d)
-* test(release): add failing v3.9.0 ship-metadata guards [`c15dec0`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/c15dec066f1283ecabb405a2e8e10dbcb97e74cf)
-* feat(leave-notification): remove `monitoring.py` and `rate_limit.py` as unused legacy utilities [`a7ec8ef`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/a7ec8ef97f8a3e0f5f33830913e35ad953af5f0f)
-* chore: implement leave announcements and remove AI jail functionality [`ee5f173`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/ee5f1732695f7bfaa0c18e72b2f6965d9cf1a808)
-* chore: remove unused files and cleanup `.dockerignore` [`2148d46`](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/2148d4649ac953268feaba9bb7bfc49be174bae7)
+* fix(deploy): reset origin/main on the host so dirty .env.example cannot block pull [91520e9](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/91520e98bbf9a724330af3944e65628fb7f556e1)
+* chore(release): document v3.9.0 GitLab main → deploy.sh Docker path [12602ab](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/12602ab255335bae333f266003cea945019da488)
+* feat(warn): replace resetwarnings with /unwarn and drop /reset-reminder [b487f3d](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/b487f3d47b8a1d813494ae879e0d923fdaca93a6)
+* fix(commands): ignore prefix text and debounce the @cocobot info card [21e0917](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/21e091720b3709d9a27a176e699b29693104ed44)
+* fix(commands): drop all prefix commands and send the @cocobot card once [2cbe20b](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/2cbe20b3059f630c7f424c81a915f698e9fa1fc3)
+* feat(leave): post fun leave lines in the member's last text channel [856854a](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/856854a10f8dc8bf2c6116816af2215774ebe0e1)
+* fix(permissions): send permission denials as ephemeral replies only [a93d4c0](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/a93d4c05ce92f3f0752c25dd36cbf93a99f0be66)
+* feat(leave): prefix leave lines, 10 Imperium codas, staff simulate, #logs [8aef0e2](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/8aef0e2397dccbdcbb1169a84ab2e69218a364a0)
+* fix(summarize): stop @mentioning the user after a successful summary [eeb49d1](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/eeb49d1ad10d4cb291455abd4f7901a48519c92d)
+* fix(release): make v3.9.0 production-ready for Docker and docs [da78505](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/da78505513eb25fe5fd32af018ce592419c1e9f5)
+* docs(changelog): ship leave announcements as v3.9.0 and restore 3.6–3.8 history [99b2bc2](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/99b2bc29b03a53e0e84e62ff6dff1d01c431d94c)
+* fix(warn): restore /warn and /resetwarnings from main [68d1cb2](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/68d1cb2e2b07c791328f3cc872481cf41ff371bb)
+* chore(release): bump version 3.5.3 → 3.9.0 [5e283b3](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/5e283b33403d3dfbe42922f6e5f75782f6bf948d)
+* test(release): add failing v3.9.0 ship-metadata guards [c15dec0](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/c15dec066f1283ecabb405a2e8e10dbcb97e74cf)
+* feat(leave-notification): remove `monitoring.py` and `rate_limit.py` as unused legacy utilities [a7ec8ef](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/a7ec8ef97f8a3e0f5f33830913e35ad953af5f0f)
+* chore: implement leave announcements and remove AI jail functionality [ee5f173](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/ee5f1732695f7bfaa0c18e72b2f6965d9cf1a808)
+* chore: remove unused files and cleanup `.dockerignore` [2148d46](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/2148d4649ac953268feaba9bb7bfc49be174bae7)
 
 ---
 
@@ -46,35 +48,6 @@ know how this shit works.
 - **Python 3.13**: Runtime venv is 3.13-only (Gemini/`pydantic_core` ABI).
 - **Lint**: `flake8` is clean on `bot.py`, `cogs/`, `config/`, `utils/`, `scripts/`, and `tests/`.
 - **Docker / deploy**: Image is `python:3.13-slim` (matches GitLab CI). `.dockerignore` keeps secrets and junk out of the image. `deploy.sh` uses `git pull --ff-only` and Compose `--status running` checks.
-
----
-
-## v3.7.0
-
-### Added
-
-- **Per-Feature AI Provider Configuration**: Each AI-powered feature (`/translate`, `/transliterate`, `/summarize`) now has its own fully self-contained provider configuration (provider, API key, model). Operators can mix and match providers per feature — e.g. Gemini for transliteration, DeepSeek for translation, Groq for summarization — instead of sharing a single global provider per service.
-- **AI Fallback Providers**: Every AI feature now supports an optional `FALLBACK_PROVIDER` (plus its own API key and model). If the primary provider raises any exception, `UseAI` automatically retries the same prompt with the fallback provider, transparently to the user.
-- **`APIConfig.validate_providers()`**: New validation method that checks all configured AI providers are in the allowed set (`gemini`, `deepseek`, `groq`) and that an API key is present for each non-empty provider. Wired into `validate_config()` so misconfiguration fails fast on startup.
-- **New Environment Variables**: Added `TRANSLITERATE_PROVIDER`, `TRANSLITERATE_PROVIDER_API_KEY`, `TRANSLITERATE_PROVIDER_MODEL`, `TRANSLITERATE_FALLBACK_PROVIDER`, `TRANSLITERATE_FALLBACK_PROVIDER_API_KEY`, `TRANSLITERATE_FALLBACK_PROVIDER_MODEL`, `TRANSLATE_PROVIDER`, `TRANSLATE_PROVIDER_API_KEY`, `TRANSLATE_PROVIDER_MODEL`, `TRANSLATE_FALLBACK_PROVIDER`, `TRANSLATE_FALLBACK_PROVIDER_API_KEY`, `TRANSLATE_FALLBACK_PROVIDER_MODEL`, `SUMMARIZE_PROVIDER`, `SUMMARIZE_PROVIDER_API_KEY`, `SUMMARIZE_PROVIDER_MODEL`, `SUMMARIZE_FALLBACK_PROVIDER`, `SUMMARIZE_FALLBACK_PROVIDER_API_KEY`, `SUMMARIZE_FALLBACK_PROVIDER_MODEL`.
-- **Async AI Calls**: `/translate` and `/transliterate` now invoke the AI provider via `asyncio.to_thread`, so long-running model calls no longer block the Discord event loop.
-- **Cog-Level Test Patching**: `test_translate.py` and `test_transliterate.py` now patch `UseAI._init_client` so tests no longer require real API keys to instantiate the AI helper.
-
-### Changed
-
-- **Version Bump**: `3.6.0` → `3.7.0`
-- **Removed Global Provider Config**: The old shared `GEMINI_API_KEY`, `GEMINI_MODEL`, `GROQ_API_KEY`, `GROQ_MODEL`, `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL` constants (and their `GEMINI_MODEL` / `GROQ_MODEL` env-var entries) have been removed from `config/config.py` and `config/app_config.py`. Use the per-feature variables above.
-- **`UseAI` Constructor**: The `UseAI.__init__` signature now requires `api_key` and `model` and accepts optional `fallback_provider`, `fallback_api_key`, `fallback_model`. Provider/client/model initialization is factored out into a private `_init_client` method for reuse.
-- **`.env.example` AI Section**: Restructured into clearly labeled per-feature blocks (Transliterate / Translate / Summarize, each with primary and fallback), with inline sign-up links and instructions on how to disable a fallback.
-- **`pyproject.toml` Pytest Config**: All pytest settings (including `filterwarnings` and `asyncio_default_fixture_loop_scope`) consolidated into `[tool.pytest.ini_options]`; `pytest.ini` removed.
-- **CI Image**: `.gitlab-ci.yml` switched to the `debian` image and SSH deploy steps now use strict host-key checking.
-- **Docker Compose Env Handling**: `docker-compose.yml` and `scripts/deploy-as-docker.sh` updated to use the `--env-file` flag for cleaner environment injection.
-- **Removed `on.sh`**: The legacy `on.sh` systemd shortcut was removed in favour of `deploy.sh` / `scripts/deploy-as-service.sh`.
-
-### Fixed
-
-- **AI provider latency blocking the bot**: Wrapping `ai.prompt` in `asyncio.to_thread` prevents the translate and transliterate cogs from stalling the Discord event loop on slow model responses.
-- **`pyproject.toml` config warning**: Pytest no longer warns about `pytest.ini` being ignored now that all settings live in `pyproject.toml`.
 
 ---
 
