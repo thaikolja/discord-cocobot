@@ -203,7 +203,7 @@ WARNED_ROLE_ID=
 # LEAVE ANNOUNCEMENTS
 # ============================================================================
 # Fun leave line in the member's last text channel. False = #logs only.
-LEAVE_PUBLIC_ANNOUNCEMENTS=True
+LEAVE_PUBLIC_ANNOUNCEMENTS=False
 # LEAVE_LOG_CHANNEL_ID=1513856672966246410
 ```
 
