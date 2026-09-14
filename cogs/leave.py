@@ -48,7 +48,7 @@ FORBIDDEN_CODA_MARKERS = ('{name}', '{user}', LEAVE_PREFIX_EMOJI, '**')
 
 def public_leave_announcements_enabled() -> bool:
     """Return True unless LEAVE_PUBLIC_ANNOUNCEMENTS is a case-insensitive False."""
-    return os.getenv('LEAVE_PUBLIC_ANNOUNCEMENTS', 'True').strip().lower() == 'true'
+    return os.getenv('LEAVE_PUBLIC_ANNOUNCEMENTS', 'False').strip().lower() == 'true'
 
 
 def _coda_from_entry(entry) -> str | None:

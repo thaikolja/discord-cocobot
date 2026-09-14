@@ -233,7 +233,7 @@ There are no prefix (`!`) commands. Messages like `!test` are ignored (no bot re
 - Messages containing "visa" in the `visa` channel - Auto-remind users to mention nationality (persistent via VisaReminder DB)
 - Messages containing "tate" - Display Bottom G GIF (3-minute per-user cooldown)
 - Mentioning `@Nal` - Display tribute image
-- Member leave / kick / ban - Fun line in the channel of their last message when `LEAVE_PUBLIC_ANNOUNCEMENTS` is `True` (default); professional `#logs` line always (`LEAVE_LOG_CHANNEL_ID`, default 1513856672966246410). If they never spoke, or public announcements are `False`, only `#logs`. Bots are skipped. `/simulate-leave` stays in the invoking channel even when public announcements are off.
+- Member leave / kick / ban - Fun line in the channel of their last message when `LEAVE_PUBLIC_ANNOUNCEMENTS` is `True`; professional `#logs` line always (`LEAVE_LOG_CHANNEL_ID`, default 1513856672966246410). If they never spoke, or public announcements are `False` (default), only `#logs`. Bots are skipped. `/simulate-leave` stays in the invoking channel even when public announcements are off.
 
 ## Development Commands
 

@@ -117,7 +117,8 @@ def mock_member(mock_guild):
 def leave_cog():
     bot = MagicMock(spec=commands.Bot)
     bot.tree = MagicMock()
-    cog = LeaveCog(bot)
+    with patch.dict(os.environ, {'LEAVE_PUBLIC_ANNOUNCEMENTS': 'True'}):
+        cog = LeaveCog(bot)
     cog.use_templates([SAMPLE_CODA])
     return cog
 
@@ -341,12 +342,12 @@ def test_public_leave_announcements_enabled_parses_true_false(value, expected):
         assert public_leave_announcements_enabled() is expected
 
 
-def test_public_leave_announcements_enabled_defaults_true():
+def test_public_leave_announcements_enabled_defaults_false():
     env = {k: v for k, v in os.environ.items() if k != 'LEAVE_PUBLIC_ANNOUNCEMENTS'}
     with patch.dict(os.environ, env, clear=True):
         from cogs.leave import public_leave_announcements_enabled
 
-        assert public_leave_announcements_enabled() is True
+        assert public_leave_announcements_enabled() is False
 
 
 @pytest.mark.asyncio
