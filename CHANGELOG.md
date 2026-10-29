@@ -10,6 +10,8 @@ know how this shit works.
 
 ### What's Changed
 
+* feat(translate): show input and output in a stacked embed [e4f25b4](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/e4f25b4ef38938c4fa1adc97087b2d3c98b3d3be)
+* show input and detected languages [d6182b3](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/d6182b3ed3e2aec63170c153126f7d5b26182156)
 * fix(leave): default LEAVE_PUBLIC_ANNOUNCEMENTS to False [78049f6](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/78049f69a05c7878e457e11ae451ed7fcd68fbb2)
 * feat(leave): toggle public leave lines with LEAVE_PUBLIC_ANNOUNCEMENTS [82f4817](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/82f4817f55f9c68d65cb5ac002e0ec6fe91f8d5c)
 * fix(deploy): reset origin/main on the host so dirty .env.example cannot block pull [91520e9](https://gitlab.com/thailand-discord/bots/cocobot/-/commit/91520e98bbf9a724330af3944e65628fb7f556e1)
