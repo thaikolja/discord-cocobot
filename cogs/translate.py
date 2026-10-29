@@ -41,7 +41,8 @@ from utils.helpers import UseAI  # Import AI helper utility
 # Configure the logger for this module to track activities and errors
 logger = logging.getLogger(__name__)
 
-DISCORD_MESSAGE_LIMIT = 2000
+DISCORD_EMBED_FIELD_NAME_LIMIT = 256
+DISCORD_EMBED_FIELD_VALUE_LIMIT = 1024
 
 
 def _normalize_language(language: str | None) -> str | None:
@@ -103,38 +104,41 @@ def _truncate(text: str, limit: int) -> str:
     return f"{''.join(truncated)}…"
 
 
-def _format_translation_response(
+def _format_embed_value(text: str) -> str:
+    """Format content for a non-empty Discord embed field value."""
+    escaped = _escape_response_text(text)
+    if not escaped.strip():
+        return "*(empty)*"
+    return _truncate(escaped, DISCORD_EMBED_FIELD_VALUE_LIMIT)
+
+
+def _format_field_name(icon: str, label: str, language: str) -> str:
+    """Build a safe embed field name while retaining the resolved language."""
+    prefix = f"{icon} {label} · "
+    language_budget = DISCORD_EMBED_FIELD_NAME_LIMIT - _utf16_length(prefix)
+    safe_language = _truncate(_escape_response_text(language), language_budget)
+    return f"{prefix}{safe_language}"
+
+
+def _build_translation_embed(
     text: str,
     output: str,
     source_language: str,
     target_language: str,
-) -> str:
-    """Build a safe translation response within Discord's message limit."""
-    escaped_input = _escape_response_text(text)
-    escaped_output = _escape_response_text(output)
-    source_label = _truncate(_escape_response_text(source_language), 64)
-    target_label = _truncate(_escape_response_text(target_language), 64)
-    input_label = f"📚️ **Input ({source_label}):** "
-    output_label = f"\n**Output ({target_label}):** "
-    content_budget = (
-        DISCORD_MESSAGE_LIMIT - _utf16_length(input_label) - _utf16_length(output_label)
+) -> discord.Embed:
+    """Build a compact, single-column translation card for Discord."""
+    embed = discord.Embed(title="🌐 Translation", color=discord.Color.blurple())
+    embed.add_field(
+        name=_format_field_name("📥", "Input", source_language),
+        value=_format_embed_value(text),
+        inline=False,
     )
-
-    # Give each field half of the available space, then let the other field use
-    # any capacity the shorter field leaves behind.
-    input_length = _utf16_length(escaped_input)
-    output_length = _utf16_length(escaped_output)
-    input_budget = min(input_length, content_budget // 2)
-    output_budget = min(output_length, content_budget - input_budget)
-    remaining = content_budget - input_budget - output_budget
-    output_budget += min(remaining, output_length - output_budget)
-    remaining = content_budget - input_budget - output_budget
-    input_budget += min(remaining, input_length - input_budget)
-
-    return (
-        f"{input_label}{_truncate(escaped_input, input_budget)}"
-        f"{output_label}{_truncate(escaped_output, output_budget)}"
+    embed.add_field(
+        name=_format_field_name("📤", "Output", target_language),
+        value=_format_embed_value(output),
+        inline=False,
     )
+    return embed
 
 
 # noinspection PyUnresolvedReferences
@@ -242,30 +246,43 @@ class TranslateCog(commands.Cog):
             output = await asyncio.to_thread(ai.prompt, prompt)
 
             # Check if the response is valid
-            if not output:
+            if not output or not str(output).strip():
                 # Send error message if response is empty
-                await interaction.followup.send(ERROR_MESSAGE)
+                await interaction.followup.send(
+                    ERROR_MESSAGE,
+                    allowed_mentions=discord.AllowedMentions.none(),
+                )
                 return
 
-            # Include the source text and resolved languages without allowing
-            # user or model output to create mentions or break the labels.
-            response = _format_translation_response(
+            # Keep input and output in separate stacked fields so long content
+            # wraps consistently on both mobile and desktop Discord clients.
+            embed = _build_translation_embed(
                 text,
                 str(output),
                 displayed_source_language,
                 to_language,
             )
             await interaction.followup.send(
-                response,
+                embed=embed,
                 allowed_mentions=discord.AllowedMentions.none(),
             )
         except TimeoutError:
             # Handle API timeout errors
-            await interaction.followup.send("⏰ Request timed out after 10 seconds")
+            await interaction.followup.send(
+                "⏰ Request timed out after 10 seconds",
+                allowed_mentions=discord.AllowedMentions.none(),
+            )
         except Exception as e:
             # Handle other exceptions
             logger.error(f"Translation error: {e}", exc_info=True)
-            await interaction.followup.send(f"❌ Error: {str(e)}")
+            error = _truncate(
+                _escape_response_text(str(e)),
+                2000 - _utf16_length("❌ Error: "),
+            )
+            await interaction.followup.send(
+                f"❌ Error: {error}",
+                allowed_mentions=discord.AllowedMentions.none(),
+            )
 
 
 # Define the asynchronous setup function to add the TranslateCog to the bot

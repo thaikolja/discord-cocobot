@@ -85,11 +85,13 @@
 /translate text: "Where is the bathroom?" from_language: English to_language: Thai
 ```
 
-**Returns:**[^4]
+**Returns:**[^4] an embed titled "🌐 Translation", with the source and the translation in stacked fields:
 
-> 📚️ **Input (English):** Where is the bathroom?
+> **📥 Input · English**
+> Where is the bathroom?
 >
-> **Output (Thai):** ห้องน้ำอยู่ที่ไหน
+> **📤 Output · Thai**
+> ห้องน้ำอยู่ที่ไหน
 
 ### Transliterate Thai text into the Latin alphabet
 
